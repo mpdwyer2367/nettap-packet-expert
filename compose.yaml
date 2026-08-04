@@ -47,9 +47,13 @@ services:
       OLLAMA_BASE_URL: http://ollama:11434
       WEBUI_SECRET_KEY: ${WEBUI_SECRET_KEY}
       WEBUI_AUTH: "True"
-      ENABLE_SIGNUP: "True"
+      WEBUI_ADMIN_NAME: ${WEBUI_ADMIN_NAME}
+      WEBUI_ADMIN_EMAIL: ${WEBUI_ADMIN_EMAIL}
+      WEBUI_ADMIN_PASSWORD: ${WEBUI_ADMIN_PASSWORD}
+      ENABLE_SIGNUP: "False"
       DEFAULT_USER_ROLE: pending
       ENABLE_PASSWORD_VALIDATION: "True"
+      ENABLE_PASSWORD_CHANGE_FORM: "True"
       PASSWORD_VALIDATION_REGEX_PATTERN: '^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^\w\s]).{12,72}$$'
       PASSWORD_VALIDATION_HINT: "Use 12-72 characters with upper, lower, number, and symbol."
       ENABLE_PERSISTENT_CONFIG: "True"
@@ -59,6 +63,8 @@ services:
       DEFAULT_MODELS: ${MODEL_NAME}
       DEFAULT_PINNED_MODELS: ${MODEL_NAME}
       MODEL_ORDER_LIST: '["${MODEL_NAME}"]'
+      WEBUI_BANNERS: >-
+        [{"id":"nettap-bootstrap-password-rc8","type":"warning","title":"Secure the administrator account","content":"This fresh installation uses a temporary local password. Go to Settings > Account and change it before connecting the application to any shared or untrusted network.","dismissible":true,"timestamp":1785864000}]
       DEFAULT_PROMPT_SUGGESTIONS: >-
         [{"title":["Start an","investigation"],"content":"Help me start a network or security investigation."},{"title":["Understand my","evidence"],"content":"Help me understand what evidence I have and what it can prove."},{"title":["Troubleshoot a","network problem"],"content":"Guide me through a network performance or availability problem."},{"title":["Help me","decide"],"content":"I am not sure where to start. Ask me one important question at a time."}]
     ports:

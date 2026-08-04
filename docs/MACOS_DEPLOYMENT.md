@@ -16,8 +16,12 @@ The default deployment runs both Ollama and Open WebUI in Linux containers. It i
 2. Clone the repository and open Terminal in it.
 3. Run `./scripts/start-macos.sh`.
 4. Open `http://127.0.0.1:3001`.
-5. Create the first account. Open WebUI assigns the first account the administrator role; later accounts remain pending until approved.
-6. Select `nettap-packet-expert:0.1.0-rc.7` if it is not already selected.
+5. On a fresh data volume, sign in with `admin@nettap.local` and temporary password `admin`.
+6. Open **Settings > Account** and replace the temporary password with a unique 12–72 character password containing uppercase, lowercase, number, and symbol.
+7. Sign out, confirm the old password fails, and sign in with the replacement password.
+8. Select `nettap-packet-expert:0.1.0-rc.8` if it is not already selected.
+
+Existing Open WebUI volumes retain their existing accounts and passwords. Bootstrap credentials do not overwrite an existing administrator. See [Administrator bootstrap and account access](AUTHENTICATION.md).
 
 The first run downloads multiple container images and the approximately 4.7 GB quantized base model. Completion time depends on network and storage performance.
 
@@ -27,7 +31,8 @@ Run `./tests/macos-e2e.sh`. It verifies source controls, model creation, identit
 
 Complete these manual checks before public release:
 
-- First user becomes admin and can sign out and back in.
+- Fresh-volume bootstrap administrator exists and has the admin role.
+- Temporary password is replaced; the old password fails and the new password survives restart.
 - The custom model is selected and returns a response.
 - Four broad starter prompts appear.
 - The UI still identifies itself as Open WebUI; the project must not remove Open WebUI branding without permission or an applicable license.

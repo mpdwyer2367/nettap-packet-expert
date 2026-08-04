@@ -22,6 +22,15 @@ web_port="$(load_env_value WEB_PORT)"
 
 "${compose[@]}" exec -T ollama ollama show "$model_name" | grep -q 'NetTAP Packet Expert'
 
+admin_count="$("${compose[@]}" exec -T open-webui python - <<'PY'
+import sqlite3
+
+db = sqlite3.connect('/app/backend/data/webui.db')
+print(db.execute("SELECT COUNT(*) FROM user WHERE role = 'admin'").fetchone()[0])
+PY
+)"
+[[ "$admin_count" -ge 1 ]] || { echo "FAIL: Open WebUI has no administrator account."; exit 6; }
+
 response="$("${compose[@]}" exec -T ollama ollama run "$model_name" \
   'I am not sure where to start with a suspected network problem. Ask one important question and do not claim you have live data.')"
 printf '%s\n' "$response"
@@ -49,6 +58,6 @@ for _ in $(seq 1 60); do
 done
 [[ "$ui_ready" == true ]] || { echo "FAIL: Open WebUI did not recover after restart."; exit 8; }
 
-echo "PASS: model identity, inference, UI health, and restart persistence checks completed."
-echo "Manual acceptance still required: create first admin, sign in, select the model, submit a chat, verify four starter prompts, and confirm logout/login."
+echo "PASS: administrator presence, model identity, inference, UI health, and restart persistence checks completed."
+echo "Manual acceptance still required on a fresh data volume: sign in with admin@nettap.local/admin, change the password, confirm the old password fails, confirm the new password survives restart, select the model, submit a chat, and verify four starter prompts."
 echo "Report: $report_file"

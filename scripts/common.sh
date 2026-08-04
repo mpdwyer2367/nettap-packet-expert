@@ -34,6 +34,17 @@ initialize_env() {
     mv "$temporary" "$env_file"
     unset secret
   fi
+
+  ensure_env_default WEBUI_ADMIN_NAME "NetTAP Administrator"
+  ensure_env_default WEBUI_ADMIN_EMAIL "admin@nettap.local"
+  ensure_env_default WEBUI_ADMIN_PASSWORD "admin"
+}
+
+ensure_env_default() {
+  local key="$1" value="$2"
+  if ! grep -q "^${key}=" "$env_file"; then
+    printf '%s=%s\n' "$key" "$value" >> "$env_file"
+  fi
 }
 
 load_env_value() {

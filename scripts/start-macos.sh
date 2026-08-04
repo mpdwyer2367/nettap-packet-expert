@@ -53,5 +53,8 @@ done
 
 web_port="$(load_env_value WEB_PORT)"
 echo "Open WebUI: http://127.0.0.1:${web_port}"
-echo "Create the first account as the administrator. Keep loopback binding until TLS and access controls are configured."
+echo "Fresh-install login: admin@nettap.local / admin"
+echo "Immediately change the temporary password in Settings > Account before expanding network access."
+echo "Existing Open WebUI volumes keep their existing accounts and passwords."
+echo "Keep loopback binding until TLS and access controls are configured."
 echo "Apple Silicon note: Dockerized Ollama is CPU-compatible; Docker Desktop does not expose Metal acceleration to this Linux container."
