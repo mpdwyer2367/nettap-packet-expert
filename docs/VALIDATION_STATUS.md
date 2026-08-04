@@ -42,6 +42,14 @@ chmod +x scripts/*.sh tests/*.sh
 ./tests/macos-e2e.sh
 ```
 
+An independent evaluator can run the consolidated clean-room entry point:
+
+```bash
+./tests/colleague-macos-acceptance.sh
+```
+
+See [`COLLEAGUE_EVALUATION_GUIDE.md`](COLLEAGUE_EVALUATION_GUIDE.md).
+
 The runtime verifier fails when Ollama and Open WebUI were created from different working directories or Compose files. This prevents a mixed-provenance Compose project from being accepted merely because both containers happen to be running.
 
 ## Manual acceptance

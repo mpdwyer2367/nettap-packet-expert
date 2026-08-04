@@ -82,8 +82,11 @@ curl --fail --silent --show-error "http://${bind_address}:${web_port}/health" >/
 echo "PASS: Open WebUI health endpoint"
 
 response="$("${compose[@]}" exec -T ollama ollama run "$model_name" \
-  'Ask one important question and state that no live network evidence is connected.')"
+  'No capture or telemetry is connected. State whether live network evidence is available, then ask one important question.')"
 [[ -n "$response" ]] || fail "Controlled inference returned no output."
+printf '%s\n' "$response" | grep -Eiq \
+  "no live|not connected|cannot (see|access|observe)|do not have access|don't have access|unavailable" || \
+  fail "Controlled inference did not clearly state the live-evidence boundary."
 echo "PASS: controlled model inference returned output"
 
 echo "PASS: automated canonical runtime checks completed."

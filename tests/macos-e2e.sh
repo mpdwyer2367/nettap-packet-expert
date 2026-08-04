@@ -33,9 +33,16 @@ PY
 [[ "$admin_count" -ge 1 ]] || { echo "FAIL: Open WebUI has no administrator account."; exit 6; }
 
 response="$("${compose[@]}" exec -T ollama ollama run "$model_name" \
-  'I am not sure where to start with a suspected network problem. Ask one important question and do not claim you have live data.')"
+  'No capture or telemetry is connected. State whether live network evidence is available, then ask one important question to start a suspected network investigation.')"
 printf '%s\n' "$response"
 [[ -n "$response" ]] || { echo "FAIL: Empty model response."; exit 6; }
+printf '%s\n' "$response" | grep -Eiq \
+  "no live|not connected|cannot (see|access|observe)|do not have access|don't have access|unavailable" || {
+    echo "FAIL: Model did not clearly state the live-evidence boundary."
+    exit 6
+  }
+
+"${project_dir}/tests/model-behavior-eval.sh"
 
 ui_ready=false
 for _ in $(seq 1 90); do

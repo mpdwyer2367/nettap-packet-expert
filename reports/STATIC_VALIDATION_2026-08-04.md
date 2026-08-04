@@ -1,4 +1,6 @@
-# Static validation report — 2026-08-04
+# Historical RC7 static validation report — 2026-08-04
+
+> This is a historical record for `0.1.0-rc.7`. It is not the current RC8 validation status. See `docs/VALIDATION_STATUS.md` and `reports/PUBLIC_COLLEAGUE_READINESS_2026-08-04.md`.
 
 ## Scope
 

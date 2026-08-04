@@ -88,6 +88,12 @@ The script validates the Docker runtime and disk space, creates a protected `.en
 
 Open <http://127.0.0.1:3001> after the script completes.
 
+For an independent clean-room evaluation, a colleague can use the [`colleague evaluation guide`](docs/COLLEAGUE_EVALUATION_GUIDE.md) and run one command after cloning:
+
+```bash
+./tests/colleague-macos-acceptance.sh
+```
+
 ## Deploy on Windows
 
 Use PowerShell from a normal user account. Docker Desktop must be running with the WSL 2 engine and Linux containers.
