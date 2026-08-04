@@ -157,13 +157,16 @@ Open WebUI also has a formal **Workspace > Skills** feature for reusable Markdow
 
 ## Validate the deployment
 
+The authoritative status and the distinction between source validation, automated runtime verification, manual acceptance, and release acceptance are documented in [`docs/VALIDATION_STATUS.md`](docs/VALIDATION_STATUS.md).
+
 ### macOS automated acceptance
 
 ```bash
+./scripts/verify-macos-deployment.sh
 ./tests/macos-e2e.sh
 ```
 
-The harness checks source controls, model creation, identity, controlled inference, UI health, and persistence across service restart. It writes a timestamped report under `reports/`. Complete the manual administrator, prompt, model-selection, chat, and sign-in checks printed by the harness.
+The verifier rejects containers created from different Git working directories or Compose files, then checks image identity, model identity, loopback binding, Ollama isolation, administrator presence, UI health, and inference. The E2E harness also checks source controls, model creation, and persistence across service restart. Both write timestamped reports under `reports/`. Complete the manual administrator, prompt, knowledge, model-selection, chat, and sign-in checks printed by the harness.
 
 ### Windows acceptance
 

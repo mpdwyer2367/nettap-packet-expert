@@ -27,7 +27,7 @@ The first run downloads multiple container images and the approximately 4.7 GB q
 
 ## Automated test
 
-Run `./tests/macos-e2e.sh`. It verifies source controls, model creation, identity, a controlled inference, UI health, and persistence across service restart. It writes a timestamped report under `reports/`.
+Run `./scripts/verify-macos-deployment.sh` first. It fails if the two services were created from different working directories or Compose files and verifies canonical images, model identity, loopback binding, Ollama isolation, administrator presence, UI health, and controlled inference. Then run `./tests/macos-e2e.sh`; it also verifies source controls, model creation, identity, UI health, inference, and persistence across service restart. Both write timestamped reports under `reports/`.
 
 Complete these manual checks before public release:
 

@@ -33,6 +33,20 @@ else
 fi
 
 echo
+echo "[Container mounts]"
+if [[ -z "$container_ids" ]]; then
+  echo "No Docker containers found."
+else
+  for container_id in $container_ids; do
+    container_name="$(docker inspect --format '{{.Name}}' "$container_id" | sed 's#^/##')"
+    echo "Container: $container_name"
+    docker inspect --format \
+      '{{range .Mounts}}type={{.Type}} | source={{.Source}} | destination={{.Destination}} | volume={{.Name}}{{println}}{{end}}' \
+      "$container_id" 2>&1 || true
+  done
+fi
+
+echo
 echo "[Docker volumes: Compose ownership only]"
 volume_names="$(docker volume ls -q 2>/dev/null || true)"
 if [[ -z "$volume_names" ]]; then
@@ -67,7 +81,14 @@ fi
 
 echo
 echo "[Containerized Ollama models]"
-ollama_ids="$(docker ps -q --filter 'ancestor=ollama/ollama' 2>/dev/null || true)"
+ollama_ids=""
+running_ids="$(docker ps -q 2>/dev/null || true)"
+for container_id in $running_ids; do
+  container_image="$(docker inspect --format '{{.Config.Image}}' "$container_id" 2>/dev/null || true)"
+  case "$container_image" in
+    ollama/ollama|ollama/ollama:*) ollama_ids="${ollama_ids} ${container_id}" ;;
+  esac
+done
 if [[ -z "$ollama_ids" ]]; then
   echo "No running ollama/ollama containers found."
 else

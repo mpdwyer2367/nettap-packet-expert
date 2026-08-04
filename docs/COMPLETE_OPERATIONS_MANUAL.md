@@ -234,11 +234,14 @@ docker @compose down
 
 ## 9. Health and acceptance checks
 
+See [`VALIDATION_STATUS.md`](VALIDATION_STATUS.md) for the authoritative distinction between source validation, automated runtime verification, manual acceptance, and release acceptance.
+
 On macOS:
 
 ```bash
 ./scripts/status.sh
 curl --fail http://127.0.0.1:3001/health
+./scripts/verify-macos-deployment.sh
 ./tests/macos-e2e.sh
 ```
 

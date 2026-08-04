@@ -14,6 +14,7 @@ echo "Host: $(uname -a)"
 [[ "$(uname -s)" == "Darwin" ]] || { echo "FAIL: macOS host required."; exit 2; }
 "${project_dir}/tests/static-checks.sh"
 "${project_dir}/scripts/start-macos.sh"
+"${project_dir}/scripts/verify-macos-deployment.sh"
 
 # shellcheck source=scripts/common.sh
 source "${project_dir}/scripts/common.sh"
