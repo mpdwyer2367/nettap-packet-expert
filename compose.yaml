@@ -1,0 +1,80 @@
+name: nettap-packet-expert
+
+services:
+  ollama:
+    image: ${OLLAMA_IMAGE}
+    restart: unless-stopped
+    volumes:
+      - packet-expert-ollama-data:/root/.ollama
+    networks: [backend, model-egress]
+    healthcheck:
+      test: ["CMD", "ollama", "list"]
+      interval: 10s
+      timeout: 10s
+      retries: 30
+      start_period: 20s
+    security_opt:
+      - no-new-privileges:true
+
+  model-init:
+    image: ${OLLAMA_IMAGE}
+    profiles: ["initialize"]
+    depends_on:
+      ollama:
+        condition: service_healthy
+    environment:
+      OLLAMA_HOST: http://ollama:11434
+    volumes:
+      - ./model:/model:ro
+    networks: [backend]
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - >-
+        ollama pull qwen2.5:7b-instruct-q4_K_M &&
+        ollama create ${MODEL_NAME} -f /model/Modelfile &&
+        ollama show ${MODEL_NAME}
+    restart: "no"
+    security_opt:
+      - no-new-privileges:true
+
+  open-webui:
+    image: ${OPEN_WEBUI_IMAGE}
+    restart: unless-stopped
+    depends_on:
+      ollama:
+        condition: service_healthy
+    environment:
+      OLLAMA_BASE_URL: http://ollama:11434
+      WEBUI_SECRET_KEY: ${WEBUI_SECRET_KEY}
+      WEBUI_AUTH: "True"
+      ENABLE_SIGNUP: "True"
+      DEFAULT_USER_ROLE: pending
+      ENABLE_PASSWORD_VALIDATION: "True"
+      PASSWORD_VALIDATION_REGEX_PATTERN: '^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^\w\s]).{12,72}$$'
+      PASSWORD_VALIDATION_HINT: "Use 12-72 characters with upper, lower, number, and symbol."
+      ENABLE_PERSISTENT_CONFIG: "True"
+      ENABLE_CODE_EXECUTION: "False"
+      ENABLE_CODE_INTERPRETER: "False"
+      ENABLE_PIP_INSTALL_FRONTMATTER_REQUIREMENTS: "False"
+      DEFAULT_MODELS: ${MODEL_NAME}
+      DEFAULT_PINNED_MODELS: ${MODEL_NAME}
+      MODEL_ORDER_LIST: '["${MODEL_NAME}"]'
+      DEFAULT_PROMPT_SUGGESTIONS: >-
+        [{"title":["Start an","investigation"],"content":"Help me start a network or security investigation."},{"title":["Understand my","evidence"],"content":"Help me understand what evidence I have and what it can prove."},{"title":["Troubleshoot a","network problem"],"content":"Guide me through a network performance or availability problem."},{"title":["Help me","decide"],"content":"I am not sure where to start. Ask me one important question at a time."}]
+    ports:
+      - "${BIND_ADDRESS}:${WEB_PORT}:8080"
+    volumes:
+      - packet-expert-open-webui-data:/app/backend/data
+    networks: [backend, user-access]
+    security_opt:
+      - no-new-privileges:true
+
+networks:
+  backend:
+    internal: true
+  model-egress: {}
+  user-access: {}
+
+volumes:
+  packet-expert-ollama-data: {}
+  packet-expert-open-webui-data: {}

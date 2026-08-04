@@ -1,0 +1,9 @@
+.env
+reports/*.json
+reports/*.log
+reports/*.txt
+captures/
+evidence/
+*.pcap
+*.pcapng
+.DS_Store
