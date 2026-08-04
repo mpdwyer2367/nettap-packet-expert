@@ -22,8 +22,10 @@ grep -q 'nettap-bootstrap-password-rc8' "$project_dir/compose.yaml"
 grep -q 'ENABLE_CODE_EXECUTION: "False"' "$project_dir/compose.yaml"
 grep -q 'internal: true' "$project_dir/compose.yaml"
 test -f "$project_dir/scripts/start-windows.ps1"
+test -f "$project_dir/scripts/inventory-macos.sh"
 test -f "$project_dir/docs/AUTHENTICATION.md"
 test -f "$project_dir/docs/WINDOWS_DEPLOYMENT.md"
+test -f "$project_dir/docs/COMPLETE_OPERATIONS_MANUAL.md"
 if grep -RIn --exclude=static-checks.sh 'mapfile' "$project_dir/scripts" "$project_dir/tests"; then
   echo "ERROR: mapfile is unavailable in the Bash 3.2 shipped with macOS." >&2
   exit 1

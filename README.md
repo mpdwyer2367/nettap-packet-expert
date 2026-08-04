@@ -246,3 +246,5 @@ No license has yet been selected for NetTAP-authored source. Public repository v
 - [Ollama Modelfile reference](https://docs.ollama.com/modelfile)
 
 For platform-specific detail, see [`docs/MACOS_DEPLOYMENT.md`](docs/MACOS_DEPLOYMENT.md), [`docs/WINDOWS_DEPLOYMENT.md`](docs/WINDOWS_DEPLOYMENT.md), and [`docs/AUTHENTICATION.md`](docs/AUTHENTICATION.md).
+
+For inventory, consolidation, backup, administration, maintenance, sharing, GitHub release management, and operator handoff, use the [`complete operations manual`](docs/COMPLETE_OPERATIONS_MANUAL.md). On macOS, begin duplicate-deployment cleanup with the read-only [`scripts/inventory-macos.sh`](scripts/inventory-macos.sh); review its output before stopping or removing anything.
