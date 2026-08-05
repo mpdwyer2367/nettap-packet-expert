@@ -9,6 +9,7 @@ mode: packet_expert
 modelfile: model/nettap-ai.Modelfile
 knowledge:
   - knowledge/NetTAP_AI_Knowledge.md
+  - knowledge/NetTAP_Ingestion_Analysis_Guidance.md
   - knowledge/NetTAP_Packet_Expert_Knowledge.md
 launcher_port: 3001
 starter_prompts:

@@ -112,6 +112,8 @@ The old `scripts/nettap-packet-expert` entry point remains as a compatibility wr
 | Network & Visibility profile | Same `nettap-ai` model | [NetTAP Network & Visibility knowledge](knowledge/NetTAP_Network_Visibility_Knowledge.md) |
 | Packet Expert profile | Same `nettap-ai` model | [NetTAP Packet Expert knowledge](knowledge/NetTAP_Packet_Expert_Knowledge.md) |
 
+The [ingestion and analysis guidance](knowledge/NetTAP_Ingestion_Analysis_Guidance.md) is shared by both profiles. It defines accurate handling for PCAP-derived evidence, logs, flow telemetry, cloud flow records, decryption, provenance, correlation, and evidence-bounded security conclusions.
+
 Critical evidence and safety rules are built into the combined Ollama model definition. Import shared and specialist knowledge into restricted Open WebUI collections, then attach only the appropriate collections to each Workspace Model profile. Updating a Git file does not update an already imported collection.
 
 See [assistant customization](docs/ASSISTANT_CUSTOMIZATION.md), [knowledge management](docs/KNOWLEDGE_MANAGEMENT.md), and [tool security](docs/TOOL_SECURITY.md).

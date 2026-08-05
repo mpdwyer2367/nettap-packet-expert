@@ -6,7 +6,7 @@ Commercial distribution is fail-closed. Passing source CI is necessary but insuf
 |---|---|---|---|
 | Source integrity | Shell lint, policy/secret checks, Compose rendering, exact commit | Engineering | Automated |
 | Functional runtime | Fresh-install reports on advertised macOS and Windows configurations | QA | Pending physical hosts |
-| Model behavior | Eleven guardrail and combined-capability cases plus representative domain evals | AI/QA | Smoke suite implemented; expanded eval pending |
+| Model behavior | Fourteen guardrail and combined-capability cases plus representative domain evals | AI/QA | Smoke suite implemented; expanded eval pending |
 | Profile isolation | Knowledge, RBAC, tool, launcher and direct-model negative tests for both profiles | AI/Security | Source controls implemented; runtime evidence pending |
 | Storage reuse | Before/after model-store measurement proving one approved base and one combined NetTAP model | QA | Pending target hosts |
 | Supply chain | Immutable digests, SPDX SBOM, no unapproved HIGH/CRITICAL findings | Security | Tooling implemented; release scan pending |

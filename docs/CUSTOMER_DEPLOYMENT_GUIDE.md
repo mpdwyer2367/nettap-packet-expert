@@ -69,7 +69,7 @@ Complete `reports/RELEASE_ACCEPTANCE_TEMPLATE.md` against the exact commit, imag
 - generated bootstrap credential is retired;
 - signup, code execution, API keys, web search, user webhooks, and admin chat access are disabled;
 - backup and restore into new volumes succeed;
-- eleven behavioral and combined-capability smoke cases pass;
+- fourteen behavioral and combined-capability smoke cases pass;
 - browser login, both launchers, profile switching, profile-specific prompts, and isolated specialist knowledge retrieval behave as documented;
 - the actual Ollama model-store measurement confirms one approved base and one combined NetTAP custom model;
 - no report contains credentials or customer evidence.

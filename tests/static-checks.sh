@@ -13,6 +13,13 @@ grep -q 'Do not make autonomous production changes' "$model_file"
 grep -q 'Never claim that live telemetry' "$model_file"
 grep -q 'Keep general guidance free of packet-level terminology' "$model_file"
 grep -q 'Unified mode' "$model_file"
+grep -q 'Never ask a user to paste, upload, or store TLS' "$model_file"
+grep -q -- '--sslkeylog' "$model_file"
+grep -q 'Classify GRE and VXLAN as encapsulation, not encryption' "$model_file"
+grep -q 'IPsec is a security suite; its ESP mode can provide confidentiality through encryption' "$model_file"
+grep -q 'Raw PCAP, logs, flow exports, cloud records, and telemetry require a supported parser and validated schema' "$model_file"
+grep -q 'timezone, clock-synchronization status, observation point, schema version, sampling configuration' "$model_file"
+grep -q 'Treat possible command-and-control as an evidence-supported indicator or hypothesis' "$model_file"
 grep -q '^RELEASE_VERSION=0.3.0-rc.2$' "$project_dir/.env.example"
 grep -q '^BASE_MODEL=qwen2.5:7b-instruct-q4_K_M$' "$project_dir/.env.example"
 grep -q '^NETTAP_AI_MODEL=nettap-ai:0.3.0-rc.2$' "$project_dir/.env.example"
@@ -37,7 +44,8 @@ required_files=(
   config/Caddyfile config/Launcher.Caddyfile
   assistants/shared/core-policy.md
   assistants/network-visibility/assistant.yaml assistants/packet-expert/assistant.yaml
-  knowledge/NetTAP_AI_Knowledge.md knowledge/NetTAP_Network_Visibility_Knowledge.md
+  knowledge/NetTAP_AI_Knowledge.md knowledge/NetTAP_Ingestion_Analysis_Guidance.md
+  knowledge/NetTAP_Network_Visibility_Knowledge.md
   knowledge/NetTAP_Packet_Expert_Knowledge.md model/nettap-ai.Modelfile
   launchers/network-visibility/index.html launchers/packet-expert/index.html launchers/shared.css
   docs/AUTHENTICATION.md docs/COMMERCIAL_RELEASE_GATES.md
@@ -56,6 +64,23 @@ required_files=(
   reports/STATIC_VALIDATION_2026-08-05_0.3.0-rc.2.md
 )
 for file in "${required_files[@]}"; do test -f "${project_dir}/${file}"; done
+
+ingestion_guidance="$project_dir/knowledge/NetTAP_Ingestion_Analysis_Guidance.md"
+grep -q 'Raw sources require a supported parser and validated schema; normalized excerpts can be analyzed directly' "$ingestion_guidance"
+grep -q 'Never ask the user to paste, upload, or store TLS' "$ingestion_guidance"
+grep -q -- 'tcpdump --sslkeylog' "$ingestion_guidance"
+grep -q 'GRE and VXLAN are encapsulation technologies and do not themselves provide encryption' "$ingestion_guidance"
+grep -q 'IPsec is a security suite; its ESP mode can provide confidentiality through encryption' "$ingestion_guidance"
+grep -q 'source timezone and UTC offset' "$ingestion_guidance"
+grep -q 'clock-synchronization status' "$ingestion_guidance"
+grep -q 'exporter identity' "$ingestion_guidance"
+grep -q 'IPFIX template status' "$ingestion_guidance"
+grep -q 'sampling rate' "$ingestion_guidance"
+grep -q 'capture drops' "$ingestion_guidance"
+grep -q 'observation point' "$ingestion_guidance"
+grep -q 'schema version' "$ingestion_guidance"
+grep -q 'chain of custody' "$ingestion_guidance"
+grep -q 'indicators or hypotheses' "$ingestion_guidance"
 
 python3 - "$project_dir" <<'PY'
 import sys

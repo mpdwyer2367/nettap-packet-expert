@@ -34,7 +34,7 @@ Do not enter passwords, secrets, private keys, customer evidence, packet payload
 - Temporary model egress absent at runtime:
 - Exact shared base and combined model identities:
 - Before/after model-store measurement:
-- Eleven behavioral and combined-capability smoke cases:
+- Fourteen behavioral and combined-capability smoke cases:
 - Cross-profile knowledge, RBAC and tool negative tests:
 - Port 3000, port 3001 and shared WebUI launcher selection:
 - SBOM and vulnerability policy:

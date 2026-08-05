@@ -9,6 +9,7 @@ mode: network_visibility
 modelfile: model/nettap-ai.Modelfile
 knowledge:
   - knowledge/NetTAP_AI_Knowledge.md
+  - knowledge/NetTAP_Ingestion_Analysis_Guidance.md
   - knowledge/NetTAP_Network_Visibility_Knowledge.md
 launcher_port: 3000
 starter_prompts:
