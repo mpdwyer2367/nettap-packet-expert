@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.3.0-rc.1 unified NetTAP AI Suite candidate — 2026-08-05
+
+- Added Network & Visibility and retained Packet Expert as separate assistant policies over one Qwen2.5 7B base.
+- Consolidated both assistants into one Ollama service, one model volume, one Open WebUI, one account/chat database, and one administration lifecycle.
+- Added stateless branded launchers on local ports 3000 and 3001 with a shared Open WebUI on port 3100.
+- Added assistant manifests, isolated knowledge sources, a unified `nettap-ai` CLI, migration and rollback controls, and expanded behavioral/isolation tests.
+- Preserved the Compose project and volume identity for controlled migration from 0.2.0-rc.1.
+- Kept production and commercial approval fail-closed pending exact-build target-host, security, legal, support, signing, and acceptance evidence.
+
 ## 0.2.0-rc.1 production-candidate validation update — 2026-08-04
 
 - Added GitHub Actions shell lint and rendering of local, production and bootstrap Compose profiles.

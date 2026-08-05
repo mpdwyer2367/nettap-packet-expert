@@ -1,0 +1,24 @@
+#!/usr/bin/env bash
+set -euo pipefail
+script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+command_name="${1:-help}"
+shift || true
+case "$command_name" in
+  start-local) exec "${script_dir}/start-macos.sh" "$@" ;;
+  configure-production) exec "${script_dir}/configure-production.sh" "$@" ;;
+  start-production) exec "${script_dir}/start-production.sh" "$@" ;;
+  status) exec "${script_dir}/status.sh" "$@" ;;
+  health) exec "${script_dir}/healthcheck.sh" "$@" ;;
+  stop) exec "${script_dir}/stop.sh" "$@" ;;
+  update-models) exec "${script_dir}/update-model.sh" "$@" ;;
+  lock-images) exec "${script_dir}/lock-images.sh" "$@" ;;
+  scan) exec "${script_dir}/security-scan.sh" "$@" ;;
+  backup) exec "${script_dir}/backup.sh" "$@" ;;
+  restore) exec "${script_dir}/restore.sh" "$@" ;;
+  verify-production) exec "${script_dir}/verify-production-deployment.sh" "$@" ;;
+  certify) exec "${script_dir}/certify-production.sh" "$@" ;;
+  help|*)
+    echo "NetTAP AI Suite administration"
+    echo "Commands: start-local, configure-production, start-production, status, health, stop, update-models, lock-images, scan, backup, restore, verify-production, certify"
+    ;;
+esac

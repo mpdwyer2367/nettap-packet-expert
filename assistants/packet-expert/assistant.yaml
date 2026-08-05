@@ -1,0 +1,16 @@
+schema_version: 1
+id: nettap-packet-expert
+display_name: NetTAP Packet Expert
+version: 0.3.0-rc.1
+base_model: qwen2.5:7b-instruct-q4_K_M
+runtime_model: nettap-packet-expert:0.3.0-rc.1
+modelfile: model/packet-expert.Modelfile
+knowledge:
+  - knowledge/NetTAP_Packet_Expert_Knowledge.md
+launcher_port: 3001
+starter_prompts:
+  - Start an investigation
+  - Understand my evidence
+  - Plan a capture
+tool_policy: no_tools_by_default
+live_data_default: unavailable

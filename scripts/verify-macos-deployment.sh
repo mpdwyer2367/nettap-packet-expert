@@ -16,7 +16,7 @@ fail() {
   exit 1
 }
 
-echo "NetTAP Packet Expert canonical macOS runtime verification"
+echo "NetTAP AI Suite canonical macOS runtime verification"
 echo "UTC: $(date -u +%FT%TZ)"
 echo "Host: $(uname -a)"
 echo "Project directory: $project_dir"
@@ -26,20 +26,26 @@ require_runtime
 [[ -f "$env_file" ]] || fail "Missing .env. Run ./scripts/start-macos.sh first."
 docker info >/dev/null 2>&1 || fail "Docker Desktop engine is not running."
 
-model_name="$(load_env_value MODEL_NAME)"
+visibility_model="$(load_env_value NETWORK_VISIBILITY_MODEL)"
+packet_model="$(load_env_value PACKET_EXPERT_MODEL)"
 web_port="$(load_env_value WEB_PORT)"
+visibility_port="$(load_env_value VISIBILITY_LAUNCHER_PORT)"
+packet_port="$(load_env_value PACKET_EXPERT_LAUNCHER_PORT)"
 bind_address="$(load_env_value BIND_ADDRESS)"
 ollama_image="$(load_env_value OLLAMA_IMAGE)"
 webui_image="$(load_env_value OPEN_WEBUI_IMAGE)"
 
-[[ "$model_name" == "nettap-packet-expert:0.2.0-rc.1" ]] || fail "Unexpected model identity: $model_name"
+[[ "$visibility_model" == "nettap-network-visibility:0.3.0-rc.1" ]] || fail "Unexpected Network & Visibility identity: $visibility_model"
+[[ "$packet_model" == "nettap-packet-expert:0.3.0-rc.1" ]] || fail "Unexpected Packet Expert identity: $packet_model"
 [[ "$bind_address" == "127.0.0.1" ]] || fail "BIND_ADDRESS must remain 127.0.0.1 for the local profile."
 "${compose[@]}" config >/dev/null || fail "Compose configuration is invalid."
 
 ollama_id="$("${compose[@]}" ps -q ollama)"
 webui_id="$("${compose[@]}" ps -q open-webui)"
+launcher_id="$("${compose[@]}" ps -q assistant-launcher)"
 [[ -n "$ollama_id" ]] || fail "Ollama service container is not running."
 [[ -n "$webui_id" ]] || fail "Open WebUI service container is not running."
+[[ -n "$launcher_id" ]] || fail "Assistant launcher service container is not running."
 
 verify_provenance() {
   local container_id="$1" service="$2" expected_image="$3"
@@ -57,6 +63,7 @@ verify_provenance() {
 
 verify_provenance "$ollama_id" ollama "$ollama_image"
 verify_provenance "$webui_id" open-webui "$webui_image"
+verify_provenance "$launcher_id" assistant-launcher "$(load_env_value CADDY_IMAGE)"
 
 ollama_ports="$(docker inspect --format '{{json .NetworkSettings.Ports}}' "$ollama_id")"
 [[ "$ollama_ports" == *'11434/tcp":null'* ]] || fail "Containerized Ollama unexpectedly publishes a host port: $ollama_ports"
@@ -70,8 +77,9 @@ webui_binding="$(docker port "$webui_id" 8080/tcp 2>/dev/null || true)"
 [[ "$webui_binding" == "${bind_address}:${web_port}" ]] || fail "Open WebUI binding is $webui_binding; expected ${bind_address}:${web_port}."
 echo "PASS: Open WebUI is bound to ${bind_address}:${web_port}"
 
-"${compose[@]}" exec -T ollama ollama show "$model_name" | grep -q 'NetTAP Packet Expert' || fail "Custom model identity check failed."
-echo "PASS: custom model $model_name is installed"
+"${compose[@]}" exec -T ollama ollama show "$visibility_model" | grep -q 'NetTAP Network & Visibility' || fail "Network & Visibility identity check failed."
+"${compose[@]}" exec -T ollama ollama show "$packet_model" | grep -q 'NetTAP Packet Expert' || fail "Packet Expert identity check failed."
+echo "PASS: both assistant models are installed"
 
 admin_count="$("${compose[@]}" exec -T open-webui python - <<'PY'
 import sqlite3
@@ -84,8 +92,11 @@ echo "PASS: Open WebUI administrator exists"
 
 curl --fail --silent --show-error "http://${bind_address}:${web_port}/health" >/dev/null || fail "Open WebUI health endpoint failed."
 echo "PASS: Open WebUI health endpoint"
+curl --fail --silent --show-error "http://${bind_address}:${visibility_port}/" | grep -q 'Network &amp; Visibility' || fail "Network & Visibility launcher failed."
+curl --fail --silent --show-error "http://${bind_address}:${packet_port}/" | grep -q 'Packet Expert' || fail "Packet Expert launcher failed."
+echo "PASS: both assistant launchers"
 
-response="$("${compose[@]}" exec -T ollama ollama run "$model_name" \
+response="$("${compose[@]}" exec -T ollama ollama run "$packet_model" \
   'No capture or telemetry is connected. State whether live network evidence is available, then ask one important question.')"
 [[ -n "$response" ]] || fail "Controlled inference returned no output."
 printf '%s\n' "$response" | grep -Eiq \
@@ -94,5 +105,5 @@ printf '%s\n' "$response" | grep -Eiq \
 echo "PASS: controlled model inference returned output"
 
 echo "PASS: automated canonical runtime checks completed."
-echo "Manual acceptance remains required: generated-password replacement and rejection, finalization, new-password persistence, model selection, four starter prompts, knowledge attachment, and browser chat behavior."
+echo "Manual acceptance remains required: generated-password replacement and rejection, finalization, new-password persistence, switching between both assistants, assistant-specific suggestions, knowledge isolation, and browser chat behavior."
 echo "Report: $report_file"

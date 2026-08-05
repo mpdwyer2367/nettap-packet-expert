@@ -38,18 +38,23 @@ if ($content -match '(?m)^WEBUI_SECRET_KEY=GENERATE_ON_FIRST_START$') {
 }
 
 $defaults = [ordered]@{
-    RELEASE_VERSION = '0.2.0-rc.1'
+    RELEASE_VERSION = '0.3.0-rc.1'
     OLLAMA_IMAGE = 'ollama/ollama:0.32.5'
     OPEN_WEBUI_IMAGE = 'ghcr.io/open-webui/open-webui:v0.11.0'
     CADDY_IMAGE = 'caddy:2.11.4-alpine'
     BACKUP_IMAGE = 'alpine:3.24.1'
-    MODEL_NAME = 'nettap-packet-expert:0.2.0-rc.1'
+    BASE_MODEL = 'qwen2.5:7b-instruct-q4_K_M'
+    NETWORK_VISIBILITY_MODEL = 'nettap-network-visibility:0.3.0-rc.1'
+    PACKET_EXPERT_MODEL = 'nettap-packet-expert:0.3.0-rc.1'
+    MODEL_NAME = 'nettap-packet-expert:0.3.0-rc.1'
     EXPECTED_BASE_MODEL_ID = '845dbda0ea48'
     BIND_ADDRESS = '127.0.0.1'
-    WEB_PORT = '3001'
+    WEB_PORT = '3100'
+    VISIBILITY_LAUNCHER_PORT = '3000'
+    PACKET_EXPERT_LAUNCHER_PORT = '3001'
     HTTPS_BIND_ADDRESS = '0.0.0.0'
     HTTPS_PORT = '8443'
-    APPLIANCE_HOSTNAME = 'packet-expert.local'
+    APPLIANCE_HOSTNAME = 'nettap-ai.local'
     JWT_EXPIRES_IN = '8h'
     OLLAMA_CPUS = '6'
     OLLAMA_MEMORY = '8g'
@@ -63,7 +68,10 @@ $defaults = [ordered]@{
     DEPLOYMENT_MODE = 'local'
 }
 
-$content = $content -replace '(?m)^MODEL_NAME=nettap-packet-expert:0\.1\.0-rc\.8$', 'MODEL_NAME=nettap-packet-expert:0.2.0-rc.1'
+$content = $content -replace '(?m)^RELEASE_VERSION=0\.2\.0-rc\.1$', 'RELEASE_VERSION=0.3.0-rc.1'
+$content = $content -replace '(?m)^MODEL_NAME=nettap-packet-expert:(0\.1\.0-rc\.8|0\.2\.0-rc\.1)$', 'MODEL_NAME=nettap-packet-expert:0.3.0-rc.1'
+$content = $content -replace '(?m)^APPLIANCE_HOSTNAME=packet-expert\.local$', 'APPLIANCE_HOSTNAME=nettap-ai.local'
+$content = $content -replace '(?m)^WEB_PORT=3001$', 'WEB_PORT=3100'
 $content = $content -replace '(?m)^WEBUI_ADMIN_PASSWORD=admin$', 'WEBUI_ADMIN_PASSWORD=GENERATE_ON_FIRST_START'
 
 foreach ($entry in $defaults.GetEnumerator()) {
@@ -128,17 +136,27 @@ if ($LASTEXITCODE -ne 0) {
     throw 'Failed to remove temporary registry-egress network.'
 }
 
-docker @compose up -d ollama open-webui
+docker @compose up -d ollama open-webui assistant-launcher
 docker @compose ps
 
-$webPort = '3001'
+$webPort = '3100'
+$visibilityPort = '3000'
+$packetPort = '3001'
 foreach ($line in [System.IO.File]::ReadAllLines($envPath)) {
     if ($line -match '^WEB_PORT=(.+)$') {
         $webPort = $Matches[1]
     }
+    if ($line -match '^VISIBILITY_LAUNCHER_PORT=(.+)$') {
+        $visibilityPort = $Matches[1]
+    }
+    if ($line -match '^PACKET_EXPERT_LAUNCHER_PORT=(.+)$') {
+        $packetPort = $Matches[1]
+    }
 }
 
-Write-Host "Open WebUI: http://127.0.0.1:$webPort"
+Write-Host "NetTAP AI Suite: http://127.0.0.1:$webPort"
+Write-Host "Network & Visibility: http://127.0.0.1:$visibilityPort"
+Write-Host "Packet Expert: http://127.0.0.1:$packetPort"
 Write-Host "Bootstrap credential file: $bootstrapPasswordPath"
 Write-Host 'Immediately change the generated password in Settings > Account.'
 Write-Host 'Then run finalize-admin.sh from WSL/Git Bash, or follow docs/AUTHENTICATION.md.'

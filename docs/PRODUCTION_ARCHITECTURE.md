@@ -10,8 +10,11 @@ The supported commercial candidate is a single-node, single-customer Docker soft
 flowchart LR
     B["Customer browser"] -->|HTTPS| G["Caddy TLS gateway"]
     G -->|internal HTTP| W["Open WebUI"]
-    W -->|internal API| O["Ollama"]
-    O --> M["Qwen2.5 7B<br/>NetTAP policy"]
+    W --> V["Network & Visibility policy"]
+    W --> P["Packet Expert policy"]
+    V -->|internal API| O["One Ollama service"]
+    P -->|internal API| O
+    O --> M["One Qwen2.5 7B base"]
     D["Authorized normalized data"] --> W
 ```
 
@@ -37,7 +40,8 @@ Open WebUI administrators can access and control the application instance. They 
 | Caddy | TLS termination and security headers | Customer identity provider |
 | Open WebUI | Authentication, chat, model and knowledge access | Strong tenant isolation inside one instance |
 | Ollama | Local model serving and model storage | Network capture or telemetry collector |
-| Packet Expert model | Evidence-disciplined advisory reasoning | Autonomous remediation or forensic proof |
+| Network & Visibility model | Architecture, visibility and telemetry advisory reasoning | Live telemetry collection or autonomous configuration |
+| Packet Expert model | Evidence-disciplined packet and forensic advisory reasoning | Autonomous remediation or forensic proof |
 | NetTAP TAP/NPB | Separately supplied traffic visibility | Included by this software repository |
 
 ## Availability and recovery
@@ -46,4 +50,4 @@ This is a single-node design. A host or volume failure causes service interrupti
 
 ## Sizing
 
-Production preflight enforces at least 8 CPUs, 16 GiB Docker memory, and 40 GiB free disk. For more than a small number of concurrent users, performance must be benchmarked with representative prompt length, retrieval context, and concurrency before sale. GPU acceleration is not part of the certified candidate profile.
+Production preflight enforces at least 8 CPUs, 16 GiB Docker memory, and 40 GiB free disk. Both assistant manifests are expected to reuse one base-model store, but the exact release must measure disk consumption. For more than a small number of concurrent users, performance must be benchmarked with representative prompt length, retrieval context, and concurrency before sale. GPU acceleration is not part of the certified candidate profile.

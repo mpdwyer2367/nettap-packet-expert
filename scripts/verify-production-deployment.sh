@@ -54,19 +54,27 @@ if docker inspect --format '{{range $name, $_ := .NetworkSettings.Networks}}{{$n
   echo "FAIL: Ollama still has temporary registry egress." >&2
   exit 12
 fi
-model_name="$(load_env_value MODEL_NAME)"
+base_name="$(load_env_value BASE_MODEL)"
+visibility_name="$(load_env_value NETWORK_VISIBILITY_MODEL)"
+packet_name="$(load_env_value PACKET_EXPERT_MODEL)"
 model_rows="$("${compose_production[@]}" exec -T ollama ollama list)"
-base_id="$(printf '%s\n' "$model_rows" | awk '$1 == "qwen2.5:7b-instruct-q4_K_M" {print $2}')"
-custom_id="$(printf '%s\n' "$model_rows" | awk -v name="$model_name" '$1 == name {print $2}')"
+base_id="$(printf '%s\n' "$model_rows" | awk -v name="$base_name" '$1 == name {print $2}')"
+visibility_id="$(printf '%s\n' "$model_rows" | awk -v name="$visibility_name" '$1 == name {print $2}')"
+packet_id="$(printf '%s\n' "$model_rows" | awk -v name="$packet_name" '$1 == name {print $2}')"
 [[ "$base_id" == "$(load_env_value EXPECTED_BASE_MODEL_ID)" ]] || {
   echo "FAIL: Runtime base-model identity does not match the approved manifest." >&2
   exit 12
 }
-[[ -n "$custom_id" ]] || { echo "FAIL: Runtime custom-model identity is unavailable." >&2; exit 12; }
+[[ -n "$visibility_id" ]] || { echo "FAIL: Network & Visibility model identity is unavailable." >&2; exit 12; }
+[[ -n "$packet_id" ]] || { echo "FAIL: Packet Expert model identity is unavailable." >&2; exit 12; }
 model_lock="${project_dir}/reports/generated/model-lock.txt"
 [[ -f "$model_lock" ]] || { echo "FAIL: Model identity record is missing." >&2; exit 12; }
-grep -Fqx "Custom model ID: $custom_id" "$model_lock" || {
-  echo "FAIL: Runtime custom-model identity differs from the initialization record." >&2
+grep -Fqx "Network Visibility model ID: $visibility_id" "$model_lock" || {
+  echo "FAIL: Network & Visibility identity differs from the initialization record." >&2
+  exit 12
+}
+grep -Fqx "Packet Expert model ID: $packet_id" "$model_lock" || {
+  echo "FAIL: Packet Expert identity differs from the initialization record." >&2
   exit 12
 }
 hostname="$(load_env_value APPLIANCE_HOSTNAME)"
@@ -88,13 +96,15 @@ mkdir -p "$(dirname "$output")"
   printf 'Result: PASS\n'
   printf 'Verified UTC: %s\n' "$(date -u +%FT%TZ)"
   printf 'Release: %s\n' "$(load_env_value RELEASE_VERSION)"
-  printf 'Model: %s\n' "$model_name"
+  printf 'Network Visibility model: %s\n' "$visibility_name"
+  printf 'Packet Expert model: %s\n' "$packet_name"
   printf 'Base model ID: %s\n' "$base_id"
-  printf 'Custom model ID: %s\n' "$custom_id"
+  printf 'Network Visibility model ID: %s\n' "$visibility_id"
+  printf 'Packet Expert model ID: %s\n' "$packet_id"
   printf 'OLLAMA_IMAGE=%s\n' "$(load_env_value OLLAMA_IMAGE)"
   printf 'OPEN_WEBUI_IMAGE=%s\n' "$(load_env_value OPEN_WEBUI_IMAGE)"
   printf 'CADDY_IMAGE=%s\n' "$(load_env_value CADDY_IMAGE)"
   printf 'Endpoint: https://%s:%s\n' "$hostname" "$https_port"
-  printf 'Controls: exact images, TLS/HSTS gateway, least privilege, exact gateway binding, no direct Ollama/WebUI host ports, runtime model egress absent, locked model identity, healthy services\n'
+  printf 'Controls: exact images, TLS/HSTS gateway, least privilege, exact gateway binding, no direct Ollama/WebUI host ports, runtime model egress absent, shared base identity, two locked assistant identities, healthy services\n'
 } > "$output"
 echo "Production runtime verification passed: $output"

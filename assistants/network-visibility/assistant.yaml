@@ -1,0 +1,16 @@
+schema_version: 1
+id: nettap-network-visibility
+display_name: NetTAP Network & Visibility
+version: 0.3.0-rc.1
+base_model: qwen2.5:7b-instruct-q4_K_M
+runtime_model: nettap-network-visibility:0.3.0-rc.1
+modelfile: model/network-visibility.Modelfile
+knowledge:
+  - knowledge/NetTAP_Network_Visibility_Knowledge.md
+launcher_port: 3000
+starter_prompts:
+  - Start here
+  - Design or configure
+  - Connect visibility and data
+tool_policy: no_tools_by_default
+live_data_default: unavailable

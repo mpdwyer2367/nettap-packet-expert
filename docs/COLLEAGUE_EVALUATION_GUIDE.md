@@ -1,29 +1,33 @@
-# Independent colleague evaluation
+# Colleague evaluation guide
 
-This is the shortest macOS evaluation path for `0.2.0-rc.1`. It does not grant production or commercial approval.
+This is the shortest controlled macOS evaluation path for NetTAP AI Suite `0.3.0-rc.1`. It does not grant production or commercial approval.
 
-## Clean-room run
-
-1. Use a test host with Docker Desktop, at least 16 GiB RAM, and 15 GiB free disk.
-2. Clone a fresh copy and record the commit:
+## Fresh evaluation
 
 ```bash
 git clone https://github.com/mpdwyer2367/nettap-packet-expert.git
 cd nettap-packet-expert
-git rev-parse HEAD
 chmod +x scripts/* tests/*.sh
-./tests/colleague-macos-acceptance.sh
+./tests/static-checks.sh
+./scripts/start-macos.sh
+./tests/macos-e2e.sh
 ```
 
-3. Open the loopback URL printed by the script.
-4. Use the generated bootstrap credential file; do not put its contents in the report.
-5. Replace the password, prove the generated value fails, and finalize the administrator.
-6. Confirm the four broad prompts, selected `nettap-packet-expert:0.2.0-rc.1` model, non-live evidence boundary, and a successful chat.
-7. Import and attach the approved knowledge file, record its hash, and test retrieval.
-8. Run the six behavioral guardrail cases.
+## Browser checks
 
-## Required report
+1. Open <http://127.0.0.1:3000>; confirm the Network & Visibility page and its three broad starting points.
+2. Open <http://127.0.0.1:3001>; confirm the Packet Expert page and its three investigation starting points.
+3. Sign in once and confirm both use the same Open WebUI account and history.
+4. Switch between both assistants in the model selector.
+5. Confirm neither assistant claims that live traffic, telemetry, or a capture is available.
+6. Confirm Network & Visibility requests device identity before exact configuration.
+7. Confirm explicit PCAP work routes to Packet Expert.
+8. Import each knowledge file into a separate restricted collection and attach it only to its matching Workspace Model.
+9. Confirm one assistant does not retrieve the other's specialist knowledge during a negative test.
+10. Restart and confirm accounts, chats, knowledge, and both models persist.
 
-Return the exact commit, macOS/architecture, Docker Desktop/Engine/Compose, allocated CPU/memory, image digests, model identity, timestamped automated reports, completed release-acceptance template, and all exceptions. Do not include passwords, private environment values, chat evidence, packet data, or customer identifiers.
+## Record
 
-Packet Expert does not capture traffic, decode arbitrary PCAP, ingest IPFIX, or connect to an NPB in this repository. The model is Qwen2.5 7B plus a NetTAP Modelfile, not separately fine-tuned weights.
+Save the generated macOS reports, host and Docker versions, image digests, model IDs, storage before and after both manifests, browser results, knowledge hashes, backup/restore result, exceptions, and tester identity. Use the release acceptance template and do not describe a source-only pass as a production certification.
+
+Existing Packet Expert 0.2 deployments must use [MIGRATION.md](MIGRATION.md), not the fresh-install procedure.

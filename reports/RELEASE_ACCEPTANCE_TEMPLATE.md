@@ -1,4 +1,4 @@
-# Release acceptance: NetTAP Packet Expert
+# Release acceptance: NetTAP AI Suite
 
 Do not enter passwords, secrets, private keys, customer evidence, packet payload, personal data, or vulnerability exploit details in this record.
 
@@ -8,7 +8,9 @@ Do not enter passwords, secrets, private keys, customer evidence, packet payload
 - Git commit/tag:
 - Signed package, checksum and signed provenance:
 - Signature verification:
-- Image/model names and immutable digests:
+- Image, base-model and both assistant-model names and immutable identities:
+- Network & Visibility manifest and knowledge hashes:
+- Packet Expert manifest and knowledge hashes:
 - SBOM identifiers:
 - Tester and UTC date:
 - Approver and UTC date:
@@ -30,8 +32,11 @@ Do not enter passwords, secrets, private keys, customer evidence, packet payload
 - No direct Open WebUI/Ollama host ports:
 - Running containers match approved image digests and least-privilege policy:
 - Temporary model egress absent at runtime:
-- Exact base/custom model identity and controlled inference:
-- Six behavioral guardrails:
+- Exact shared base and both assistant identities:
+- Before/after model-store measurement:
+- Ten behavioral and assistant-routing smoke cases:
+- Cross-assistant prompt, knowledge, RBAC and tool negative tests:
+- Port 3000, port 3001 and shared WebUI launcher selection:
 - SBOM and vulnerability policy:
 - Backup release/model/image provenance, checksum and same-release restore into new volumes:
 - Restart/update/rollback:
@@ -43,8 +48,9 @@ Do not enter passwords, secrets, private keys, customer evidence, packet payload
 - Password replaced; generated password rejected:
 - New password persists:
 - Signup and disabled features verified:
-- Model and four broad prompts:
-- Approved knowledge hash, access, attachment and retrieval:
+- Both assistants and model switching:
+- Assistant-specific starting prompts:
+- Approved knowledge hashes, access, isolated attachment and retrieval:
 - Prompt-injection and evidence-boundary behavior:
 - Browser and customer DNS/TLS:
 - Logging/monitoring and retention:

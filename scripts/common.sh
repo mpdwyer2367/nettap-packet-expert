@@ -28,19 +28,24 @@ initialize_env() {
     cp "${project_dir}/.env.example" "$env_file"
   fi
   chmod 0600 "$env_file"
-  ensure_env_default RELEASE_VERSION "0.2.0-rc.1"
+  ensure_env_default RELEASE_VERSION "0.3.0-rc.1"
   ensure_env_default OLLAMA_IMAGE "ollama/ollama:0.32.5"
   ensure_env_default OPEN_WEBUI_IMAGE "ghcr.io/open-webui/open-webui:v0.11.0"
   ensure_env_default CADDY_IMAGE "caddy:2.11.4-alpine"
   ensure_env_default BACKUP_IMAGE "alpine:3.24.1"
-  ensure_env_default MODEL_NAME "nettap-packet-expert:0.2.0-rc.1"
+  ensure_env_default BASE_MODEL "qwen2.5:7b-instruct-q4_K_M"
+  ensure_env_default NETWORK_VISIBILITY_MODEL "nettap-network-visibility:0.3.0-rc.1"
+  ensure_env_default PACKET_EXPERT_MODEL "nettap-packet-expert:0.3.0-rc.1"
+  ensure_env_default MODEL_NAME "nettap-packet-expert:0.3.0-rc.1"
   ensure_env_default EXPECTED_BASE_MODEL_ID "845dbda0ea48"
   ensure_env_default DEPLOYMENT_MODE "local"
   ensure_env_default BIND_ADDRESS "127.0.0.1"
-  ensure_env_default WEB_PORT "3001"
+  ensure_env_default WEB_PORT "3100"
+  ensure_env_default VISIBILITY_LAUNCHER_PORT "3000"
+  ensure_env_default PACKET_EXPERT_LAUNCHER_PORT "3001"
   ensure_env_default HTTPS_BIND_ADDRESS "0.0.0.0"
   ensure_env_default HTTPS_PORT "8443"
-  ensure_env_default APPLIANCE_HOSTNAME "packet-expert.local"
+  ensure_env_default APPLIANCE_HOSTNAME "nettap-ai.local"
   ensure_env_default WEBUI_SECRET_KEY "GENERATE_ON_FIRST_START"
   ensure_env_default JWT_EXPIRES_IN "8h"
   ensure_env_default OLLAMA_CPUS "6"
@@ -49,8 +54,15 @@ initialize_env() {
   ensure_env_default WEBUI_MEMORY "3g"
   ensure_env_default GATEWAY_CPUS "1"
   ensure_env_default GATEWAY_MEMORY "512m"
-  if grep -q '^MODEL_NAME=nettap-packet-expert:0.1.0-rc.8$' "$env_file"; then
-    set_env_value MODEL_NAME "nettap-packet-expert:0.2.0-rc.1"
+  if grep -q '^RELEASE_VERSION=0.2.0-rc.1$' "$env_file"; then
+    set_env_value RELEASE_VERSION "0.3.0-rc.1"
+    if grep -q '^WEB_PORT=3001$' "$env_file"; then set_env_value WEB_PORT "3100"; fi
+    if grep -q '^APPLIANCE_HOSTNAME=packet-expert.local$' "$env_file"; then
+      set_env_value APPLIANCE_HOSTNAME "nettap-ai.local"
+    fi
+  fi
+  if grep -Eq '^MODEL_NAME=nettap-packet-expert:(0.1.0-rc.8|0.2.0-rc.1)$' "$env_file"; then
+    set_env_value MODEL_NAME "nettap-packet-expert:0.3.0-rc.1"
   fi
   if grep -q '^WEBUI_ADMIN_PASSWORD=admin$' "$env_file"; then
     set_env_value WEBUI_ADMIN_PASSWORD "GENERATE_ON_FIRST_START"
@@ -160,7 +172,7 @@ recover_failed_model_initialization() {
   else
     "${compose_local_bootstrap[@]}" down >/dev/null 2>&1 || true
     if [[ "$was_running" == true ]]; then
-      "${compose_local[@]}" up -d ollama open-webui || true
+      "${compose_local[@]}" up -d ollama open-webui assistant-launcher || true
     fi
   fi
   echo "ERROR: Model initialization failed. Temporary registry egress was removed; any prior runtime restart was attempted." >&2
@@ -179,7 +191,7 @@ initialize_model_with_temporary_egress() {
       wait_for_ollama_local_bootstrap || recover_failed_model_initialization local "$was_running"
       "${compose_local_bootstrap[@]}" --profile initialize run --rm model-init || recover_failed_model_initialization local "$was_running"
       "${compose_local_bootstrap[@]}" down || recover_failed_model_initialization local "$was_running"
-      "${compose_local[@]}" up -d ollama open-webui
+      "${compose_local[@]}" up -d ollama open-webui assistant-launcher
       record_model_identity local
       ;;
     production)
@@ -203,28 +215,34 @@ initialize_model_with_temporary_egress() {
 }
 
 record_model_identity() {
-  local mode="$1" rows base_id custom_id expected_id custom_name
+  local mode="$1" rows base_id visibility_id packet_id expected_id base_name visibility_name packet_name
   expected_id="$(load_env_value EXPECTED_BASE_MODEL_ID)"
-  custom_name="$(load_env_value MODEL_NAME)"
+  base_name="$(load_env_value BASE_MODEL)"
+  visibility_name="$(load_env_value NETWORK_VISIBILITY_MODEL)"
+  packet_name="$(load_env_value PACKET_EXPERT_MODEL)"
   if [[ "$mode" == production ]]; then
     rows="$("${compose_production[@]}" exec -T ollama ollama list)"
   else
     rows="$("${compose_local[@]}" exec -T ollama ollama list)"
   fi
-  base_id="$(printf '%s\n' "$rows" | awk '$1 == "qwen2.5:7b-instruct-q4_K_M" {print $2}')"
-  custom_id="$(printf '%s\n' "$rows" | awk -v name="$custom_name" '$1 == name {print $2}')"
+  base_id="$(printf '%s\n' "$rows" | awk -v name="$base_name" '$1 == name {print $2}')"
+  visibility_id="$(printf '%s\n' "$rows" | awk -v name="$visibility_name" '$1 == name {print $2}')"
+  packet_id="$(printf '%s\n' "$rows" | awk -v name="$packet_name" '$1 == name {print $2}')"
   [[ "$base_id" == "$expected_id" ]] || {
     echo "ERROR: Base-model identity is $base_id; expected $expected_id. Release review is required." >&2
     exit 9
   }
-  [[ -n "$custom_id" ]] || { echo "ERROR: Custom model identity is unavailable." >&2; exit 9; }
+  [[ -n "$visibility_id" ]] || { echo "ERROR: Network & Visibility model identity is unavailable." >&2; exit 9; }
+  [[ -n "$packet_id" ]] || { echo "ERROR: Packet Expert model identity is unavailable." >&2; exit 9; }
   mkdir -p "${project_dir}/reports/generated"
   {
     printf 'Recorded UTC: %s\n' "$(date -u +%FT%TZ)"
-    printf 'Base model: qwen2.5:7b-instruct-q4_K_M\n'
+    printf 'Base model: %s\n' "$base_name"
     printf 'Base model ID: %s\n' "$base_id"
-    printf 'Custom model: %s\n' "$custom_name"
-    printf 'Custom model ID: %s\n' "$custom_id"
+    printf 'Network Visibility model: %s\n' "$visibility_name"
+    printf 'Network Visibility model ID: %s\n' "$visibility_id"
+    printf 'Packet Expert model: %s\n' "$packet_name"
+    printf 'Packet Expert model ID: %s\n' "$packet_id"
   } > "${project_dir}/reports/generated/model-lock.txt"
 }
 

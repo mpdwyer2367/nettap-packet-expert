@@ -31,5 +31,7 @@ initialize_model_with_temporary_egress production
 "${compose_production[@]}" ps
 hostname="$(load_env_value APPLIANCE_HOSTNAME)"
 https_port="$(load_env_value HTTPS_PORT)"
-echo "NetTAP Packet Expert production candidate: https://${hostname}:${https_port}"
+echo "NetTAP AI Suite production candidate: https://${hostname}:${https_port}"
+echo "Network & Visibility: https://${hostname}:${https_port}/visibility"
+echo "Packet Expert: https://${hostname}:${https_port}/packet-expert"
 echo "Run ./scripts/verify-production-deployment.sh and complete the production acceptance record."

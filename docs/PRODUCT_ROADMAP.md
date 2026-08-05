@@ -2,6 +2,22 @@
 
 This roadmap separates implemented candidate capability from future commercial editions. Dates and commitments require product approval.
 
+## Stage 0.3 — unified assistant integration candidate
+
+Implemented in `0.3.0-rc.1` source:
+
+- one shared Qwen2.5 7B base and Ollama volume;
+- separate Network & Visibility and Packet Expert model policies;
+- one Open WebUI account, chat, administration, and backup surface;
+- stateless assistant-specific launchers on local ports 3000 and 3001;
+- separate assistant manifests and knowledge sources;
+- unified `nettap-ai` administration command;
+- in-place 0.2 environment migration with retained Compose volume identity;
+- assistant-routing, launcher, and isolation smoke controls; and
+- migration, customization, knowledge, tool-security, and administration guidance.
+
+Exit: fresh and upgrade runtime reports on macOS and Windows, measured shared storage, Workspace Model and knowledge-isolation acceptance, backup/restore/rollback, security review, and signed release decision.
+
 ## Stage 1 — hardened advisory candidate
 
 Implemented in `0.2.0-rc.1`:

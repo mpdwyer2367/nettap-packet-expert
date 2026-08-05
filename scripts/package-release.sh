@@ -14,9 +14,9 @@ initialize_env
 version="$(load_env_value RELEASE_VERSION)"
 [[ "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-rc\.[0-9]+)?$ ]] || { echo "ERROR: Invalid release version." >&2; exit 13; }
 mkdir -p "${project_dir}/dist"
-archive="${project_dir}/dist/nettap-packet-expert-${version}-source.tar.gz"
+archive="${project_dir}/dist/nettap-ai-suite-${version}-source.tar.gz"
 provenance="${archive}.provenance.txt"
-git -C "$project_dir" archive --format=tar.gz --prefix="nettap-packet-expert-${version}/" -o "$archive" HEAD
+git -C "$project_dir" archive --format=tar.gz --prefix="nettap-ai-suite-${version}/" -o "$archive" HEAD
 (cd "${project_dir}/dist" && sha256_file "$(basename "$archive")") > "${archive}.sha256"
 archive_digest="$(awk '{print $1}' "${archive}.sha256")"
 {

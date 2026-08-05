@@ -6,6 +6,10 @@
 :443 {
 	tls /etc/caddy/tls/tls.crt /etc/caddy/tls/tls.key
 	encode zstd gzip
+	@network_visibility path /visibility
+	redir @network_visibility "/?model={$NETWORK_VISIBILITY_MODEL}" 302
+	@packet_expert path /packet-expert
+	redir @packet_expert "/?model={$PACKET_EXPERT_MODEL}" 302
 	reverse_proxy open-webui:8080
 	request_body {
 		max_size 100MB

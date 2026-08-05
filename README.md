@@ -1,48 +1,58 @@
-# NetTAP Packet Expert
+# NetTAP AI Suite
 
-NetTAP Packet Expert is a customer-isolated network and security operations assistant. It combines a Qwen2.5 7B instruction model, a version-controlled NetTAP operating policy, Ollama, Open WebUI, and an optional TLS gateway.
+NetTAP AI Suite is a customer-isolated network engineering and security operations assistant package. It runs two specialized experiences on one local AI runtime:
 
-The repository builds a custom Ollama model definition; it does **not** contain separately fine-tuned weights. First initialization downloads `qwen2.5:7b-instruct-q4_K_M` and creates `nettap-packet-expert:0.2.0-rc.1`.
+- **NetTAP Network & Visibility** for architecture, device planning, TAP/SPAN/NPB deployment, telemetry acquisition, and visibility operations.
+- **NetTAP Packet Expert** for authorized packet evidence, capture planning, performance investigation, cyber visibility, and forensic analysis.
 
-## Product status
+Both assistants reuse one `qwen2.5:7b-instruct-q4_K_M` base in one Ollama model store. They retain separate system policies, knowledge sources, suggested starting points, and future tool allowlists. One Open WebUI instance provides one account, chat history, administration, audit, backup, and update surface.
 
-`0.2.0-rc.1` is a valid production candidate for controlled, non-production qualification of the documented single-node architecture. It is not a production-ready, generally available, or certified appliance. Source, Compose, runtime-identity, recovery, release-provenance, and fail-closed certification controls are included. Customer production use and commercial release remain blocked until the exact build has passing macOS and Windows runtime evidence, SBOM/CVE acceptance, independent penetration-test approval, legal/licensing approval, support readiness, signature verification, and authorized release acceptance. See [validation status](docs/VALIDATION_STATUS.md).
+The repository contains model definitions and deployment source. It does **not** contain separately fine-tuned weights, customer telemetry, packet captures, credentials, or a live NetTAP connector.
 
-## What the product does
+## Release status
 
-- Guides authorized network-performance, availability, visibility, and forensic investigations.
-- Separates observed evidence from hypotheses and unavailable information.
-- Resists instructions embedded in uploaded or retrieved evidence.
-- Requires human review for production changes and supplies validation and rollback guidance.
-- Provides local evaluation and hardened single-node customer deployment profiles.
-- Supplies administration, health, image-locking, security-scan, backup, restore, packaging, and verification commands.
+`0.3.0-rc.1` is a migration and integration release candidate. Its source must pass static validation before publication, but it is not production-certified or approved for commercial appliance distribution until the exact commit has passing macOS and Windows runtime evidence, assistant-isolation tests, storage measurement, SBOM/CVE acceptance, independent penetration testing, legal/licensing approval, support readiness, signature verification, and authorized release acceptance.
 
-It is not a packet capture engine, NPB, SIEM, IDS/IPS, NDR, case-management platform, or autonomous network controller. It does not see live traffic, decode arbitrary PCAP files, or connect to NetTAP equipment unless a separately engineered, authorized, and validated integration supplies normalized evidence.
+The completed `0.2.0-rc.1` Packet Expert evidence record remains historical evidence for that earlier single-assistant candidate. It does not certify the new suite candidate. See [validation status](docs/VALIDATION_STATUS.md).
 
 ## Architecture
 
 ```mermaid
 flowchart TB
-    U["Authorized customer user"] --> G["TLS gateway<br/>customer certificate"]
-    G --> W["Open WebUI<br/>authentication and chat"]
-    W --> O["Ollama<br/>internal-only API"]
-    O --> M["Packet Expert 0.2.0-rc.1<br/>Qwen2.5 7B + NetTAP policy"]
-    E["Approved normalized evidence<br/>minimized and untrusted"] --> W
-    A["Administrator<br/>CLI and audited release process"] --> G
+    U["Authorized user"] --> L["Assistant launchers"]
+    L --> W["One Open WebUI"]
+    W --> V["Network & Visibility"]
+    W --> P["Packet Expert"]
+    V --> O["One Ollama service"]
+    P --> O
+    O --> Q["One Qwen2.5 7B base"]
 ```
 
-Runtime model traffic is confined to an internal Docker network. Open WebUI has no production host port; the TLS gateway is the only browser entry point. Registry egress is attached only during explicit image/model initialization and removed before runtime. Each customer requires a separate instance because Open WebUI administrators are root-equivalent within an instance.
+The local launchers are stateless pages. They select the correct model and starting prompt through documented Open WebUI URL parameters; accounts, chats, knowledge, models, and tools remain in the shared application.
 
-## Profiles
+Read [the architecture](docs/ARCHITECTURE.md), [migration procedure](docs/MIGRATION.md), and [assistant customization guide](docs/ASSISTANT_CUSTOMIZATION.md) before upgrading an existing deployment.
 
-| Profile | Intended use | Exposure | Required controls |
-|---|---|---|---|
-| Local | Evaluation and administrator activation | `127.0.0.1:3001` | Generated secret and unique bootstrap password |
-| Production | Single-customer deployment | TLS gateway on `8443` by default | Customer certificate, retired bootstrap, immutable image digests, preflight, scan, backup, verification |
+## Local addresses
 
-Minimum production allocation is 8 CPUs, 16 GiB Docker memory, and 40 GiB free disk. More CPU and 24–32 GiB RAM improve concurrent use. The supplied container profile is CPU-compatible; it does not claim Apple Metal or Windows GPU acceleration.
+| Address | Purpose |
+|---|---|
+| <http://127.0.0.1:3000> | Network & Visibility starting page |
+| <http://127.0.0.1:3001> | Packet Expert starting page |
+| <http://127.0.0.1:3100> | Shared Open WebUI and model selector |
 
-## Local deployment
+The two launchers do not run separate Open WebUI databases or duplicate model weights.
+
+## Requirements
+
+- Docker Desktop and Docker Compose v2
+- macOS on Apple Silicon or Intel, or Windows with WSL 2 and Linux containers
+- At least 15 GiB free disk for local evaluation
+- Recommended local allocation: 8 CPUs and 16 GiB Docker memory
+- More memory improves context length and concurrent use
+
+The supplied containerized Ollama profile is CPU-compatible. It does not claim Apple Metal or Windows GPU acceleration.
+
+## New installation
 
 ### macOS
 
@@ -53,15 +63,7 @@ chmod +x scripts/* tests/*.sh
 ./scripts/start-macos.sh
 ```
 
-Open <http://127.0.0.1:3001>. The script prints the path to a protected local credential file. Sign in as `admin@nettap.local` with that generated password, replace it in **Settings > Account**, verify the generated password no longer works, then run:
-
-```bash
-./scripts/finalize-admin.sh --confirm
-```
-
-There is no shared or committed default password.
-
-### Windows
+### Windows PowerShell
 
 Run Docker Desktop with WSL 2 and Linux containers:
 
@@ -71,17 +73,81 @@ Set-Location .\nettap-packet-expert
 .\scripts\start-windows.ps1
 ```
 
-The PowerShell entry point uses the same generated-credential and temporary-egress design. Complete administrator finalization from WSL or Git Bash. See [Windows deployment](docs/WINDOWS_DEPLOYMENT.md).
+The startup script generates a unique bootstrap password and prints the protected local file containing it. Sign in as `admin@nettap.local`, change the password immediately, verify the generated password no longer works, and complete administrator finalization. There is no shared or committed default password.
 
-## Production deployment
+A populated Open WebUI volume retains its existing accounts and passwords; startup does not reset them.
 
-Use a customer-approved DNS name and PEM certificate/private key. Keep keys outside Git.
+## Upgrade from Packet Expert 0.2
+
+Do not begin by deleting containers or volumes. Follow [MIGRATION.md](docs/MIGRATION.md) to:
+
+1. Inventory and back up the old deployment while using the old release.
+2. Protect the old `.env` and record its source commit.
+3. Apply the reviewed suite candidate.
+4. Build both assistant manifests from the verified shared base.
+5. Preserve existing Open WebUI accounts, chats, and Packet Expert knowledge.
+6. Add the isolated Network & Visibility knowledge collection.
+7. Validate both assistants, launchers, storage, backup, restore, and rollback.
+
+Never merge Open WebUI SQLite files or mount one SQLite volume into multiple running Open WebUI containers.
+
+## Administration
+
+```bash
+./scripts/nettap-ai help
+./scripts/nettap-ai status
+./scripts/nettap-ai health
+./scripts/nettap-ai update-models --confirm
+./scripts/nettap-ai backup /secure/backup/path --confirm-stop
+./scripts/nettap-ai stop
+```
+
+The old `scripts/nettap-packet-expert` entry point remains as a compatibility wrapper for the 0.3 migration. See [administration](docs/ADMINISTRATION.md), [backup and restore](docs/COMPLETE_OPERATIONS_MANUAL.md), and [authentication](docs/AUTHENTICATION.md).
+
+## Knowledge and customizations
+
+| Assistant | Model policy | Knowledge source |
+|---|---|---|
+| Network & Visibility | [network-visibility.Modelfile](model/network-visibility.Modelfile) | [NetTAP Network & Visibility knowledge](knowledge/NetTAP_Network_Visibility_Knowledge.md) |
+| Packet Expert | [packet-expert.Modelfile](model/packet-expert.Modelfile) | [NetTAP Packet Expert knowledge](knowledge/NetTAP_Packet_Expert_Knowledge.md) |
+
+Critical evidence and safety rules are built into each Ollama model definition. Supplemental knowledge must be imported into a restricted Open WebUI collection and attached only to its corresponding Workspace Model. Updating a Git file does not update an already imported collection.
+
+See [assistant customization](docs/ASSISTANT_CUSTOMIZATION.md), [knowledge management](docs/KNOWLEDGE_MANAGEMENT.md), and [tool security](docs/TOOL_SECURITY.md).
+
+## Validation
+
+Source validation:
+
+```bash
+./tests/static-checks.sh
+```
+
+Runtime validation after deployment:
+
+```bash
+./tests/model-behavior-eval.sh
+./tests/model-storage-sharing.sh
+./tests/backup-restore-e2e.sh
+```
+
+On a supported macOS host:
+
+```bash
+./tests/macos-e2e.sh
+```
+
+The tests verify model identity, evidence boundaries, assistant routing, launcher selection, shared runtime, recovery controls, and selected isolation properties. They do not prove factual accuracy for every prompt or replace independent security and customer acceptance.
+
+## Production profile
+
+Use a customer-approved DNS name and certificate:
 
 ```bash
 ./scripts/lock-images.sh --confirm
 ./scripts/security-scan.sh
 ./scripts/configure-production.sh \
-  --hostname packet-expert.customer.example \
+  --hostname nettap-ai.customer.example \
   --certificate /secure/path/tls.crt \
   --private-key /secure/path/tls.key
 ./scripts/production-preflight.sh
@@ -89,66 +155,29 @@ Use a customer-approved DNS name and PEM certificate/private key. Keep keys outs
 ./scripts/verify-production-deployment.sh
 ```
 
-If administrator activation is incomplete, production startup deliberately opens only the loopback activation profile and refuses to enable the network gateway.
+Production assistant links are:
 
-Use [the customer deployment guide](docs/CUSTOMER_DEPLOYMENT_GUIDE.md) for firewall, DNS, backup, acceptance, and rollback requirements.
+- `https://nettap-ai.customer.example:8443/visibility`
+- `https://nettap-ai.customer.example:8443/packet-expert`
 
-## Administration
+The TLS gateway is the only production browser entry point. Ollama and Open WebUI have no direct production host ports. Each customer or security boundary requires a separate instance.
 
-```bash
-./scripts/nettap-packet-expert help
-./scripts/nettap-packet-expert status
-./scripts/nettap-packet-expert health
-./scripts/nettap-packet-expert backup --confirm-stop
-./scripts/nettap-packet-expert scan
-./scripts/nettap-packet-expert stop
-```
+## Product boundaries
 
-Restore is non-destructive: it verifies checksums, requires the matching software release, and writes only to new, explicitly named volumes.
+- No live traffic or telemetry is available unless a separately approved connector supplies current evidence.
+- The LLM is not an NPB, capture engine, flow collector, SIEM, IDS/IPS, NDR, case-management platform, or autonomous controller.
+- Configuration and forensic conclusions require authorized human review.
+- Tools are disabled by default and require a separate security and release decision.
+- Never commit `.env`, TLS private keys, bootstrap credentials, customer evidence, backups, private reports, or model weights.
 
-```bash
-./scripts/backup.sh /secure/backup/path --confirm-stop
-./scripts/restore.sh /secure/backup/path --target-prefix customer-test-restore
-```
+## Release and license
 
-## Knowledge and model behavior
-
-The authoritative system behavior is in [the Modelfile](model/Modelfile). Supplemental administrator-managed knowledge is in [the knowledge file](knowledge/NetTAP_Packet_Expert_Knowledge.md). Import the Markdown file under **Workspace > Knowledge**, restrict its access, and attach it to the Packet Expert model. Updating Git does not automatically replace an imported Open WebUI knowledge revision.
-
-Four broad first-use prompts are supplied:
-
-- Start an investigation
-- Understand my evidence
-- Troubleshoot a network problem
-- Help me decide
-
-## Validation and commercial release
+The certification command is fail-closed and cannot manufacture external evidence:
 
 ```bash
-./tests/static-checks.sh
-./tests/model-behavior-eval.sh
 ./scripts/certify-production.sh
-```
-
-The certification command is fail-closed. It cannot manufacture external evidence and will return `NOT CERTIFIED` until all named approvals and platform reports exist. A signed release package also requires an authorized Cosign key:
-
-```bash
 COSIGN_KEY=/secure/release.key ./scripts/package-release.sh
-./scripts/verify-release.sh dist/nettap-packet-expert-0.2.0-rc.1-source.tar.gz /path/to/cosign.pub
+./scripts/verify-release.sh dist/nettap-ai-suite-0.3.0-rc.1-source.tar.gz /path/to/cosign.pub
 ```
 
-Packaging records the source commit, Git tree, artifact digest and release version in a separately signed provenance record. A checksum-only result is suitable for integrity testing, not commercial release acceptance.
-
-Detailed gates are in [commercial release gates](docs/COMMERCIAL_RELEASE_GATES.md), [threat model](docs/THREAT_MODEL.md), [product roadmap](docs/PRODUCT_ROADMAP.md), the reusable [acceptance template](reports/RELEASE_ACCEPTANCE_TEMPLATE.md), and the completed [0.2.0-rc.1 evidence record](reports/RELEASE_ACCEPTANCE_0.2.0-rc.1.md).
-
-## Security and support boundary
-
-- Never commit `.env`, TLS private keys, bootstrap credentials, customer evidence, backups, or private reports.
-- Keep one isolated instance per customer or security boundary.
-- Use customer-controlled TLS, host-disk encryption, firewall restrictions, protected backups, retention rules, and centralized monitoring.
-- Treat Packet Expert output as advisory. An authorized human approves operational changes and forensic conclusions.
-- Report vulnerabilities through a private GitHub security advisory as described in [SECURITY.md](SECURITY.md).
-
-## License
-
-NetTAP-authored source, configuration, and documentation are licensed under the [Apache License 2.0](LICENSE), copyright 2026 NetTAP Technology Limited. That license does not relicense container images, base-model artifacts, or other dependencies and does not grant trademark rights. Review [third-party notices](THIRD_PARTY_NOTICES.md) before distribution.
+NetTAP-authored source, configuration, and documentation are licensed under the [Apache License 2.0](LICENSE), copyright 2026 NetTAP Technology Limited. The license does not relicense container images, base-model artifacts, or other dependencies and does not grant trademark rights. Review [third-party notices](THIRD_PARTY_NOTICES.md) before distribution.

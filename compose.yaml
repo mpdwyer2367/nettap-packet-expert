@@ -1,3 +1,5 @@
+# The project name remains stable for the 0.3 migration so an approved in-place
+# upgrade can retain the existing Open WebUI and Ollama volumes.
 name: nettap-packet-expert
 
 services:
@@ -40,11 +42,13 @@ services:
     entrypoint: ["/bin/sh", "-c"]
     command:
       - >-
-        ollama pull qwen2.5:7b-instruct-q4_K_M &&
-        actual_id="$$(ollama list | awk '$$1 == "qwen2.5:7b-instruct-q4_K_M" {print $$2}')" &&
+        ollama pull ${BASE_MODEL} &&
+        actual_id="$$(ollama list | awk '$$1 == "${BASE_MODEL}" {print $$2}')" &&
         test "$$actual_id" = "${EXPECTED_BASE_MODEL_ID}" &&
-        ollama create ${MODEL_NAME} -f /model/Modelfile &&
-        ollama show ${MODEL_NAME}
+        ollama create ${NETWORK_VISIBILITY_MODEL} -f /model/network-visibility.Modelfile &&
+        ollama create ${PACKET_EXPERT_MODEL} -f /model/packet-expert.Modelfile &&
+        ollama show ${NETWORK_VISIBILITY_MODEL} &&
+        ollama show ${PACKET_EXPERT_MODEL}
     restart: "no"
     security_opt:
       - no-new-privileges:true
@@ -121,13 +125,13 @@ services:
       ENABLE_USER_STATUS: "False"
       RESPONSE_WATERMARK: "AI-generated engineering guidance; verify before use."
       IFRAME_CSP: "default-src 'none'; style-src 'unsafe-inline'; img-src data: blob:; font-src data:; connect-src 'none'; script-src 'none'; frame-src 'none'"
-      DEFAULT_MODELS: ${MODEL_NAME}
-      DEFAULT_PINNED_MODELS: ${MODEL_NAME}
-      MODEL_ORDER_LIST: '["${MODEL_NAME}"]'
+      DEFAULT_MODELS: ${NETWORK_VISIBILITY_MODEL},${PACKET_EXPERT_MODEL}
+      DEFAULT_PINNED_MODELS: ${NETWORK_VISIBILITY_MODEL},${PACKET_EXPERT_MODEL}
+      MODEL_ORDER_LIST: "[\"${NETWORK_VISIBILITY_MODEL}\",\"${PACKET_EXPERT_MODEL}\"]"
       WEBUI_BANNERS: >-
         [{"id":"nettap-bootstrap-password-rc9","type":"warning","title":"Complete administrator activation","content":"This installation generated a unique bootstrap credential. Change it in Settings > Account, verify the old credential fails, then run the administrator finalization command before enabling production access.","dismissible":false,"timestamp":1785864000}]
       DEFAULT_PROMPT_SUGGESTIONS: >-
-        [{"title":["Start an","investigation"],"content":"Help me start a network or security investigation."},{"title":["Understand my","evidence"],"content":"Help me understand what evidence I have and what it can prove."},{"title":["Troubleshoot a","network problem"],"content":"Guide me through a network performance or availability problem."},{"title":["Help me","decide"],"content":"I am not sure where to start. Ask me one important question at a time."}]
+        [{"title":["Start with","my goal"],"content":"Ask me one simple question to understand what I want to accomplish."},{"title":["Explain this","assistant"],"content":"Briefly explain what this selected NetTAP assistant can help me do."},{"title":["Help me","decide"],"content":"I am not sure where to start. Ask me one important question at a time."}]
     expose: ["8080"]
     volumes:
       - packet-expert-open-webui-data:/app/backend/data
