@@ -30,31 +30,15 @@ if [[ -n "$available_kib" && "$available_kib" -lt 15728640 ]]; then
   exit 4
 fi
 
-"${compose[@]}" config >/dev/null
-"${compose[@]}" pull
-"${compose[@]}" up -d ollama
-
-ready=false
-for _ in $(seq 1 90); do
-  if "${compose[@]}" exec -T ollama ollama list >/dev/null 2>&1; then
-    ready=true
-    break
-  fi
-  sleep 2
-done
-[[ "$ready" == true ]] || {
-  echo "ERROR: Ollama did not become ready within three minutes." >&2
-  exit 5
-}
-
-"${compose[@]}" --profile initialize run --rm model-init
-"${compose[@]}" up -d open-webui
-"${compose[@]}" ps
+set_env_value DEPLOYMENT_MODE local
+initialize_model_with_temporary_egress local
+"${compose_local[@]}" ps
 
 web_port="$(load_env_value WEB_PORT)"
 echo "Open WebUI: http://127.0.0.1:${web_port}"
-echo "Fresh-install login: admin@nettap.local / admin"
-echo "Immediately change the temporary password in Settings > Account before expanding network access."
+echo "Bootstrap credential file: $bootstrap_password_file"
+echo "Immediately change the generated password in Settings > Account."
+echo "Then run ./scripts/finalize-admin.sh --confirm after verifying the old password fails."
 echo "Existing Open WebUI volumes keep their existing accounts and passwords."
 echo "Keep loopback binding until TLS and access controls are configured."
 echo "Apple Silicon note: Dockerized Ollama is CPU-compatible; Docker Desktop does not expose Metal acceleration to this Linux container."

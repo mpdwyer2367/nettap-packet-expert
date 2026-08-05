@@ -1,0 +1,45 @@
+services:
+  open-webui:
+    environment:
+      WEBUI_URL: https://${APPLIANCE_HOSTNAME}:${HTTPS_PORT}
+      WEBUI_SESSION_COOKIE_SECURE: "True"
+      WEBUI_AUTH_COOKIE_SECURE: "True"
+      WEBUI_SESSION_COOKIE_SAME_SITE: strict
+      WEBUI_AUTH_COOKIE_SAME_SITE: strict
+      WEBUI_BANNERS: "[]"
+
+  gateway:
+    image: ${CADDY_IMAGE}
+    init: true
+    restart: unless-stopped
+    cpus: ${GATEWAY_CPUS}
+    mem_limit: ${GATEWAY_MEMORY}
+    pids_limit: 256
+    depends_on:
+      open-webui:
+        condition: service_healthy
+    environment:
+      APPLIANCE_HOSTNAME: ${APPLIANCE_HOSTNAME}
+    ports:
+      - "${HTTPS_BIND_ADDRESS}:${HTTPS_PORT}:443"
+    volumes:
+      - ./config/Caddyfile:/etc/caddy/Caddyfile:ro
+      - ./config/tls:/etc/caddy/tls:ro
+      - packet-expert-gateway-data:/data
+      - packet-expert-gateway-config:/config
+    networks: [user-access]
+    security_opt:
+      - no-new-privileges:true
+    cap_drop: [ALL]
+    cap_add: [NET_BIND_SERVICE]
+    healthcheck:
+      test: ["CMD", "wget", "--no-check-certificate", "--quiet", "--spider", "https://127.0.0.1/health"]
+      interval: 15s
+      timeout: 10s
+      retries: 20
+      start_period: 30s
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "10"

@@ -5,5 +5,11 @@ script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "${script_dir}/common.sh"
 require_runtime
 [[ -f "$env_file" ]] || { echo "Packet Expert has not been initialized."; exit 1; }
-"${compose[@]}" ps
-"${compose[@]}" exec -T ollama ollama list
+mode="$(load_env_value DEPLOYMENT_MODE)"
+if [[ "$mode" == "production" ]]; then
+  "${compose_production[@]}" ps
+  "${compose_production[@]}" exec -T ollama ollama list
+else
+  "${compose_local[@]}" ps
+  "${compose_local[@]}" exec -T ollama ollama list
+fi

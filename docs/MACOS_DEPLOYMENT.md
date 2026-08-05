@@ -1,48 +1,29 @@
-# macOS deployment and acceptance
+# macOS deployment
 
-## Supported release-candidate path
+## Evaluation profile
 
-- macOS on Apple silicon (`arm64`) or Intel (`x86_64`)
-- Docker Desktop with Docker Compose v2
-- 16 GB host memory recommended; 8 GB is a constrained evaluation floor
-- 15 GB free disk minimum
-- Browser access to `http://127.0.0.1:3001`
+Requirements: supported macOS on Apple silicon or Intel, Docker Desktop with Compose v2, 16 GiB system memory recommended, and 15 GiB free disk.
 
-The default deployment runs both Ollama and Open WebUI in Linux containers. It is portable and CPU-compatible on Apple silicon, but Docker Desktop does not expose Apple's Metal GPU to the Ollama container. Performance validation must therefore record host architecture, memory, Docker resources, model load time, first-token time, and sustained token rate. Native Ollama is a future acceleration profile, not part of this release candidate.
+```bash
+git clone https://github.com/mpdwyer2367/nettap-packet-expert.git
+cd nettap-packet-expert
+chmod +x scripts/* tests/*.sh
+./scripts/start-macos.sh
+```
 
-## Install and run
+Open <http://127.0.0.1:3001>. Sign in as `admin@nettap.local` with the password in the protected path printed by the script. Change it, prove the generated value fails, then run `./scripts/finalize-admin.sh --confirm`.
 
-1. Install and start Docker Desktop.
-2. Clone the repository and open Terminal in it.
-3. Run `./scripts/start-macos.sh`.
-4. Open `http://127.0.0.1:3001`.
-5. On a fresh data volume, sign in with `admin@nettap.local` and temporary password `admin`.
-6. Open **Settings > Account** and replace the temporary password with a unique 12–72 character password containing uppercase, lowercase, number, and symbol.
-7. Sign out, confirm the old password fails, and sign in with the replacement password.
-8. Select `nettap-packet-expert:0.1.0-rc.8` if it is not already selected.
+Validate:
 
-Existing Open WebUI volumes retain their existing accounts and passwords. Bootstrap credentials do not overwrite an existing administrator. See [Administrator bootstrap and account access](AUTHENTICATION.md).
+```bash
+./tests/static-checks.sh
+./scripts/verify-macos-deployment.sh
+./tests/macos-e2e.sh
+./tests/model-behavior-eval.sh
+```
 
-The first run downloads multiple container images and the approximately 4.7 GB quantized base model. Completion time depends on network and storage performance.
+The automated and manual reports must be tied to the exact commit. Apple silicon inference in this Linux-container profile is CPU-compatible; it does not use Metal.
 
-## Automated test
+## Production candidate
 
-Run `./scripts/verify-macos-deployment.sh` first. It fails if the two services were created from different working directories or Compose files and verifies canonical images, model identity, loopback binding, Ollama isolation, administrator presence, UI health, and controlled inference. Then run `./tests/macos-e2e.sh`; it also verifies source controls, model creation, identity, UI health, inference, and persistence across service restart. Both write timestamped reports under `reports/`.
-
-Complete these manual checks before public release:
-
-- Fresh-volume bootstrap administrator exists and has the admin role.
-- Temporary password is replaced; the old password fails and the new password survives restart.
-- The custom model is selected and returns a response.
-- Four broad starter prompts appear.
-- The UI still identifies itself as Open WebUI; the project must not remove Open WebUI branding without permission or an applicable license.
-- The service is bound only to loopback.
-- No real customer packet capture, credential, secret, or personal data is present.
-
-## Stop and update
-
-- Stop services without deleting data: `./scripts/stop.sh`
-- Show status: `./scripts/status.sh`
-- Rebuild the custom model after reviewing `model/Modelfile`: `./scripts/update-model.sh --confirm`
-
-Never run `docker compose down -v` unless permanent deletion of all local users, chats, configuration, and downloaded models is intended.
+Production requires 8 Docker CPUs, 16 GiB Docker memory, 40 GiB free disk, customer TLS, immutable image digests, a passing vulnerability scan, backup/restore evidence, runtime verification, and signed acceptance. Follow [the customer deployment guide](CUSTOMER_DEPLOYMENT_GUIDE.md). A macOS runtime pass applies only to the tested macOS, architecture, Docker versions, allocation, images, and commit.

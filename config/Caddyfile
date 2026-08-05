@@ -1,0 +1,25 @@
+{
+	admin off
+	auto_https off
+}
+
+:443 {
+	tls /etc/caddy/tls/tls.crt /etc/caddy/tls/tls.key
+	encode zstd gzip
+	reverse_proxy open-webui:8080
+	request_body {
+		max_size 100MB
+	}
+	header {
+		Strict-Transport-Security "max-age=31536000; includeSubDomains"
+		X-Content-Type-Options "nosniff"
+		X-Frame-Options "DENY"
+		Referrer-Policy "no-referrer"
+		Permissions-Policy "camera=(), microphone=(), geolocation=()"
+		-Server
+	}
+	log {
+		output stdout
+		format json
+	}
+}

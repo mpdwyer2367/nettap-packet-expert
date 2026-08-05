@@ -1,61 +1,68 @@
 # Release acceptance: NetTAP Packet Expert
 
+Do not enter passwords, secrets, private keys, customer evidence, packet payload, personal data, or vulnerability exploit details in this record.
+
+## Release identity
+
 - Version:
-- Commit:
-- Tester:
-- Test date/time UTC:
-- macOS version:
-- Architecture:
-- Host memory:
-- Docker Desktop version:
-- Docker Engine/Compose versions:
-- Image names and immutable digests:
-- Base-model identity and license checked:
+- Git commit/tag:
+- Signed package and checksum:
+- Signature verification:
+- Image/model names and immutable digests:
+- SBOM identifiers:
+- Tester and UTC date:
+- Approver and UTC date:
+
+## Advertised platforms
+
+| Platform/architecture | Host allocation | Docker/Compose | Runtime report | Result |
+|---|---|---|---|---|
+| macOS Apple silicon | | | | |
+| macOS Intel, if advertised | | | | |
+| Windows/WSL2 | | | | |
 
 ## Automated results
 
-- Static checks:
-- Canonical single-directory/Compose provenance:
-- Pinned container image identity:
-- Loopback-only Open WebUI binding:
-- No published containerized Ollama port:
-- Model creation:
-- Controlled inference:
-- UI health:
-- Administrator presence:
-- Restart persistence:
-- Report attachment:
+- Source CI and secret scan:
+- Production Compose policy:
+- Generated bootstrap and gateway refusal before activation:
+- TLS/cookie/header verification:
+- No direct Open WebUI/Ollama host ports:
+- Temporary model egress absent at runtime:
+- Exact model identity and controlled inference:
+- Six behavioral guardrails:
+- SBOM and vulnerability policy:
+- Backup checksum and restore into new volumes:
+- Restart/update/rollback:
+- Resource/concurrency test:
 
 ## Manual results
 
-- First-user administrator creation:
-- Temporary-password replacement:
-- Old password rejected:
-- New password persists after restart:
-- Sign-out/sign-in:
-- Default model selection:
-- Four starter prompts:
-- Approved knowledge imported and attached:
-- Knowledge access control verified:
-- No false live-data claim:
-- Open WebUI branding retained:
-- Loopback-only exposure:
-- No sensitive evidence included:
+- Generated first login succeeds:
+- Password replaced; generated password rejected:
+- New password persists:
+- Signup and disabled features verified:
+- Model and four broad prompts:
+- Approved knowledge hash, access, attachment and retrieval:
+- Prompt-injection and evidence-boundary behavior:
+- Browser and customer DNS/TLS:
+- Logging/monitoring and retention:
+- Support handoff:
 
-## Release gates
+## Independent gates
 
-- Source secret scan:
-- Dependency/image vulnerability scan:
-- SBOM:
-- Checksums/signatures:
-- License review:
-- Security review:
-- Documentation review:
+- Penetration-test approval:
+- Legal/third-party/branding approval:
+- Privacy/data-processing approval:
+- Support/SLA/EOL approval:
+- Security exception record:
 - Known limitations accepted:
 
 ## Decision
 
-- [ ] Accepted for evaluation release
+- [ ] Evaluation only
+- [ ] Customer deployment accepted for the named customer and environment
+- [ ] Commercial distribution approved for the defined scope
 - [ ] Rejected
-- Approver:
-- Notes:
+
+Scope, validity period, exceptions, rollback decision, and approver signature:

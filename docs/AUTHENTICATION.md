@@ -1,88 +1,60 @@
-# Administrator bootstrap and account access
+# Administrator activation and account access
 
-## Intended fresh-install workflow
+## Fresh installation
 
-NetTAP Packet Expert RC8 uses Open WebUI's supported headless administrator creation. On the first start of an empty Open WebUI data volume, the application creates:
+An empty Open WebUI data volume creates one local administrator:
 
 - Display name: `NetTAP Administrator`
 - Login: `admin@nettap.local`
-- Temporary password: `admin`
+- Password: a unique value generated on the deployment host
 - Role: `admin`
 
-The login contains `@nettap.local` because the stock Open WebUI sign-in page requires an email-formatted value. This is a local identifier; it does not need to receive email.
+There is no shared default password. The ignored file `.bootstrap-admin-password` is created with restricted local permissions and contains the one-time value. Open WebUI creates the account only when its user database is empty; existing volumes keep their existing accounts.
 
-Open WebUI creates this account only when no user exists. It does not overwrite, rename, demote, or reset an existing account. Existing installations therefore retain their current users, passwords, roles, chats, knowledge, and settings.
+## Required activation
 
-## Required first-session action
+1. Keep the application on `127.0.0.1`.
+2. Sign in using the generated credential file.
+3. In **Settings > Account**, choose a unique password of 12–72 characters with upper, lower, number, and symbol.
+4. Sign out, verify the generated password fails, and verify the new password succeeds.
+5. Run `./scripts/finalize-admin.sh --confirm` and type `FINALIZE`.
 
-1. Keep the application bound to `127.0.0.1`.
-2. Open `http://127.0.0.1:3001`.
-3. Sign in with `admin@nettap.local` and `admin`.
-4. Open **Settings > Account**.
-5. Enter `admin` as the current password.
-6. Choose a unique password with 12–72 characters, including uppercase, lowercase, number, and symbol.
-7. Save the change.
-8. Sign out and sign in with the new password.
-9. Confirm that the old password no longer works.
-
-Do not expose the application through bridged networking, a non-loopback bind address, port forwarding beyond the local host, or a reverse proxy before completing this change.
+Finalization removes the local credential file, marks the bootstrap value retired in `.env`, and creates an ignored activation record. Production startup refuses to enable the TLS gateway until this record exists.
 
 ## Enforcement boundary
 
-Open WebUI v0.11.0 supports automatic administrator creation and a password-change form. It does not provide a native forced-password-change-on-first-login state. This release therefore provides:
-
-- host-loopback binding by default;
-- disabled signup;
-- a visible bootstrap-password warning banner;
-- strong validation for the replacement password;
-- documented manual acceptance checks.
-
-The warning is not equivalent to a technically enforced first-login reset. Do not claim otherwise. A future appliance requiring hard enforcement must add and validate a dedicated first-boot identity gate.
+The repository enforces production blocking and credential-file retirement. The operator confirmation remains a human assertion that the old password was rejected; stock Open WebUI does not expose a dedicated forced-first-login transaction to this Compose deployment. The activation warning is present in the loopback profile and removed by the production overlay after the activation gate.
 
 ## Existing installations
 
-If a Docker volume already contains an Open WebUI user, the bootstrap credentials will not work. Use the existing administrator account. To inspect accounts without displaying password hashes:
+Generated bootstrap credentials never reset an existing database. To list user identity and role without displaying password hashes:
 
 ```bash
-docker compose --env-file .env -f compose.yaml exec -T open-webui python - <<'PY'
+docker compose --env-file .env -f compose.yaml -f compose.local.yaml exec -T open-webui python - <<'PY'
 import sqlite3
-
 db = sqlite3.connect('/app/backend/data/webui.db')
-for row in db.execute(
-    'SELECT name, email, role, created_at FROM user ORDER BY created_at'
-):
+for row in db.execute('SELECT name, email, role, created_at FROM user ORDER BY created_at'):
     print(' | '.join(str(value) for value in row))
 PY
 ```
 
-If the administrator password is lost, follow the official Open WebUI password-reset process and create a verified backup before changing the database. Do not delete `webui.db` unless permanent removal of accounts, chats, settings, and knowledge is intended.
+If access is lost, create a verified backup and follow the official Open WebUI password-reset procedure. Never delete `webui.db` as an access workaround; that can remove accounts, chats, settings, and knowledge.
 
-## Account policy
+## Production account policy
 
-- Additional signup is disabled by default.
-- Administrators can deliberately enable and govern additional accounts in Open WebUI after reviewing access requirements.
-- Never publish `.env`; it contains the application secret and temporary bootstrap configuration.
-- Do not reuse the temporary password after the first session.
-- Authentication does not grant live packet, telemetry, appliance, or network-control access.
+- Signup is disabled.
+- Additional accounts require an approved administrator workflow.
+- One application instance serves one customer or trust boundary.
+- Use an 8-hour session lifetime in this candidate.
+- API keys, web search, direct tool servers, sub-agents, user webhooks, non-admin file/web uploads, sharing/import/export, code execution, memories, admin exports, and admin chat access are disabled by default.
+- SSO/MFA is not part of the certified candidate scope; customers requiring it need a separately engineered and validated identity profile.
 
-## Acceptance record
+## Acceptance
 
-Record these results for each release platform:
+Record generated-login success, password replacement, old-password rejection, new-password persistence after restart, disabled signup, administrator role, session expiry, and production-gateway refusal before finalization. Never record either password in the acceptance report.
 
-| Check | Expected result |
-|---|---|
-| Empty-volume startup | Bootstrap administrator is created |
-| Initial login | `admin@nettap.local / admin` succeeds on loopback |
-| Role | Account is `admin` |
-| Signup | New public registration is unavailable |
-| Password change | Strong replacement password is accepted |
-| Old password | `admin` fails after the change |
-| New password | Sign-out/sign-in succeeds |
-| Persistence | New password survives container restart |
-| Existing volume | Existing credentials are unchanged |
-
-## Authoritative references
+Official references:
 
 - [Open WebUI environment configuration](https://docs.openwebui.com/reference/env-configuration/)
-- [Open WebUI roles](https://docs.openwebui.com/features/authentication-access/rbac/roles/)
-- [Open WebUI administrator password reset](https://docs.openwebui.com/troubleshooting/password-reset/)
+- [Open WebUI hardening](https://docs.openwebui.com/getting-started/advanced-topics/hardening/)
+- [Open WebUI password reset](https://docs.openwebui.com/troubleshooting/password-reset/)

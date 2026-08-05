@@ -32,8 +32,8 @@ bind_address="$(load_env_value BIND_ADDRESS)"
 ollama_image="$(load_env_value OLLAMA_IMAGE)"
 webui_image="$(load_env_value OPEN_WEBUI_IMAGE)"
 
-[[ "$model_name" == "nettap-packet-expert:0.1.0-rc.8" ]] || fail "Unexpected model identity: $model_name"
-[[ "$bind_address" == "127.0.0.1" ]] || fail "BIND_ADDRESS must remain 127.0.0.1 for the local RC8 profile."
+[[ "$model_name" == "nettap-packet-expert:0.2.0-rc.1" ]] || fail "Unexpected model identity: $model_name"
+[[ "$bind_address" == "127.0.0.1" ]] || fail "BIND_ADDRESS must remain 127.0.0.1 for the local profile."
 "${compose[@]}" config >/dev/null || fail "Compose configuration is invalid."
 
 ollama_id="$("${compose[@]}" ps -q ollama)"
@@ -49,7 +49,7 @@ verify_provenance() {
   actual_image="$(docker inspect --format '{{.Config.Image}}' "$container_id")"
   state="$(docker inspect --format '{{.State.Status}}' "$container_id")"
   [[ "$working_dir" == "$project_dir" ]] || fail "$service was created from $working_dir, not $project_dir. Recreate the project from the canonical directory."
-  [[ "$config_files" == "${project_dir}/compose.yaml" ]] || fail "$service uses unexpected Compose files: $config_files"
+  [[ "$config_files" == *"${project_dir}/compose.yaml"* && "$config_files" == *"${project_dir}/compose.local.yaml"* ]] || fail "$service uses unexpected Compose files: $config_files"
   [[ "$actual_image" == "$expected_image" ]] || fail "$service image is $actual_image; expected $expected_image."
   [[ "$state" == "running" ]] || fail "$service state is $state, not running."
   echo "PASS: $service provenance, image, and running state"
@@ -61,6 +61,10 @@ verify_provenance "$webui_id" open-webui "$webui_image"
 ollama_ports="$(docker inspect --format '{{json .NetworkSettings.Ports}}' "$ollama_id")"
 [[ "$ollama_ports" == *'11434/tcp":null'* ]] || fail "Containerized Ollama unexpectedly publishes a host port: $ollama_ports"
 echo "PASS: containerized Ollama has no published host port"
+if docker inspect --format '{{range $name, $_ := .NetworkSettings.Networks}}{{$name}} {{end}}' "$ollama_id" | grep -q 'model-egress'; then
+  fail "Temporary model-registry egress remains attached."
+fi
+echo "PASS: temporary model-registry egress is absent"
 
 webui_binding="$(docker port "$webui_id" 8080/tcp 2>/dev/null || true)"
 [[ "$webui_binding" == "${bind_address}:${web_port}" ]] || fail "Open WebUI binding is $webui_binding; expected ${bind_address}:${web_port}."
@@ -90,5 +94,5 @@ printf '%s\n' "$response" | grep -Eiq \
 echo "PASS: controlled model inference returned output"
 
 echo "PASS: automated canonical runtime checks completed."
-echo "Manual acceptance remains required: password replacement on a fresh volume, old-password rejection, new-password persistence, model selection, four starter prompts, knowledge attachment, and browser chat behavior."
+echo "Manual acceptance remains required: generated-password replacement and rejection, finalization, new-password persistence, model selection, four starter prompts, knowledge attachment, and browser chat behavior."
 echo "Report: $report_file"

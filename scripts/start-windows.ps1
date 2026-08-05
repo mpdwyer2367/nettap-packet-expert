@@ -5,6 +5,9 @@ $projectDir = (Resolve-Path (Join-Path $PSScriptRoot '..')).Path
 $envPath = Join-Path $projectDir '.env'
 $envExamplePath = Join-Path $projectDir '.env.example'
 $composeFile = Join-Path $projectDir 'compose.yaml'
+$localComposeFile = Join-Path $projectDir 'compose.local.yaml'
+$bootstrapComposeFile = Join-Path $projectDir 'compose.bootstrap.yaml'
+$bootstrapPasswordPath = Join-Path $projectDir '.bootstrap-admin-password'
 
 if (-not (Get-Command docker -ErrorAction SilentlyContinue)) {
     throw 'Docker Desktop is required and docker was not found in PATH.'
@@ -35,15 +38,50 @@ if ($content -match '(?m)^WEBUI_SECRET_KEY=GENERATE_ON_FIRST_START$') {
 }
 
 $defaults = [ordered]@{
+    RELEASE_VERSION = '0.2.0-rc.1'
+    OLLAMA_IMAGE = 'ollama/ollama:0.32.5'
+    OPEN_WEBUI_IMAGE = 'ghcr.io/open-webui/open-webui:v0.11.0'
+    CADDY_IMAGE = 'caddy:2.11.4-alpine'
+    BACKUP_IMAGE = 'alpine:3.24.1'
+    MODEL_NAME = 'nettap-packet-expert:0.2.0-rc.1'
+    EXPECTED_BASE_MODEL_ID = '845dbda0ea48'
+    BIND_ADDRESS = '127.0.0.1'
+    WEB_PORT = '3001'
+    HTTPS_BIND_ADDRESS = '0.0.0.0'
+    HTTPS_PORT = '8443'
+    APPLIANCE_HOSTNAME = 'packet-expert.local'
+    JWT_EXPIRES_IN = '8h'
+    OLLAMA_CPUS = '6'
+    OLLAMA_MEMORY = '8g'
+    WEBUI_CPUS = '2'
+    WEBUI_MEMORY = '3g'
+    GATEWAY_CPUS = '1'
+    GATEWAY_MEMORY = '512m'
     WEBUI_ADMIN_NAME = 'NetTAP Administrator'
     WEBUI_ADMIN_EMAIL = 'admin@nettap.local'
-    WEBUI_ADMIN_PASSWORD = 'admin'
+    WEBUI_ADMIN_PASSWORD = 'GENERATE_ON_FIRST_START'
+    DEPLOYMENT_MODE = 'local'
 }
+
+$content = $content -replace '(?m)^MODEL_NAME=nettap-packet-expert:0\.1\.0-rc\.8$', 'MODEL_NAME=nettap-packet-expert:0.2.0-rc.1'
+$content = $content -replace '(?m)^WEBUI_ADMIN_PASSWORD=admin$', 'WEBUI_ADMIN_PASSWORD=GENERATE_ON_FIRST_START'
 
 foreach ($entry in $defaults.GetEnumerator()) {
     if ($content -notmatch "(?m)^$([regex]::Escape($entry.Key))=") {
         $content = $content.TrimEnd() + "`r`n$($entry.Key)=$($entry.Value)`r`n"
     }
+}
+
+if ($content -match '(?m)^WEBUI_ADMIN_PASSWORD=GENERATE_ON_FIRST_START$') {
+    $passwordBytes = New-Object byte[] 12
+    $passwordRng = [System.Security.Cryptography.RandomNumberGenerator]::Create()
+    $passwordRng.GetBytes($passwordBytes)
+    $passwordRng.Dispose()
+    $passwordSuffix = ($passwordBytes | ForEach-Object { $_.ToString('x2') }) -join ''
+    $adminPassword = "Ntp!9$passwordSuffix"
+    $content = $content -replace '(?m)^WEBUI_ADMIN_PASSWORD=GENERATE_ON_FIRST_START$', "WEBUI_ADMIN_PASSWORD=$adminPassword"
+    $credentialText = "Login: admin@nettap.local`r`nBootstrap password: $adminPassword`r`nGenerated UTC: $([DateTime]::UtcNow.ToString('o'))`r`n"
+    [System.IO.File]::WriteAllText($bootstrapPasswordPath, $credentialText, [System.Text.UTF8Encoding]::new($false))
 }
 
 [System.IO.File]::WriteAllText(
@@ -56,16 +94,19 @@ $compose = @(
     'compose',
     '--project-directory', $projectDir,
     '--env-file', $envPath,
-    '-f', $composeFile
+    '-f', $composeFile,
+    '-f', $localComposeFile
 )
 
+$bootstrapCompose = $compose + @('-f', $bootstrapComposeFile)
+
 docker @compose config --quiet
-docker @compose pull
-docker @compose up -d ollama
+docker @bootstrapCompose pull
+docker @bootstrapCompose up -d ollama
 
 $ready = $false
 foreach ($attempt in 1..90) {
-    docker @compose exec -T ollama ollama list 2>$null | Out-Null
+    docker @bootstrapCompose exec -T ollama ollama list 2>$null | Out-Null
     if ($LASTEXITCODE -eq 0) {
         $ready = $true
         break
@@ -77,12 +118,17 @@ if (-not $ready) {
     throw 'Ollama did not become ready within three minutes.'
 }
 
-docker @compose --profile initialize run --rm model-init
+docker @bootstrapCompose --profile initialize run --rm model-init
 if ($LASTEXITCODE -ne 0) {
     throw 'NetTAP model initialization failed.'
 }
 
-docker @compose up -d open-webui
+docker @bootstrapCompose down
+if ($LASTEXITCODE -ne 0) {
+    throw 'Failed to remove temporary registry-egress network.'
+}
+
+docker @compose up -d ollama open-webui
 docker @compose ps
 
 $webPort = '3001'
@@ -93,6 +139,7 @@ foreach ($line in [System.IO.File]::ReadAllLines($envPath)) {
 }
 
 Write-Host "Open WebUI: http://127.0.0.1:$webPort"
-Write-Host 'Fresh-install login: admin@nettap.local / admin'
-Write-Host 'Immediately change the temporary password in Settings > Account.'
+Write-Host "Bootstrap credential file: $bootstrapPasswordPath"
+Write-Host 'Immediately change the generated password in Settings > Account.'
+Write-Host 'Then run finalize-admin.sh from WSL/Git Bash, or follow docs/AUTHENTICATION.md.'
 Write-Host 'Existing Open WebUI volumes keep their existing accounts and passwords.'
