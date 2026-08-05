@@ -30,5 +30,6 @@ try {
         try { Invoke-WebRequest -UseBasicParsing -Uri "http://127.0.0.1:$webPort/health" -TimeoutSec 5 | Out-Null; $healthy = $true; break } catch { Start-Sleep -Seconds 2 }
     }
     if (-not $healthy) { throw 'Open WebUI did not recover after restart.' }
+    Invoke-Compose run --rm workspace-init --validate-only --wait-timeout 30
     Write-Host 'PASS: model identity, inference, UI health, loopback binding, and restart persistence checks completed.'
 } finally { Stop-Transcript }

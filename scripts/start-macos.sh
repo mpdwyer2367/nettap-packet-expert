@@ -48,10 +48,11 @@ done
 }
 
 "${compose[@]}" --profile initialize run --rm model-init
-"${compose[@]}" up -d open-webui
+"${compose[@]}" up -d open-webui workspace-init
 "${compose[@]}" ps
 
 web_port="$(load_env_value WEB_PORT)"
 echo "Open WebUI: http://127.0.0.1:${web_port}"
 echo "Create the first account as the administrator. Keep loopback binding until TLS and access controls are configured."
+echo "After the first administrator is created, workspace-init privately imports knowledge, installs the formal Skill, attaches both to Packet Expert, and validates retrieval."
 echo "Apple Silicon note: Dockerized Ollama is CPU-compatible; Docker Desktop does not expose Metal acceleration to this Linux container."

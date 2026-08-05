@@ -20,8 +20,9 @@ for ($attempt = 0; $attempt -lt 90; $attempt++) {
 }
 if (-not $ready) { throw 'Ollama did not become ready within three minutes.' }
 Invoke-Compose --profile initialize run --rm model-init
-Invoke-Compose up -d open-webui
+Invoke-Compose up -d open-webui workspace-init
 Invoke-Compose ps
 $webPort = Get-EnvironmentValue 'WEB_PORT'
 Write-Host "Open WebUI: http://127.0.0.1:$webPort"
 Write-Host 'Keep loopback binding until TLS and access controls are configured.'
+Write-Host 'After the first administrator is created, workspace-init privately imports knowledge, installs the formal Skill, attaches both to Packet Expert, and validates retrieval.'

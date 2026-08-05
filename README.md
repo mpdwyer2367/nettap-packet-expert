@@ -26,7 +26,7 @@ flowchart TD
     A["Authorized user"] --> B["Open WebUI\n127.0.0.1:3001"]
     B --> C["Ollama\ninternal Docker network"]
     C --> D["NetTAP Packet Expert\nQwen2.5 7B + Modelfile"]
-    E["NetTAP knowledge\nmanual Open WebUI import"] --> B
+    E["NetTAP knowledge and Skill\nautomatic private provisioning"] --> B
     F["Approved external evidence\nnormalized and minimized"] --> A
 ```
 
@@ -40,11 +40,12 @@ Open WebUI and Ollama communicate on an internal Docker network. The browser is 
 | NetTAP model behavior | Built into the custom Ollama model | `model/Modelfile` |
 | Starter prompts | Seeded on a fresh Open WebUI data volume | `compose.yaml` |
 | Open WebUI accounts and chats | Persisted in a Docker volume | Open WebUI data volume |
-| NetTAP knowledge file | **Manual import and model attachment required** | `knowledge/NetTAP_Packet_Expert_Knowledge.md` |
+| NetTAP knowledge file | Automatically indexed and attached after first-admin creation | `knowledge/NetTAP_Packet_Expert_Knowledge.md` |
+| Formal Open WebUI Skill | Automatically installed and attached after first-admin creation | `workspace/skills/nettap-packet-evidence-analysis.md` |
 | Formal Open WebUI Workspace Skills | **No separate Skill package is included in RC7** | Operational instructions are in the Modelfile |
 | Live packet or telemetry feeds | **Not included** | Requires a separately engineered and authorized integration |
 
-In this release, “Packet Expert skills” means the investigation workflow and guardrails encoded in the Modelfile. It is not a claim that an Open WebUI Workspace Skill has been installed. Do not import the same instructions twice unless you intentionally want additional prompt context.
+The Ollama Modelfile supplies always-on safety boundaries. Open WebUI also receives a formal, versioned Packet Evidence Analysis Skill that is attached to the workspace model.
 
 ## Requirements
 
@@ -101,22 +102,19 @@ Open <http://127.0.0.1:3001>. If a command fails, stop and review the reported e
 
 Starter prompts are persistent Open WebUI configuration. A fresh Open WebUI data volume receives the repository defaults. An existing volume can retain older prompts; review and update them in the Open WebUI administrator settings instead of deleting the volume and losing user data.
 
-## Load the NetTAP knowledge into Open WebUI
+## Automated Open WebUI workspace provisioning
 
-The knowledge file is deliberately not auto-imported because Open WebUI knowledge belongs to its persistent application database and access-control model.
+The `workspace-init` service waits for the first administrator account, then idempotently:
 
-1. Sign in as the first administrator.
-2. Open **Workspace > Knowledge**.
-3. Select **Create** and name the knowledge base `NetTAP Packet Expert`.
-4. Upload [`knowledge/NetTAP_Packet_Expert_Knowledge.md`](knowledge/NetTAP_Packet_Expert_Knowledge.md).
-5. Wait for processing to complete.
-6. Open **Workspace > Models**, edit the NetTAP model or create an Open WebUI model preset based on `nettap-packet-expert:0.1.0-rc.7`, and attach the `NetTAP Packet Expert` knowledge base.
-7. Save, start a new chat with that model, and ask: `What evidence-quality checks should I complete before interpreting supplied network evidence?`
-8. Confirm the response uses the knowledge guidance and still states that no live capture is connected.
+1. Creates or updates the private `NetTAP Packet Expert` knowledge base.
+2. Uploads and indexes the versioned knowledge Markdown when its hash changes.
+3. Creates or updates the formal `NetTAP Packet Evidence Analysis` Skill.
+4. Creates or updates the `NetTAP Packet Expert` workspace model and attaches both resources.
+5. Queries the vector index and fails if expected evidence-quality guidance is not retrieved.
 
 Open WebUI supports focused retrieval and full-context attachment. Focused retrieval is the safer default as the knowledge base grows. The current short project file can also use full context if administrators want it present in every request and have confirmed the context-window impact.
 
-Updating the Markdown file in Git does not update a knowledge base that was already imported. Re-upload the approved revision or use a separately designed knowledge-sync process.
+Resources remain private to the first administrator by default. An administrator may deliberately grant approved users read access in Open WebUI. Rerunning `workspace-init` updates changed content without duplicating records.
 
 ## Packaged operating skills
 
@@ -131,7 +129,7 @@ The custom model automatically receives these behaviors from the Modelfile:
 - Never invent commands, interface names, supported features, counters, packet contents, or completed actions.
 - Present configuration as reviewable steps with validation and rollback.
 
-Open WebUI also has a formal **Workspace > Skills** feature for reusable Markdown instructions. RC7 does not ship a separate importable Skill file; the authoritative Packet Expert instructions are already versioned in the Modelfile. If a future release adds formal Skill files, import them under **Workspace > Skills**, grant users read access, and bind them to the model under **Workspace > Models**. Skills are instructions, not executable integrations or live data access.
+The formal Skill is packaged at [`workspace/skills/nettap-packet-evidence-analysis.md`](workspace/skills/nettap-packet-evidence-analysis.md). Skills are instructions, not executable integrations or live-data access.
 
 ## Validate the deployment
 
@@ -142,6 +140,12 @@ Open WebUI also has a formal **Workspace > Skills** feature for reusable Markdow
 ```
 
 The harness checks source controls, model creation, identity, controlled inference, UI health, and persistence across service restart. It writes a timestamped report under `reports/`. Complete the manual administrator, prompt, model-selection, chat, and sign-in checks printed by the harness.
+
+After creating the first administrator, validate actual indexed retrieval and attachments with:
+
+```bash
+./tests/retrieval-e2e.sh
+```
 
 ### Windows acceptance
 

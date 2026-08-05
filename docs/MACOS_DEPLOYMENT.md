@@ -21,6 +21,8 @@ The default deployment runs both Ollama and Open WebUI in Linux containers. It i
 5. Create the first account. Open WebUI assigns the first account the administrator role; later accounts remain pending until approved.
 6. Select `nettap-packet-expert:0.1.0-rc.7` if it is not already selected.
 
+The initializer then privately imports and indexes the packaged knowledge, installs the formal Packet Evidence Analysis Skill, attaches both to the workspace model, and validates vector retrieval. Run `./tests/retrieval-e2e.sh` for an explicit post-login acceptance check.
+
 The first run downloads multiple container images and the approximately 4.7 GB quantized base model. Completion time depends on network and storage performance.
 
 ## Automated test

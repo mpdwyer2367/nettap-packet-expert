@@ -12,6 +12,10 @@ grep -q 'Never claim that a capture' "$project_dir/model/Modelfile"
 grep -q '^BIND_ADDRESS=127.0.0.1$' "$project_dir/.env.example"
 grep -q 'ENABLE_CODE_EXECUTION: "False"' "$project_dir/compose.yaml"
 grep -q 'internal: true' "$project_dir/compose.yaml"
+grep -q 'workspace-init:' "$project_dir/compose.yaml"
+grep -q 'skillIds' "$project_dir/workspace/install.py"
+grep -q 'retrieval/query/collection' "$project_dir/workspace/install.py"
+grep -q '^# NetTAP Packet Evidence Analysis$' "$project_dir/workspace/skills/nettap-packet-evidence-analysis.md"
 grep -q 'Start-Windows.ps1' "$project_dir/README.md"
 grep -q 'Windows-E2E.ps1' "$project_dir/docs/WINDOWS_DEPLOYMENT.md"
 for required_file in \
@@ -49,7 +53,7 @@ except ImportError:
     pass
 else:
     data = yaml.safe_load(text)
-    assert {"ollama", "model-init", "open-webui"} <= set(data["services"])
+    assert {"ollama", "model-init", "open-webui", "workspace-init"} <= set(data["services"])
 print("Static checks passed.")
 PY
 

@@ -56,9 +56,9 @@ services:
       ENABLE_CODE_EXECUTION: "False"
       ENABLE_CODE_INTERPRETER: "False"
       ENABLE_PIP_INSTALL_FRONTMATTER_REQUIREMENTS: "False"
-      DEFAULT_MODELS: ${MODEL_NAME}
-      DEFAULT_PINNED_MODELS: ${MODEL_NAME}
-      MODEL_ORDER_LIST: '["${MODEL_NAME}"]'
+      DEFAULT_MODELS: ${WORKSPACE_MODEL_ID:-nettap-packet-expert}
+      DEFAULT_PINNED_MODELS: ${WORKSPACE_MODEL_ID:-nettap-packet-expert}
+      MODEL_ORDER_LIST: '["${WORKSPACE_MODEL_ID:-nettap-packet-expert}","${MODEL_NAME}"]'
       DEFAULT_PROMPT_SUGGESTIONS: >-
         [{"title":["Start an","investigation"],"content":"Help me start a network or security investigation."},{"title":["Understand my","evidence"],"content":"Help me understand what evidence I have and what it can prove."},{"title":["Troubleshoot a","network problem"],"content":"Guide me through a network performance or availability problem."},{"title":["Help me","decide"],"content":"I am not sure where to start. Ask me one important question at a time."}]
     ports:
@@ -66,6 +66,28 @@ services:
     volumes:
       - packet-expert-open-webui-data:/app/backend/data
     networks: [backend, user-access]
+    security_opt:
+      - no-new-privileges:true
+
+  workspace-init:
+    image: ${OPEN_WEBUI_IMAGE}
+    restart: on-failure:5
+    depends_on:
+      open-webui:
+        condition: service_healthy
+    environment:
+      WEBUI_SECRET_KEY: ${WEBUI_SECRET_KEY}
+      PYTHONPATH: /app/backend
+      OPEN_WEBUI_INTERNAL_URL: http://open-webui:8080
+      MODEL_NAME: ${MODEL_NAME}
+      WORKSPACE_MODEL_ID: ${WORKSPACE_MODEL_ID:-nettap-packet-expert}
+      WORKSPACE_INIT_WAIT_SECONDS: "604800"
+    volumes:
+      - packet-expert-open-webui-data:/app/backend/data
+      - ./workspace:/workspace:ro
+      - ./knowledge:/knowledge:ro
+    networks: [user-access]
+    entrypoint: ["python", "/workspace/install.py"]
     security_opt:
       - no-new-privileges:true
 

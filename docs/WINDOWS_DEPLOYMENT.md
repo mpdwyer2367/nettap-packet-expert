@@ -39,6 +39,8 @@ The launcher performs preflight checks, creates `.env` with a random WebUI secre
 
 Open `http://127.0.0.1:3001`. The first account becomes administrator; later registrations remain pending until approved. The first run downloads container images and the approximately 4.7 GB base model.
 
+After first-admin creation, `workspace-init` privately imports and indexes the knowledge file, installs the formal Skill, attaches both to Packet Expert, and validates retrieval. The Windows acceptance harness repeats that check.
+
 ## Validate the deployment
 
 ```powershell
