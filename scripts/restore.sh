@@ -28,8 +28,8 @@ grep -Fqx 'Backup format: NetTAP AI Suite volume backup v2' "${backup_dir}/manif
   echo "ERROR: Unsupported or malformed backup manifest." >&2
   exit 4
 }
-grep -Fqx 'Source project: nettap-packet-expert' "${backup_dir}/manifest.txt" || {
-  echo "ERROR: Backup was not created by the compatible NetTAP AI Suite Compose project." >&2
+grep -Eq '^Source project: [a-z0-9][a-z0-9_-]{2,62}$' "${backup_dir}/manifest.txt" || {
+  echo "ERROR: Backup source project identity is invalid." >&2
   exit 4
 }
 current_release="$(load_env_value RELEASE_VERSION)"

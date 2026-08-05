@@ -24,7 +24,11 @@ if [[ -n "$(find "$output_dir" -mindepth 1 -print -quit)" ]]; then
   echo "ERROR: Backup destination must be empty; existing files are never overwritten: $output_dir" >&2
   exit 4
 fi
-project_name="nettap-packet-expert"
+project_name="${COMPOSE_PROJECT_NAME:-nettap-packet-expert}"
+[[ "$project_name" =~ ^[a-z0-9][a-z0-9_-]{2,62}$ ]] || {
+  echo "ERROR: Invalid Compose project name for backup provenance: $project_name" >&2
+  exit 4
+}
 mode="$(load_env_value DEPLOYMENT_MODE)"
 restart_required=false
 model_lock="${project_dir}/reports/generated/model-lock.txt"
@@ -77,7 +81,9 @@ backup_volume "${project_name}_packet-expert-open-webui-data" open-webui-data.tg
   for key in OLLAMA_IMAGE OPEN_WEBUI_IMAGE CADDY_IMAGE BACKUP_IMAGE; do
     printf '%s=%s\n' "$key" "$(load_env_value "$key")"
   done
-  if git -C "$project_dir" rev-parse --verify HEAD >/dev/null 2>&1; then
+  if [[ "${NETTAP_SOURCE_COMMIT:-}" =~ ^[0-9a-f]{40}$ ]]; then
+    printf 'Source commit: %s\n' "$NETTAP_SOURCE_COMMIT"
+  elif git -C "$project_dir" rev-parse --verify HEAD >/dev/null 2>&1; then
     printf 'Source commit: %s\n' "$(git -C "$project_dir" rev-parse HEAD)"
   else
     printf 'Source commit: packaged-release-no-git-metadata\n'

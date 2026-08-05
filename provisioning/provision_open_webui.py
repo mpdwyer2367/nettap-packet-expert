@@ -32,6 +32,7 @@ def required_env(name: str) -> str:
 MANIFEST_PATH = Path(os.environ.get("NETTAP_PROVISIONING_MANIFEST", "/provision/open-webui.json"))
 SOURCE_ROOT = Path(os.environ.get("NETTAP_PROVISIONING_SOURCE_ROOT", "/source"))
 STATE_PATH = Path(os.environ.get("NETTAP_PROVISIONING_STATE", "/app/backend/data/nettap-provisioning-state.json"))
+CHECKSUM_PATH = Path(os.environ.get("NETTAP_PROVISIONING_CHECKSUMS", "/provision/knowledge-sources.sha256"))
 
 
 def load_manifest() -> dict:
@@ -54,9 +55,45 @@ def source_path(relative: str) -> Path:
     return path
 
 
+def verify_source_checksums(manifest: dict) -> dict[str, str]:
+    pinned = {}
+    for line_number, raw in enumerate(CHECKSUM_PATH.read_text(encoding="utf-8").splitlines(), 1):
+        line = raw.strip()
+        if not line or line.startswith("#"):
+            continue
+        parts = line.split(None, 1)
+        if len(parts) != 2 or len(parts[0]) != 64 or any(char not in "0123456789abcdef" for char in parts[0]):
+            raise ProvisioningError(f"invalid source checksum line {line_number}")
+        relative = parts[1].lstrip("*")
+        if relative in pinned:
+            raise ProvisioningError(f"duplicate pinned provisioning source: {relative}")
+        pinned[relative] = parts[0]
+
+    referenced = set()
+    for collection in manifest["knowledge_collections"]:
+        referenced.update(collection["files"])
+    for assistant in manifest["assistants"]:
+        referenced.update(assistant["system_prompt_files"])
+    if set(pinned) != referenced:
+        raise ProvisioningError(
+            f"pinned source set differs from manifest; missing={sorted(referenced - set(pinned))}, "
+            f"extra={sorted(set(pinned) - referenced)}"
+        )
+    for relative, expected in pinned.items():
+        actual = hashlib.sha256(source_path(relative).read_bytes()).hexdigest()
+        if actual != expected:
+            raise ProvisioningError(
+                f"pinned source identity mismatch for {relative}: expected {expected}, received {actual}"
+            )
+    return pinned
+
+
 def provisioning_fingerprint(manifest: dict) -> str:
+    verify_source_checksums(manifest)
     digest = hashlib.sha256()
     digest.update(MANIFEST_PATH.read_bytes())
+    digest.update(b"\0")
+    digest.update(CHECKSUM_PATH.read_bytes())
     digest.update(b"\0")
     digest.update(required_env("NETTAP_AI_MODEL").encode("utf-8"))
     digest.update(b"\0")

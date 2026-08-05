@@ -133,8 +133,10 @@ Runtime validation after deployment:
 
 ```bash
 ./tests/model-behavior-eval.sh
+./tests/normalized-ingestion-eval.sh
 ./tests/model-storage-sharing.sh
 ./tests/backup-restore-e2e.sh
+./tests/failed-update-rollback-e2e.sh
 ```
 
 On a supported macOS host:
@@ -142,6 +144,17 @@ On a supported macOS host:
 ```bash
 ./tests/macos-e2e.sh
 ```
+
+Release acceptance must start from the signed source package rather than a working checkout. Run the following command once on macOS and once inside Windows/WSL2, using the same archive, checksum, provenance, signatures, and public key:
+
+```bash
+./tests/clean-package-acceptance.sh \
+  --archive /approved/nettap-ai-suite-0.3.0-rc.3-source.tar.gz \
+  --evidence-dir /protected/nettap-rc3-acceptance \
+  --public-key /approved/cosign.pub
+```
+
+The clean-package test creates an isolated Compose project with empty volumes, verifies the package against its exact Git tree and signature, installs the candidate, requires administrator password replacement, verifies ports 3000/3001/3100, exercises automatic offline RAG and both assistants, executes all fourteen behavior cases plus normalized packet/log/IPFIX examples, measures shared model storage, and tests restart, backup/restore, failed-update recovery, SBOM, and the vulnerability policy. Compare the two resulting summaries with `./tests/compare-platform-acceptance.sh`. See [the RC3 acceptance plan](docs/RC3_ACCEPTANCE_PLAN.md).
 
 The tests verify model identity, provisioning API behavior and idempotence, exact embedding revision metadata, offline retrieval proof, managed profile selection, combined capabilities, evidence boundaries, shared runtime, and recovery controls. They do not prove factual accuracy for every prompt or replace target-host, independent security, and customer acceptance.
 

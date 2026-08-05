@@ -20,9 +20,9 @@ jobs:
       - name: Run static checks
         run: ./tests/static-checks.sh
       - name: Test Open WebUI provisioning contract
-        run: python3 -m unittest -v tests/test_provision_open_webui.py
+        run: python3 -m unittest -v tests/test_provision_open_webui.py tests/test_verify_archive_tree.py
       - name: Compile provisioning code
-        run: python3 -m py_compile provisioning/*.py
+        run: python3 -m py_compile provisioning/*.py scripts/verify-archive-tree.py
       - name: Render supported Compose profiles
         run: |
           docker compose --env-file .env.example \
@@ -43,3 +43,7 @@ jobs:
             [ref]$errors
           ) | Out-Null
           if ($errors.Count -gt 0) { throw ($errors | Out-String) }
+      - name: Build and verify unsigned source candidate
+        run: |
+          ./scripts/package-release.sh --unsigned-candidate
+          ./scripts/verify-release.sh dist/nettap-ai-suite-0.3.0-rc.3-source.tar.gz

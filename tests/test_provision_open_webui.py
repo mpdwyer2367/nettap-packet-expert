@@ -160,6 +160,7 @@ class ProvisioningTest(unittest.TestCase):
             "RELEASE_VERSION": "0.3.0-rc.3",
             "NETTAP_AI_MODEL": "nettap-ai:0.3.0-rc.3",
             "NETTAP_PROVISIONING_MANIFEST": str(ROOT / "provisioning/open-webui.json"),
+            "NETTAP_PROVISIONING_CHECKSUMS": str(ROOT / "provisioning/knowledge-sources.sha256"),
             "NETTAP_PROVISIONING_SOURCE_ROOT": str(ROOT),
             "NETTAP_PROVISIONING_STATE": str(self.state_path),
         })
@@ -247,6 +248,21 @@ class ProvisioningTest(unittest.TestCase):
         self.assertIn("did not return the managed verification marker", result.stderr)
         self.assertFalse(self.state_path.exists())
         self.assertEqual(Handler.state.models, {})
+
+    def test_fails_closed_when_pinned_source_identity_changes(self):
+        checksum_path = Path(self.tempdir.name) / "knowledge-sources.sha256"
+        checksum_path.write_text(
+            (ROOT / "provisioning/knowledge-sources.sha256").read_text(encoding="utf-8").replace(
+                "a9bf608d2965f2c9b69e63b8344cf6150a86c7511a3699b524f82eeb54373a91",
+                "0" * 64,
+                1,
+            ),
+            encoding="utf-8",
+        )
+        self.env["NETTAP_PROVISIONING_CHECKSUMS"] = str(checksum_path)
+        result = self.run_provisioner("--fingerprint", check=False)
+        self.assertEqual(result.returncode, 1)
+        self.assertIn("pinned source identity mismatch", result.stderr)
 
 
 if __name__ == "__main__":

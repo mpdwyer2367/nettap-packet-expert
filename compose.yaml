@@ -189,6 +189,7 @@ services:
       RELEASE_VERSION: ${RELEASE_VERSION}
       NETTAP_AI_MODEL: ${NETTAP_AI_MODEL}
       NETTAP_PROVISIONING_MANIFEST: /provision/open-webui.json
+      NETTAP_PROVISIONING_CHECKSUMS: /provision/knowledge-sources.sha256
       NETTAP_PROVISIONING_SOURCE_ROOT: /source
       NETTAP_PROVISIONING_STATE: /app/backend/data/nettap-provisioning-state.json
     volumes:

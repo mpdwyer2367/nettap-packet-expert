@@ -1,0 +1,24 @@
+{
+  "schema": "nettap.normalized.packet-observation",
+  "schema_version": "1.0",
+  "classification": "synthetic-test-data",
+  "source": "TShark-derived example; no raw payload",
+  "source_timezone": "UTC",
+  "clock_sync": "synchronized; test fixture",
+  "observation_point": "example-datacenter-edge",
+  "capture": {
+    "start_utc": "2026-08-05T12:00:00Z",
+    "end_utc": "2026-08-05T12:00:02Z",
+    "snap_length": 256,
+    "received_packets": 8,
+    "capture_drops": 0,
+    "truncated_packets": 0,
+    "sha256": "synthetic-fixture-no-raw-pcap"
+  },
+  "observations": [
+    {"time_utc": "2026-08-05T12:00:00.100Z", "src_ip": "192.0.2.10", "dst_ip": "192.0.2.53", "protocol": "DNS", "query": "example.com", "response": "93.184.216.34"},
+    {"time_utc": "2026-08-05T12:00:00.500Z", "src_ip": "192.0.2.10", "src_port": 51514, "dst_ip": "93.184.216.34", "dst_port": 443, "protocol": "TCP", "flags": "SYN"},
+    {"time_utc": "2026-08-05T12:00:00.540Z", "src_ip": "93.184.216.34", "src_port": 443, "dst_ip": "192.0.2.10", "dst_port": 51514, "protocol": "TCP", "flags": "SYN,ACK"},
+    {"time_utc": "2026-08-05T12:00:00.610Z", "src_ip": "192.0.2.10", "src_port": 51514, "dst_ip": "93.184.216.34", "dst_port": 443, "protocol": "TLS", "sni": "example.com", "tls_version": "1.3"}
+  ]
+}

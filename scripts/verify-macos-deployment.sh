@@ -5,9 +5,17 @@ script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # shellcheck source=scripts/common.sh
 source "${script_dir}/common.sh"
 
+platform="macos"
+if [[ "${1:-}" == "--windows-wsl2" && $# -eq 1 ]]; then
+  platform="windows-wsl2"
+elif [[ $# -ne 0 ]]; then
+  echo "Usage: ./scripts/verify-macos-deployment.sh [--windows-wsl2]" >&2
+  exit 2
+fi
+
 report_dir="${project_dir}/reports"
 mkdir -p "$report_dir"
-report_file="${report_dir}/macos-runtime-verification-$(date -u +%Y%m%dT%H%M%SZ).txt"
+report_file="${report_dir}/${platform}-runtime-verification-$(date -u +%Y%m%dT%H%M%SZ).txt"
 exec > >(tee "$report_file") 2>&1
 
 fail() {
@@ -16,12 +24,18 @@ fail() {
   exit 1
 }
 
-echo "NetTAP AI Suite canonical macOS runtime verification"
+echo "NetTAP AI Suite canonical ${platform} runtime verification"
 echo "UTC: $(date -u +%FT%TZ)"
 echo "Host: $(uname -a)"
 echo "Project directory: $project_dir"
 
-[[ "$(uname -s)" == "Darwin" ]] || fail "macOS host required."
+if [[ "$platform" == macos ]]; then
+  [[ "$(uname -s)" == Darwin ]] || fail "macOS host required."
+else
+  if [[ "$(uname -s)" != Linux ]] || ! grep -Eiq 'microsoft|wsl' /proc/version; then
+    fail "Windows/WSL2 host required."
+  fi
+fi
 require_runtime
 [[ -f "$env_file" ]] || fail "Missing .env. Run ./scripts/start-macos.sh first."
 docker info >/dev/null 2>&1 || fail "Docker Desktop engine is not running."

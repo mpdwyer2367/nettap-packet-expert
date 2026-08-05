@@ -44,6 +44,7 @@ assert provisioner["networks"] == ["backend"]
 assert provisioner["read_only"] is True
 assert provisioner["cap_drop"] == ["ALL"]
 assert "ports" not in provisioner
+assert provisioner["environment"]["NETTAP_PROVISIONING_CHECKSUMS"] == "/provision/knowledge-sources.sha256"
 
 for service_name in ("ollama", "open-webui"):
     service = base["services"][service_name]
@@ -146,5 +147,29 @@ assert 'Release: $current_release' in restore
 package = (root / "scripts/package-release.sh").read_text(encoding="utf-8")
 for field in ("provenance", "Commit:", "Tree:", "SHA256:"):
     assert field in package
+assert "initialize_env" not in package
+
+release_verifier = (root / "scripts/verify-release.sh").read_text(encoding="utf-8")
+assert "verify-archive-tree.py" in release_verifier
+
+acceptance = (root / "tests/clean-package-acceptance.sh").read_text(encoding="utf-8")
+for control in (
+    "--public-key",
+    "--allow-unsigned-evaluation",
+    "start-wsl2.sh",
+    "model-behavior-eval.sh",
+    "normalized-ingestion-eval.sh",
+    "model-storage-sharing.sh",
+    "backup-restore-e2e.sh",
+    "failed-update-rollback-e2e.sh",
+    "Signature verification: %s",
+    "Base model ID: %s",
+    "Embedding aggregate SHA256: %s",
+):
+    assert control in acceptance
+
+certification = (root / "scripts/certify-production.sh").read_text(encoding="utf-8")
+for control in ("Tree: $tree", "Package: $package_name", "Package SHA256: $package_sha256", "compare-platform-acceptance.sh"):
+    assert control in certification
 
 print("Production configuration checks passed.")
