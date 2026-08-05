@@ -243,7 +243,15 @@ docker @compose up -d open-webui
 
 `0.1.0-rc.8` is an evaluation release candidate. Source-level validation is available in CI. It must not be called macOS-validated until `tests/macos-e2e.sh` and the manual acceptance checklist pass on the physical Apple silicon and Intel hosts that will be advertised. Windows runtime acceptance is manual in this release.
 
-No license has yet been selected for NetTAP-authored source. Public repository visibility is not the same as an open-source license. Add an approved project license before inviting redistribution or external contributions.
+NetTAP-authored source in this repository is available under the Apache License 2.0. Third-party software, container images, and model artifacts remain subject to their own licenses.
+
+## License
+
+NetTAP-authored source code, configuration, and documentation in this repository are licensed under the [Apache License 2.0](LICENSE).
+
+Copyright 2026 NetTAP Technology Limited. See [NOTICE](NOTICE) for attribution and trademark information.
+
+The project license does not relicense separately distributed dependencies, container images, base-model weights, or other third-party artifacts. See [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md). The Apache License does not grant permission to use NetTAP names, logos, service marks, or product names except as stated in Section 6 of the license.
 
 ## Official references
 
