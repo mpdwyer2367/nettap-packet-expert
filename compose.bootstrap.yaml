@@ -1,0 +1,6 @@
+services:
+  ollama:
+    networks: [backend, model-egress]
+
+networks:
+  model-egress: {}

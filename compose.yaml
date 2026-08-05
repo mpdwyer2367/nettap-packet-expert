@@ -3,10 +3,14 @@ name: nettap-packet-expert
 services:
   ollama:
     image: ${OLLAMA_IMAGE}
+    init: true
     restart: unless-stopped
+    cpus: ${OLLAMA_CPUS}
+    mem_limit: ${OLLAMA_MEMORY}
+    pids_limit: 1024
     volumes:
       - packet-expert-ollama-data:/root/.ollama
-    networks: [backend, model-egress]
+    networks: [backend]
     healthcheck:
       test: ["CMD", "ollama", "list"]
       interval: 10s
@@ -15,6 +19,12 @@ services:
       start_period: 20s
     security_opt:
       - no-new-privileges:true
+    cap_drop: [ALL]
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "5"
 
   model-init:
     image: ${OLLAMA_IMAGE}
@@ -31,15 +41,22 @@ services:
     command:
       - >-
         ollama pull qwen2.5:7b-instruct-q4_K_M &&
+        actual_id="$$(ollama list | awk '$$1 == "qwen2.5:7b-instruct-q4_K_M" {print $$2}')" &&
+        test "$$actual_id" = "${EXPECTED_BASE_MODEL_ID}" &&
         ollama create ${MODEL_NAME} -f /model/Modelfile &&
         ollama show ${MODEL_NAME}
     restart: "no"
     security_opt:
       - no-new-privileges:true
+    cap_drop: [ALL]
 
   open-webui:
     image: ${OPEN_WEBUI_IMAGE}
+    init: true
     restart: unless-stopped
+    cpus: ${WEBUI_CPUS}
+    mem_limit: ${WEBUI_MEMORY}
+    pids_limit: 1024
     depends_on:
       ollama:
         condition: service_healthy
@@ -54,33 +71,90 @@ services:
       DEFAULT_USER_ROLE: pending
       ENABLE_PASSWORD_VALIDATION: "True"
       ENABLE_PASSWORD_CHANGE_FORM: "True"
+      JWT_EXPIRES_IN: ${JWT_EXPIRES_IN}
       PASSWORD_VALIDATION_REGEX_PATTERN: '^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^\w\s]).{12,72}$$'
       PASSWORD_VALIDATION_HINT: "Use 12-72 characters with upper, lower, number, and symbol."
-      ENABLE_PERSISTENT_CONFIG: "True"
+      ENABLE_PERSISTENT_CONFIG: "False"
+      OFFLINE_MODE: "True"
+      ENABLE_OPENAI_API: "False"
+      ENABLE_COMMUNITY_SHARING: "False"
+      ENABLE_DIRECT_CONNECTIONS: "False"
+      ENABLE_RAG_LOCAL_WEB_FETCH: "False"
+      ENABLE_SUBAGENTS: "False"
+      USER_PERMISSIONS_CHAT_FILE_UPLOAD: "False"
+      USER_PERMISSIONS_CHAT_WEB_UPLOAD: "False"
+      USER_PERMISSIONS_CHAT_EXPORT: "False"
+      USER_PERMISSIONS_CHAT_IMPORT: "False"
+      USER_PERMISSIONS_CHAT_SHARE: "False"
+      USER_PERMISSIONS_CHAT_ALLOW_PUBLIC_SHARING: "False"
+      USER_PERMISSIONS_CHAT_ALLOW_OPEN_SHARING: "False"
+      USER_PERMISSIONS_CHAT_CONTINUE_RESPONSE: "False"
+      USER_PERMISSIONS_FEATURES_DIRECT_TOOL_SERVERS: "False"
+      USER_PERMISSIONS_FEATURES_WEB_SEARCH: "False"
+      USER_PERMISSIONS_FEATURES_USER_WEBHOOKS: "False"
+      USER_PERMISSIONS_FEATURES_API_KEYS: "False"
+      USER_PERMISSIONS_WORKSPACE_MODELS_ACCESS: "False"
+      USER_PERMISSIONS_WORKSPACE_KNOWLEDGE_ACCESS: "False"
+      USER_PERMISSIONS_WORKSPACE_TOOLS_ACCESS: "False"
+      USER_PERMISSIONS_WORKSPACE_PROMPTS_ACCESS: "False"
+      USER_PERMISSIONS_WORKSPACE_SKILLS_ACCESS: "False"
+      USER_PERMISSIONS_WORKSPACE_SKILLS_IMPORT: "False"
+      USER_PERMISSIONS_WORKSPACE_SKILLS_EXPORT: "False"
+      AUDIT_LOG_LEVEL: METADATA
+      ENABLE_AUDIT_LOGS_FILE: "True"
+      AUDIT_LOGS_FILE_PATH: /app/backend/data/audit.log
+      AUDIT_LOG_FILE_ROTATION_SIZE: 10MB
+      ENABLE_AUDIT_STDOUT: "True"
+      GLOBAL_LOG_LEVEL: INFO
       ENABLE_CODE_EXECUTION: "False"
       ENABLE_CODE_INTERPRETER: "False"
       ENABLE_PIP_INSTALL_FRONTMATTER_REQUIREMENTS: "False"
+      ENABLE_API_KEYS: "False"
+      ENABLE_WEB_SEARCH: "False"
+      ENABLE_USER_WEBHOOKS: "False"
+      ENABLE_MEMORIES: "False"
+      ENABLE_ADMIN_EXPORT: "False"
+      ENABLE_ADMIN_CHAT_ACCESS: "False"
+      BYPASS_ADMIN_ACCESS_CONTROL: "False"
+      SHOW_ADMIN_DETAILS: "False"
+      ENABLE_PUBLIC_ACTIVE_USERS_COUNT: "False"
+      ENABLE_USER_STATUS: "False"
+      RESPONSE_WATERMARK: "AI-generated engineering guidance; verify before use."
+      IFRAME_CSP: "default-src 'none'; style-src 'unsafe-inline'; img-src data: blob:; font-src data:; connect-src 'none'; script-src 'none'; frame-src 'none'"
       DEFAULT_MODELS: ${MODEL_NAME}
       DEFAULT_PINNED_MODELS: ${MODEL_NAME}
       MODEL_ORDER_LIST: '["${MODEL_NAME}"]'
       WEBUI_BANNERS: >-
-        [{"id":"nettap-bootstrap-password-rc8","type":"warning","title":"Secure the administrator account","content":"This fresh installation uses a temporary local password. Go to Settings > Account and change it before connecting the application to any shared or untrusted network.","dismissible":true,"timestamp":1785864000}]
+        [{"id":"nettap-bootstrap-password-rc9","type":"warning","title":"Complete administrator activation","content":"This installation generated a unique bootstrap credential. Change it in Settings > Account, verify the old credential fails, then run the administrator finalization command before enabling production access.","dismissible":false,"timestamp":1785864000}]
       DEFAULT_PROMPT_SUGGESTIONS: >-
         [{"title":["Start an","investigation"],"content":"Help me start a network or security investigation."},{"title":["Understand my","evidence"],"content":"Help me understand what evidence I have and what it can prove."},{"title":["Troubleshoot a","network problem"],"content":"Guide me through a network performance or availability problem."},{"title":["Help me","decide"],"content":"I am not sure where to start. Ask me one important question at a time."}]
-    ports:
-      - "${BIND_ADDRESS}:${WEB_PORT}:8080"
+    expose: ["8080"]
     volumes:
       - packet-expert-open-webui-data:/app/backend/data
     networks: [backend, user-access]
     security_opt:
       - no-new-privileges:true
+    cap_drop: [ALL]
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8080/health', timeout=5)"]
+      interval: 15s
+      timeout: 10s
+      retries: 20
+      start_period: 60s
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "5"
 
 networks:
   backend:
     internal: true
-  model-egress: {}
-  user-access: {}
+  user-access:
+    internal: true
 
 volumes:
   packet-expert-ollama-data: {}
   packet-expert-open-webui-data: {}
+  packet-expert-gateway-data: {}
+  packet-expert-gateway-config: {}

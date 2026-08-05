@@ -1,13 +1,23 @@
-# Third-party notices and release constraints
+# Third-party notices and distribution review
 
-This repository orchestrates separately distributed components; it does not contain their model weights or container binaries.
+This repository orchestrates separately distributed components; it does not contain their container binaries or base-model weights.
 
-- Ollama is distributed under the MIT License. The deployment pulls its container image from `ollama/ollama`.
-- Qwen2.5-7B-Instruct is distributed under Apache License 2.0. Ollama downloads the selected quantization during model creation.
-- Open WebUI is distributed under the Open WebUI License. Its current license restricts removal or replacement of Open WebUI branding except for specified small deployments, written permission, or an enterprise license. This project intentionally does not remove Open WebUI branding.
+| Component | Candidate reference | Upstream license/source | Distribution note |
+|---|---|---|---|
+| Ollama | `ollama/ollama:0.32.5` before digest lock | [Ollama repository](https://github.com/ollama/ollama) | MIT-licensed source; verify bundled notices and image contents |
+| Qwen2.5 7B Instruct | `qwen2.5:7b-instruct-q4_K_M`, expected Ollama ID `845dbda0ea48` | [Ollama model page](https://ollama.com/library/qwen2.5:7b-instruct-q4_K_M) | Apache-2.0 model; initialization refuses a changed manifest identity |
+| Open WebUI | `ghcr.io/open-webui/open-webui:v0.11.0` before digest lock | [Open WebUI license](https://github.com/open-webui/open-webui/blob/main/LICENSE) | Branding and redistribution terms require legal review; supplied config does not remove branding |
+| Caddy | `caddy:2.11.4-alpine` before digest lock | [Caddy official image](https://hub.docker.com/_/caddy) | Apache-2.0 core; container may include other licensed packages |
+| Alpine Linux | `alpine:3.24.1` before digest lock and as image base | [Alpine official image](https://hub.docker.com/_/alpine) | Package-level notices must be retained as applicable |
 
-Container tags in `.env.example` are release-candidate pins, not a supply-chain attestation. A production release must record immutable digests, generate an SBOM, scan images and source, and retain the reports with the release.
+NetTAP-authored source, configuration, and documentation are licensed under Apache License 2.0. That license does not relicense the components, images, packages, fonts, base model, or other artifacts listed above.
 
-NetTAP-authored source code, configuration, and documentation in this repository are licensed under Apache License 2.0. This does not relicense the separately distributed components listed above, their container images, or their model artifacts.
+Before any commercial distribution, legal must approve:
 
-No permission is granted to use NetTAP names, logos, service marks, or product names except as stated in Section 6 of the Apache License 2.0.
+1. exact image/model digests and complete SPDX SBOMs;
+2. license texts, copyright notices, attribution, source-offer obligations, and export restrictions;
+3. Open WebUI branding and commercial-use terms for the intended customer/user count;
+4. NetTAP trademark and branding usage;
+5. customer terms, privacy/data processing, support, warranty, and limitation language.
+
+Bootstrap tags in `.env.example` are not production attestations. `scripts/lock-images.sh` records platform-resolved digests in ignored `.env`; `scripts/security-scan.sh` generates candidate SBOM/CVE evidence. Commercial approval must bind its legal record to the exact digests actually distributed.

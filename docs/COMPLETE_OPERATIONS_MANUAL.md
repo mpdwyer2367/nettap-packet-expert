@@ -1,195 +1,44 @@
-# NetTAP Packet Expert complete operations manual
+# NetTAP Packet Expert operations manual
 
-**Release:** `0.1.0-rc.8`  
-**Canonical repository:** <https://github.com/mpdwyer2367/nettap-packet-expert>  
-**Canonical model:** `nettap-packet-expert:0.1.0-rc.8`  
-**Canonical local URL:** <http://127.0.0.1:3001>  
-**Audience:** NetTAP administrators, maintainers, release engineers, evaluators, and support personnel
+Release `0.2.0-rc.1` is a production-hardening candidate for a single-node, single-customer Docker software appliance. It is not a certified GA appliance until every [commercial release gate](COMMERCIAL_RELEASE_GATES.md) passes.
 
-## 1. Purpose and current release boundary
+## Sources of truth
 
-NetTAP Packet Expert is a local network-operations and security-operations assistant. RC8 combines a pinned Open WebUI container, a pinned Ollama container, a Qwen2.5 7B quantized base model, and a version-controlled NetTAP Modelfile.
-
-This package creates a custom Ollama model definition; it does not contain separately fine-tuned weights. The base model is downloaded from the Ollama registry during initialization. The custom behavior is built from `model/Modelfile`.
-
-RC8 is a release candidate. Source checks pass in the repository, but it is not a generally available, fully certified appliance. macOS runtime acceptance must be run on each advertised Apple silicon and Intel configuration. Windows runtime acceptance is manual in RC8.
-
-## 2. Canonical deployment identity
-
-Use all of these identifiers together. A matching page title or container name alone is not proof that a deployment is current.
-
-| Item | RC8 source of truth |
+| Subject | File |
 |---|---|
-| Repository | `https://github.com/mpdwyer2367/nettap-packet-expert` |
-| Release | `0.1.0-rc.8` |
-| Expected Git commit at publication | Record the commit shown on the GitHub release or deployment acceptance record |
+| Architecture and boundaries | [PRODUCTION_ARCHITECTURE.md](PRODUCTION_ARCHITECTURE.md) |
+| Customer installation and recovery | [CUSTOMER_DEPLOYMENT_GUIDE.md](CUSTOMER_DEPLOYMENT_GUIDE.md) |
+| Authentication | [AUTHENTICATION.md](AUTHENTICATION.md) |
+| Threats and controls | [THREAT_MODEL.md](THREAT_MODEL.md) |
+| Current evidence | [VALIDATION_STATUS.md](VALIDATION_STATUS.md) |
+| Acceptance | [release template](../reports/RELEASE_ACCEPTANCE_TEMPLATE.md) |
+
+## Product inventory
+
+| Item | Identity |
+|---|---|
 | Compose project | `nettap-packet-expert` |
-| Custom model | `nettap-packet-expert:0.1.0-rc.8` |
+| Custom model | `nettap-packet-expert:0.2.0-rc.1` |
 | Base model | `qwen2.5:7b-instruct-q4_K_M` |
-| Web UI | `http://127.0.0.1:3001` |
-| Open WebUI image | `ghcr.io/open-webui/open-webui:v0.11.0` |
-| Ollama image | `ollama/ollama:0.32.5` |
-| Fresh administrator | `admin@nettap.local` |
-| Temporary password | `admin`—replace immediately |
+| Local UI | `127.0.0.1:3001` |
+| Production UI | customer HTTPS name, port `8443` by default |
+| Administrator login | `admin@nettap.local` with locally generated bootstrap password |
+| Persistent volumes | Ollama models; Open WebUI accounts/chats/knowledge |
 
-Treat port `3000`, a different model tag, a different Compose project, or an unknown working directory as a legacy or separate deployment until inspected.
+Image tags in `.env.example` are bootstrap references. Production uses the platform-specific digests recorded by `scripts/lock-images.sh` in ignored `.env`.
 
-## 3. Architecture and data boundary
+## Initial deployment
 
-```mermaid
-flowchart TD
-    U["Authorized operator"] --> W["Open WebUI\n127.0.0.1:3001"]
-    W --> O["Ollama\ninternal Docker network"]
-    O --> M["Packet Expert RC8\nQwen2.5 7B + Modelfile"]
-    K["Approved NetTAP knowledge\nmanual import"] --> W
-    E["Authorized, minimized evidence\nmanual submission"] --> U
-```
-
-The browser is bound to host loopback. Ollama is not published on a host port. Docker named volumes retain Open WebUI accounts, chats, settings, knowledge, and Ollama models.
-
-The package does not automatically capture an interface, inspect a PCAP, connect to a NetTAP NPB, ingest IPFIX, or receive live telemetry. Any such integration requires a separately engineered, authorized, and validated collection and normalization path. The assistant must never imply that data is live when it is not.
-
-## 4. Before cleanup: inventory every deployment
-
-Do not delete containers or volumes merely because they appear old. An Open WebUI volume may contain the only copy of an administrator account, chats, model presets, knowledge, or settings.
-
-From the canonical repository on macOS:
-
-```bash
-git pull --ff-only
-chmod +x scripts/inventory-macos.sh
-./scripts/inventory-macos.sh | tee "$HOME/Desktop/NetTAP_Packet_Expert_inventory.txt"
-```
-
-The inventory is read-only. It reports Compose projects, containers, ports, volumes, native and containerized Ollama models, and likely NetTAP Git working copies. It deliberately does not print environment values or password hashes.
-
-Classify each deployment as:
-
-- **Canonical candidate:** correct repository, Compose project, model tag, images, and port.
-- **Preserve pending review:** contains unique users, chats, knowledge, or models.
-- **Legacy, safe to stop:** not canonical and its required data has been backed up or confirmed unnecessary.
-- **Unknown:** provenance or ownership cannot be established; do not alter it.
-
-## 5. Safe consolidation and cleanup
-
-### 5.1 Stop without deleting data
-
-For the canonical repository:
-
-```bash
-./scripts/stop.sh
-```
-
-For another identified Compose project, run `docker compose down` from its exact working directory with its exact Compose file. This stops its containers and network but preserves named volumes. Do not use `-v`.
-
-If the inventory shows a standalone container whose project cannot be established, record its name and volume mounts before using `docker stop CONTAINER_NAME`. Do not remove it during initial consolidation.
-
-### 5.2 Back up persistent volumes before removal
-
-First list the exact volume names and create a private backup directory:
-
-```bash
-docker volume ls
-mkdir -p "$HOME/NetTAP-Backups"
-```
-
-Back up one exact named volume at a time. Replace `EXACT_VOLUME_NAME` with a name copied from the inventory:
-
-```bash
-docker run --rm \
-  -v EXACT_VOLUME_NAME:/source:ro \
-  -v "$HOME/NetTAP-Backups":/backup \
-  alpine:3.20 \
-  tar -czf /backup/EXACT_VOLUME_NAME.tgz -C /source .
-```
-
-Record a checksum:
-
-```bash
-shasum -a 256 "$HOME/NetTAP-Backups/EXACT_VOLUME_NAME.tgz"
-```
-
-Test that the archive can be listed:
-
-```bash
-tar -tzf "$HOME/NetTAP-Backups/EXACT_VOLUME_NAME.tgz" >/dev/null
-```
-
-Volume deletion is a separate, destructive maintenance decision. Perform it only after the exact target, backup, checksum, restore test, and retention approval are documented.
-
-### 5.3 Restore a volume
-
-Stop the owning Compose project. Create a new, explicitly named volume, then restore the archive:
-
-```bash
-docker volume create RESTORED_VOLUME_NAME
-docker run --rm \
-  -v RESTORED_VOLUME_NAME:/restore \
-  -v "$HOME/NetTAP-Backups":/backup:ro \
-  alpine:3.20 \
-  sh -c 'cd /restore && tar -xzf /backup/EXACT_VOLUME_NAME.tgz'
-```
-
-Do not attach a restored database simultaneously to two Open WebUI containers. Update the reviewed Compose mapping, start one deployment, and complete account, chat, knowledge, and health checks.
-
-## 6. Clean canonical deployment on macOS
-
-### Prerequisites
-
-- macOS on Apple silicon or Intel
-- Docker Desktop running with Compose v2
-- Git
-- 16 GB RAM recommended
-- At least 15 GB free disk
-
-Install into a clearly named working directory. If another directory with that name exists, do not overwrite it; inventory it first.
+macOS:
 
 ```bash
 git clone https://github.com/mpdwyer2367/nettap-packet-expert.git
 cd nettap-packet-expert
-chmod +x scripts/*.sh tests/*.sh
-./tests/static-checks.sh
+chmod +x scripts/* tests/*.sh
 ./scripts/start-macos.sh
 ```
 
-Open <http://127.0.0.1:3001>. The first start downloads the container images and approximately 4.7 GB base model, creates the custom model, and starts the UI.
-
-### First administrator session
-
-1. Sign in as `admin@nettap.local` with password `admin`.
-2. Open **Settings > Account**.
-3. Replace the password with a unique 12–72 character password containing uppercase, lowercase, number, and symbol.
-4. Sign out and verify that `admin` fails.
-5. Sign in with the replacement password.
-6. Confirm the selected model is `nettap-packet-expert:0.1.0-rc.8`.
-
-The bootstrap account is created only when the Open WebUI database is empty. Existing volumes retain their existing accounts and passwords.
-
-### Import approved knowledge
-
-1. Open **Workspace > Knowledge**.
-2. Create `NetTAP Packet Expert`.
-3. Upload `knowledge/NetTAP_Packet_Expert_Knowledge.md`.
-4. Wait for processing.
-5. Open **Workspace > Models** and attach the knowledge base to the Packet Expert model or model preset.
-6. Test a new chat and verify the response distinguishes supplied information from unavailable live data.
-
-Updating the Git Markdown does not update an already imported Open WebUI knowledge base. Re-import the approved revision and verify model attachment.
-
-RC8 does not include a separate Open WebUI Workspace Skill. Its operational workflow and guardrails are embedded in `model/Modelfile`.
-
-## 7. Clean canonical deployment on Windows
-
-### Prerequisites
-
-- Windows 11 or supported Windows 10
-- Hardware virtualization and WSL 2
-- Docker Desktop using Linux containers
-- Git and PowerShell
-- 16 GB RAM recommended
-- At least 15 GB free disk
-
-Run from normal-user PowerShell:
+Windows PowerShell:
 
 ```powershell
 git clone https://github.com/mpdwyer2367/nettap-packet-expert.git
@@ -197,238 +46,102 @@ Set-Location .\nettap-packet-expert
 .\scripts\start-windows.ps1
 ```
 
-If execution policy blocks the local script:
+The startup sequence:
 
-```powershell
-powershell -ExecutionPolicy Bypass -File .\scripts\start-windows.ps1
+1. validates Docker;
+2. creates protected local configuration;
+3. generates the WebUI secret and unique bootstrap password;
+4. temporarily attaches model-registry egress;
+5. pulls images/base model and builds the NetTAP model;
+6. removes the bootstrap stack and egress network;
+7. starts the loopback-only application.
+
+Activate the administrator according to [AUTHENTICATION.md](AUTHENTICATION.md). Never expose the local profile to another host.
+
+## Production conversion
+
+```bash
+./scripts/lock-images.sh --confirm
+./scripts/security-scan.sh
+./scripts/configure-production.sh \
+  --hostname packet-expert.customer.example \
+  --certificate /secure/tls.crt \
+  --private-key /secure/tls.key
+./scripts/production-preflight.sh
+./scripts/start-production.sh
+./scripts/verify-production-deployment.sh
 ```
 
-Open <http://127.0.0.1:3001>, complete the same password change and knowledge import, then run the Windows checks in `docs/WINDOWS_DEPLOYMENT.md`.
+The preflight refuses insufficient CPU/memory/disk, mutable image tags, missing TLS, or incomplete administrator activation. Runtime verification rejects unhealthy services, direct WebUI/Ollama ports, remaining model egress, missing model identity, or failed TLS health.
 
-## 8. Daily administration
+## Command reference
 
-### macOS commands
-
-| Task | Command |
+| Command | Purpose |
 |---|---|
-| Start or complete initialization | `./scripts/start-macos.sh` |
-| Show services and Ollama models | `./scripts/status.sh` |
-| Follow logs | `docker compose --env-file .env -f compose.yaml logs -f --tail 200` |
-| Restart services | `docker compose --env-file .env -f compose.yaml restart` |
-| Stop and preserve data | `./scripts/stop.sh` |
-| Rebuild after reviewed Modelfile change | `./scripts/update-model.sh --confirm` |
-| Run static checks | `./tests/static-checks.sh` |
-| Run macOS acceptance | `./tests/macos-e2e.sh` |
+| `nettap-packet-expert status` | Show canonical service status |
+| `nettap-packet-expert health` | Verify local or production endpoint |
+| `nettap-packet-expert stop` | Stop services while preserving volumes |
+| `nettap-packet-expert update-model --confirm` | Rebuild through temporary registry egress |
+| `nettap-packet-expert lock-images --confirm` | Replace tags with registry digests |
+| `nettap-packet-expert scan` | Produce SPDX SBOM and fail on HIGH/CRITICAL CVEs |
+| `nettap-packet-expert backup [path] --confirm-stop` | Stop, archive both persistent volumes with checksums, and restart |
+| `nettap-packet-expert restore PATH --target-prefix NAME` | Restore only into new volumes |
+| `nettap-packet-expert verify-production` | Verify runtime isolation, identity and TLS |
+| `nettap-packet-expert certify` | Refuse certification until independent evidence exists |
 
-### Windows commands
+## Daily operation
 
-```powershell
-$compose = @('compose', '--env-file', '.env', '-f', 'compose.yaml')
-docker @compose ps
-docker @compose logs --tail 200 ollama open-webui
-docker @compose restart
-docker @compose down
-```
+1. Run `scripts/healthcheck.sh` and monitor host/Docker/gateway/application logs.
+2. Review storage capacity, certificate expiry, backup completion, CVE updates, user access, and security advisories.
+3. Keep prompts and evidence out of public logs and tickets.
+4. Treat every model answer as advisory and require an authorized operator for changes.
 
-`down` preserves named volumes. Never add `-v` during routine operation.
-
-## 9. Health and acceptance checks
-
-See [`VALIDATION_STATUS.md`](VALIDATION_STATUS.md) for the authoritative distinction between source validation, automated runtime verification, manual acceptance, and release acceptance.
-
-On macOS:
+## Backup, restore, and disaster recovery
 
 ```bash
-./scripts/status.sh
-curl --fail http://127.0.0.1:3001/health
-./scripts/verify-macos-deployment.sh
-./tests/macos-e2e.sh
+./scripts/backup.sh /customer-protected/backup-2026-08-04 --confirm-stop
+./scripts/restore.sh /customer-protected/backup-2026-08-04 --target-prefix dr-test
 ```
 
-Manual acceptance must also confirm:
+Backups contain customer accounts, chats, knowledge, and models. Encrypt them, restrict access, replicate off host, and test restoration at the customer-approved cadence. Restore never attaches volumes or overwrites a deployment. Operations must deliberately validate and connect recovered volumes under change control.
 
-- `admin@nettap.local / admin` works only on a fresh volume.
-- The administrator changes the password and the old password fails.
-- The new password survives service restart.
-- The correct custom model is selected and responds.
-- The four broad starter prompts appear.
-- No response claims access to unconnected live traffic or telemetry.
-- The imported knowledge is attached and accessible to authorized users.
-- The UI remains bound to loopback.
-- No customer evidence, secret, credential, or personal data is in the release image or test record.
+## Updates
 
-Save the generated acceptance report under `reports/`, remove sensitive host/user details if necessary, and attach the approved report to the GitHub release.
+Customer production is release-based, not branch-based. Never run an unreviewed `git pull` in place.
 
-## 10. Account and access administration
+1. Review and verify the signed new package.
+2. Back up and prove restore.
+3. Deploy in a separate directory/volume set.
+4. lock digests, scan, initialize and test;
+5. complete browser, model, knowledge, data, security and performance acceptance;
+6. switch the approved customer endpoint;
+7. preserve the old environment for rollback, then retire it under retention policy.
 
-- Keep `BIND_ADDRESS=127.0.0.1` for the supplied local profile.
-- Signup is disabled by default.
-- Do not publish `.env`; it contains the WebUI secret and bootstrap settings.
-- Do not assume `admin@nettap.local / admin` can reset an existing database.
-- Follow `docs/AUTHENTICATION.md` for supported account inspection and password recovery.
-- Before multi-user or network exposure, design TLS termination, identity, authorization, source restrictions, audit, backup, retention, threat modeling, and penetration testing.
+## Accounts, chats, knowledge, and models
 
-The RC8 banner asks the administrator to replace the temporary password. Stock Open WebUI does not technically force a first-login password reset, so the release acceptance process must verify it.
+All Open WebUI state—including accounts, chats and imported knowledge—is in the Open WebUI volume. Ollama models are in the Ollama volume. Deleting containers does not normally delete named volumes. `docker compose down -v` is destructive and is not a supported routine operation.
 
-## 11. Updating the model and application
+The NetTAP policy in `model/Modelfile` loads automatically when the custom model is built. Supplemental Markdown knowledge requires a controlled import and model attachment. Record its hash; Git changes do not update existing WebUI data.
 
-### Model behavior change
+## Troubleshooting
 
-1. Create a Git branch.
-2. Edit `model/Modelfile` through peer review.
-3. If the release identity changes, update `MODEL_NAME` in `.env.example`, Compose references, tests, documentation, and reports together.
-4. Run `./tests/static-checks.sh`.
-5. Rebuild locally with `./scripts/update-model.sh --confirm`.
-6. Run `./tests/macos-e2e.sh` and manual acceptance.
-7. Record the base model, Modelfile commit, image digests, host, and results.
-8. Merge only after review.
+| Symptom | Check |
+|---|---|
+| UI unavailable | `scripts/status.sh`, `scripts/healthcheck.sh`, gateway/WebUI logs, port and DNS |
+| Login rejected | Generated file on fresh volume; existing administrator on reused volume |
+| Model missing | model-init output, Ollama volume, `scripts/update-model.sh --confirm` |
+| Old prompts | Persistent WebUI configuration; edit admin settings instead of deleting data |
+| Generic knowledge response | processing status, attachment, permission, selected model |
+| Slow inference | CPU/memory allocation, context/concurrency, representative benchmark |
+| Production startup refused | generated admin retirement, digest lock, TLS, resource preflight |
+| Scan failed | do not deploy; patch/update or approve a documented time-bound exception |
 
-### Open WebUI or Ollama image update
+## Sharing and GitHub maintenance
 
-1. Review vendor release notes and security advisories.
-2. Change only the pinned image tag in `.env.example`.
-3. Back up both named volumes.
-4. Pull and test on a non-production host.
-5. Test authentication, password change, existing data migration, model discovery, knowledge, prompts, inference, health, restart, backup, and restore.
-6. Record image digests, not only mutable tags.
-7. Publish a new release candidate; do not silently change an existing release.
+- Publish only reviewed source; exclude `.env`, credentials, keys, backups, generated private reports, and customer data.
+- Require pull-request review and passing CI on protected `main`.
+- Tag only an exact accepted commit and attach signed source package, checksum, signature, SBOM, notices, release notes, support matrix, and public key.
+- Use GitHub private security advisories for vulnerabilities.
+- Maintain release/EOL, support, CVE response, key rotation, and backup compatibility policies.
 
-### Knowledge update
-
-1. Edit the Markdown on a branch.
-2. Review for technical accuracy, authorization, privacy, and unsupported claims.
-3. Merge and tag the approved revision.
-4. Re-import it into Open WebUI and reattach it to the intended model.
-5. Run retrieval and access-control checks.
-
-## 12. GitHub maintenance and release workflow
-
-### Normal contribution workflow
-
-```bash
-git switch main
-git pull --ff-only
-git switch -c docs/short-description
-# edit and validate
-git status --short
-git diff --check
-./tests/static-checks.sh
-git add <reviewed-files>
-git commit -m "Describe the reviewed change"
-git push -u origin docs/short-description
-```
-
-Open a pull request, require review, and merge after checks pass. Protect `main`; require pull requests and passing CI. Do not commit secrets, `.env`, production captures, customer evidence, model registry credentials, or private reports.
-
-### Release procedure
-
-1. Confirm the repository is clean and CI passes.
-2. Complete runtime acceptance on each advertised platform.
-3. Update version strings consistently.
-4. Prepare release notes: capability changes, security changes, migrations, known limitations, checksums, and acceptance status.
-5. Create an annotated tag such as `v0.1.0-rc.9`.
-6. Push the tag and create a GitHub release from that exact commit.
-7. Attach sanitized acceptance reports and distributable source archives if approved.
-8. Keep prior tags immutable; publish a new version for fixes.
-
-### Rollback
-
-- Keep the previous Git tag, image tags/digests, and verified volume backups.
-- Stop the failed deployment without deleting volumes.
-- Restore a compatible backup only after confirming database compatibility.
-- Check out the prior tag in a separate directory and start one deployment.
-- Repeat health, identity, authentication, knowledge, and inference checks.
-- Record the reason, owner, data impact, and final state.
-
-## 13. Sharing the project
-
-Share the public repository URL and a specific release tag, not an unversioned folder or an old archive. Recipients should receive:
-
-- repository and release URL;
-- platform prerequisites;
-- deployment guide;
-- temporary account procedure;
-- security and evidence boundary;
-- acceptance status and known limitations;
-- support and vulnerability-reporting path;
-- checksum for any attached archive.
-
-The repository is public, but no license has yet been selected for NetTAP-authored source. Public visibility does not grant open-source redistribution, modification, or contribution rights. Add a NetTAP-approved license and contributor policy before inviting redistribution or external contributions.
-
-## 14. Troubleshooting decision path
-
-### Wrong or unavailable URL
-
-Run `./scripts/status.sh`, check logs, and run the inventory. RC8 defaults to `127.0.0.1:3001`. Port 3000 usually indicates another deployment.
-
-### Administrator login fails
-
-If the volume already contains a user, bootstrap credentials do not apply. Use the account inspection procedure in `docs/AUTHENTICATION.md`; do not delete the database.
-
-### Model missing
-
-Run `./scripts/update-model.sh --confirm`, then verify `nettap-packet-expert:0.1.0-rc.8` appears in `./scripts/status.sh`.
-
-### Old suggestions remain
-
-Open WebUI persistent configuration can retain earlier suggestions. Update the administrator setting or migrate approved data to a fresh, validated volume. Do not delete the old volume to fix prompts.
-
-### Generic knowledge answers
-
-Confirm processing completed, the knowledge base is attached to the selected model/preset, and the user has permission to read it.
-
-### Port conflict
-
-Use the inventory to identify the listener. Stop the exact legacy project after backup, or change `WEB_PORT` in the canonical `.env` and use that loopback URL.
-
-### Slow Apple silicon inference
-
-The containerized Ollama profile is CPU-compatible. It does not use Apple Metal. Do not describe it as GPU-accelerated.
-
-## 15. Current limitations and release decision
-
-RC8 can be shared for controlled evaluation when the platform acceptance report passes and the recipient understands the limitations. It should not yet be represented as a fully validated production appliance because:
-
-- platform runtime acceptance is not complete for every target configuration;
-- knowledge import is manual;
-- no formal Open WebUI Workspace Skill package is included;
-- no live capture, IPFIX, telemetry, NPB, or PCAP-processing integration is included;
-- automated backup/restore and Windows E2E automation are not included;
-- forced password change is procedural, not technically enforced;
-- no NetTAP source license has been selected.
-
-These boundaries are release controls, not optional wording. Close and test them before a production or commercially licensed appliance claim.
-
-## 16. Operator handoff checklist
-
-- [ ] Inventory existing Docker, Open WebUI, Ollama, ports, volumes, models, and Git copies.
-- [ ] Identify the canonical RC8 deployment by repository, project, tag, images, and port.
-- [ ] Back up and checksum every volume selected for preservation.
-- [ ] Stop legacy deployments without `-v`.
-- [ ] Deploy from the canonical GitHub repository.
-- [ ] Run static and runtime acceptance.
-- [ ] Change the temporary administrator password and verify persistence.
-- [ ] Import and attach the approved knowledge revision.
-- [ ] Confirm the model never claims unavailable live evidence.
-- [ ] Record host, versions, image digests, commit, tests, owner, and date.
-- [ ] Protect GitHub `main` and release from an immutable tag.
-- [ ] Select an approved license before external redistribution or contributions.
-
-## 17. Support escalation record
-
-For every incident or support case, record:
-
-- date/time and operator;
-- host OS and architecture;
-- Git commit and release tag;
-- Docker Desktop, Compose, image tags and digests;
-- Compose project and working directory;
-- custom model tag;
-- exact URL and bind address;
-- symptoms and timestamps;
-- commands run and results;
-- backup/checksum status;
-- data or security impact;
-- recovery action and validation.
-
-Do not include passwords, secrets, authentication tokens, private packet payloads, or unminimized customer evidence in GitHub issues or public logs.
+NetTAP-authored source is Apache-2.0 licensed. Commercial distribution additionally requires the exact third-party and branding review in [THIRD_PARTY_NOTICES.md](../THIRD_PARTY_NOTICES.md).

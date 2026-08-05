@@ -1,0 +1,89 @@
+#!/usr/bin/env python3
+"""Fail-closed structural checks for the production Compose profiles."""
+from pathlib import Path
+import sys
+import yaml
+
+root = Path(__file__).resolve().parents[1]
+
+def load(name):
+    return yaml.safe_load((root / name).read_text(encoding="utf-8"))
+
+base = load("compose.yaml")
+local = load("compose.local.yaml")
+bootstrap = load("compose.bootstrap.yaml")
+production = load("compose.production.yaml")
+
+assert set(base["services"]) == {"ollama", "model-init", "open-webui"}
+assert base["networks"]["backend"]["internal"] is True
+assert base["networks"]["user-access"]["internal"] is True
+assert "ports" not in base["services"]["ollama"]
+assert "ports" not in base["services"]["open-webui"]
+assert local["services"]["open-webui"]["ports"] == ["${BIND_ADDRESS}:${WEB_PORT}:8080"]
+assert bootstrap["services"]["ollama"]["networks"] == ["backend", "model-egress"]
+
+for service_name in ("ollama", "open-webui"):
+    service = base["services"][service_name]
+    assert service["security_opt"] == ["no-new-privileges:true"]
+    assert service["cap_drop"] == ["ALL"]
+    assert service["pids_limit"] > 0
+    assert service["logging"]["options"]["max-size"]
+
+env = base["services"]["open-webui"]["environment"]
+for key in (
+    "ENABLE_SIGNUP",
+    "ENABLE_CODE_EXECUTION",
+    "ENABLE_CODE_INTERPRETER",
+    "ENABLE_API_KEYS",
+    "ENABLE_WEB_SEARCH",
+    "ENABLE_USER_WEBHOOKS",
+    "ENABLE_MEMORIES",
+    "ENABLE_ADMIN_EXPORT",
+    "ENABLE_ADMIN_CHAT_ACCESS",
+    "BYPASS_ADMIN_ACCESS_CONTROL",
+    "ENABLE_OPENAI_API",
+    "ENABLE_COMMUNITY_SHARING",
+    "ENABLE_DIRECT_CONNECTIONS",
+    "ENABLE_RAG_LOCAL_WEB_FETCH",
+    "ENABLE_SUBAGENTS",
+    "USER_PERMISSIONS_CHAT_FILE_UPLOAD",
+    "USER_PERMISSIONS_CHAT_WEB_UPLOAD",
+    "USER_PERMISSIONS_CHAT_EXPORT",
+    "USER_PERMISSIONS_CHAT_IMPORT",
+    "USER_PERMISSIONS_CHAT_SHARE",
+    "USER_PERMISSIONS_CHAT_ALLOW_PUBLIC_SHARING",
+    "USER_PERMISSIONS_CHAT_ALLOW_OPEN_SHARING",
+    "USER_PERMISSIONS_FEATURES_DIRECT_TOOL_SERVERS",
+    "USER_PERMISSIONS_FEATURES_WEB_SEARCH",
+    "USER_PERMISSIONS_FEATURES_USER_WEBHOOKS",
+    "USER_PERMISSIONS_FEATURES_API_KEYS",
+):
+    assert env[key] == "False", f"{key} must be False"
+assert env["WEBUI_AUTH"] == "True"
+assert env["JWT_EXPIRES_IN"] == "${JWT_EXPIRES_IN}"
+assert env["ENABLE_PERSISTENT_CONFIG"] == "False"
+assert env["OFFLINE_MODE"] == "True"
+assert env["AUDIT_LOG_LEVEL"] == "METADATA"
+
+prod_web_env = production["services"]["open-webui"]["environment"]
+assert prod_web_env["WEBUI_SESSION_COOKIE_SECURE"] == "True"
+assert prod_web_env["WEBUI_AUTH_COOKIE_SECURE"] == "True"
+assert prod_web_env["WEBUI_BANNERS"] == "[]"
+gateway = production["services"]["gateway"]
+assert gateway["ports"] == ["${HTTPS_BIND_ADDRESS}:${HTTPS_PORT}:443"]
+assert gateway["networks"] == ["user-access"]
+assert "./config/tls:/etc/caddy/tls:ro" in gateway["volumes"]
+assert gateway["security_opt"] == ["no-new-privileges:true"]
+
+env_example = (root / ".env.example").read_text(encoding="utf-8")
+assert "MODEL_NAME=nettap-packet-expert:0.2.0-rc.1" in env_example
+assert "EXPECTED_BASE_MODEL_ID=845dbda0ea48" in env_example
+assert "WEBUI_ADMIN_PASSWORD=GENERATE_ON_FIRST_START" in env_example
+assert "WEBUI_ADMIN_PASSWORD=admin" not in env_example
+assert "BIND_ADDRESS=127.0.0.1" in env_example
+
+caddy = (root / "config/Caddyfile").read_text(encoding="utf-8")
+for control in ("tls /etc/caddy/tls/tls.crt", "Strict-Transport-Security", "X-Frame-Options", "-Server"):
+    assert control in caddy
+
+print("Production configuration checks passed.")

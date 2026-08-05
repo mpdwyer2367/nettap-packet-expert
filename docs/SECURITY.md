@@ -1,15 +1,13 @@
 # Security and evidence boundary
 
-This release candidate is a local decision-support assistant, not an autonomous security control, packet capture engine, IDS, NDR, SIEM, or source of ground truth.
+NetTAP Packet Expert is advisory decision support. It is not a security enforcement control or source of forensic truth.
 
-- The UI binds to `127.0.0.1` by default.
-- Authentication is enabled and the first account becomes administrator.
-- Later accounts default to pending.
-- Code execution, the code interpreter, and automatic package installation are disabled.
-- Ollama is not published to the host. It can reach the model registry through a separate egress network so the declared base model can be downloaded.
-- Persistent chat and model data remain in Docker volumes.
-- Operators must not upload secrets, credentials, personal content, or unminimized packet payload.
+Implemented candidate controls include generated bootstrap credentials, explicit bootstrap retirement, disabled signup and risky WebUI features, an 8-hour session, secure production cookies, TLS termination, internal-only WebUI/Ollama networks, no host Ollama port, temporary-only model registry egress, dropped Linux capabilities, no-new-privileges, resource/PID limits, log rotation, immutable digest enforcement, SBOM/CVE tooling, protected backups, non-overwriting restore, and fail-closed certification gates.
 
-Before any non-local exposure, deploy an approved TLS reverse proxy, restrict source networks, configure organizational identity controls, back up volumes, define retention, review audit requirements, and perform threat modeling and penetration testing.
+Required customer controls include hardened/patch-managed hosts, customer PKI and firewalling, disk and backup encryption, named administrators, secure time, endpoint monitoring, data classification and retention, incident response, controlled evidence normalization, centralized log handling, and change approval.
 
-For vulnerability reports, use a private GitHub security advisory after the repository is created. Do not open a public issue containing exploit details or secrets.
+Uploaded and retrieved content is untrusted. It may contain prompt injection, false data, sensitive payload, or poisoned knowledge. Minimize it, validate provenance, restrict access, and require human review. Packet Expert output must be validated with authoritative network/security tools before operational or forensic action.
+
+Open WebUI administrators are root-equivalent within the application. Do not share one instance across customers. SSO/MFA, native telemetry collectors, packet capture, centralized immutable audit export, high availability, licensing enforcement, and an OVA are outside this release scope.
+
+Review [the threat model](THREAT_MODEL.md), [production architecture](PRODUCTION_ARCHITECTURE.md), and [commercial gates](COMMERCIAL_RELEASE_GATES.md).

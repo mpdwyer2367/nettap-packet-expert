@@ -67,5 +67,5 @@ done
 [[ "$ui_ready" == true ]] || { echo "FAIL: Open WebUI did not recover after restart."; exit 8; }
 
 echo "PASS: administrator presence, model identity, inference, UI health, and restart persistence checks completed."
-echo "Manual acceptance still required on a fresh data volume: sign in with admin@nettap.local/admin, change the password, confirm the old password fails, confirm the new password survives restart, select the model, submit a chat, and verify four starter prompts."
+echo "Manual acceptance still required on a fresh data volume: use the locally generated credential, change it, confirm it fails, finalize activation, confirm the new password survives restart, select the model, submit a chat, and verify four starter prompts."
 echo "Report: $report_file"

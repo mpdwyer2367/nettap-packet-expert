@@ -1,102 +1,69 @@
 # NetTAP Packet Expert
 
-NetTAP Packet Expert is a local network operations and security operations assistant. The release-candidate deployment combines a Qwen2.5 7B instruction model, a versioned NetTAP operating prompt, Ollama, and Open WebUI.
+NetTAP Packet Expert is a customer-isolated network and security operations assistant. It combines a Qwen2.5 7B instruction model, a version-controlled NetTAP operating policy, Ollama, Open WebUI, and an optional TLS gateway.
 
-This repository deploys a custom Ollama model definition, not fine-tuned model weights. On first deployment, Ollama downloads `qwen2.5:7b-instruct-q4_K_M` and builds `nettap-packet-expert:0.1.0-rc.8` from [`model/Modelfile`](model/Modelfile).
+The repository builds a custom Ollama model definition; it does **not** contain separately fine-tuned weights. First initialization downloads `qwen2.5:7b-instruct-q4_K_M` and creates `nettap-packet-expert:0.2.0-rc.1`.
 
-## What is included
+## Product status
 
-- Evidence-disciplined guidance for authorized network-performance, availability, cyber-visibility, and forensic investigations.
-- A local Ollama model and loopback-only Open WebUI chat interface.
-- Four broad starter prompts for users who do not know where to begin.
-- Supplemental project knowledge in [`knowledge/NetTAP_Packet_Expert_Knowledge.md`](knowledge/NetTAP_Packet_Expert_Knowledge.md).
-- macOS deployment scripts, source checks, and a macOS runtime acceptance harness.
-- A Docker Compose path that can also be run from Windows with Docker Desktop and Linux containers.
-- A fresh-install administrator bootstrap with a documented secure-password transition.
+`0.2.0-rc.1` is a production-hardening candidate, not a generally available certified appliance. Source controls and reproducible certification gates are included. Commercial release remains blocked until the exact build has passing macOS and Windows runtime evidence, SBOM/CVE acceptance, independent penetration-test approval, legal/licensing approval, support readiness, signature verification, and authorized release acceptance. See [validation status](docs/VALIDATION_STATUS.md).
 
-## Important capability boundary
+## What the product does
 
-Packet Expert does **not** capture interfaces, decode a binary PCAP by itself, observe live traffic, connect automatically to a NetTAP NPB, replace Wireshark/TShark, or operate network and security controls. A NetTAP TAP/NPB or another authorized source must deliver evidence to an approved capture and normalization workflow. Supply only minimized, authorized evidence to the model.
+- Guides authorized network-performance, availability, visibility, and forensic investigations.
+- Separates observed evidence from hypotheses and unavailable information.
+- Resists instructions embedded in uploaded or retrieved evidence.
+- Requires human review for production changes and supplies validation and rollback guidance.
+- Provides local evaluation and hardened single-node customer deployment profiles.
+- Supplies administration, health, image-locking, security-scan, backup, restore, packaging, and verification commands.
 
-The assistant must distinguish supplied evidence, retrieved documentation, general knowledge, hypotheses, and unavailable information. It must not claim that live traffic, a capture, a telemetry feed, or a tool result exists unless the application actually provides it.
+It is not a packet capture engine, NPB, SIEM, IDS/IPS, NDR, case-management platform, or autonomous network controller. It does not see live traffic, decode arbitrary PCAP files, or connect to NetTAP equipment unless a separately engineered, authorized, and validated integration supplies normalized evidence.
 
 ## Architecture
 
 ```mermaid
-flowchart TD
-    A["Authorized user"] --> B["Open WebUI\n127.0.0.1:3001"]
-    B --> C["Ollama\ninternal Docker network"]
-    C --> D["NetTAP Packet Expert\nQwen2.5 7B + Modelfile"]
-    E["NetTAP knowledge\nmanual Open WebUI import"] --> B
-    F["Approved external evidence\nnormalized and minimized"] --> A
+flowchart TB
+    U["Authorized customer user"] --> G["TLS gateway<br/>customer certificate"]
+    G --> W["Open WebUI<br/>authentication and chat"]
+    W --> O["Ollama<br/>internal-only API"]
+    O --> M["Packet Expert 0.2.0-rc.1<br/>Qwen2.5 7B + NetTAP policy"]
+    E["Approved normalized evidence<br/>minimized and untrusted"] --> W
+    A["Administrator<br/>CLI and audited release process"] --> G
 ```
 
-Open WebUI and Ollama communicate on an internal Docker network. The browser is bound to host loopback by default. Ollama is not published on a host port.
+Runtime model traffic is confined to an internal Docker network. Open WebUI has no production host port; the TLS gateway is the only browser entry point. Registry egress is attached only during explicit image/model initialization and removed before runtime. Each customer requires a separate instance because Open WebUI administrators are root-equivalent within an instance.
 
-## What loads automatically
+## Profiles
 
-| Component | Deployment behavior | Source |
-|---|---|---|
-| Base model | Downloaded on the first model initialization | Ollama registry |
-| NetTAP model behavior | Built into the custom Ollama model | `model/Modelfile` |
-| Starter prompts | Seeded on a fresh Open WebUI data volume | `compose.yaml` |
-| Administrator | Created only when the Open WebUI user database is empty | `admin@nettap.local` / temporary password `admin` |
-| Open WebUI accounts and chats | Persisted in a Docker volume | Open WebUI data volume |
-| NetTAP knowledge file | **Manual import and model attachment required** | `knowledge/NetTAP_Packet_Expert_Knowledge.md` |
-| Formal Open WebUI Workspace Skills | **No separate Skill package is included in RC8** | Operational instructions are in the Modelfile |
-| Live packet or telemetry feeds | **Not included** | Requires a separately engineered and authorized integration |
+| Profile | Intended use | Exposure | Required controls |
+|---|---|---|---|
+| Local | Evaluation and administrator activation | `127.0.0.1:3001` | Generated secret and unique bootstrap password |
+| Production | Single-customer deployment | TLS gateway on `8443` by default | Customer certificate, retired bootstrap, immutable image digests, preflight, scan, backup, verification |
 
-In this release, “Packet Expert skills” means the investigation workflow and guardrails encoded in the Modelfile. It is not a claim that an Open WebUI Workspace Skill has been installed. Do not import the same instructions twice unless you intentionally want additional prompt context.
+Minimum production allocation is 8 CPUs, 16 GiB Docker memory, and 40 GiB free disk. More CPU and 24–32 GiB RAM improve concurrent use. The supplied container profile is CPU-compatible; it does not claim Apple Metal or Windows GPU acceleration.
 
-## Requirements
+## Local deployment
 
-| Host | Supported evaluation path | Minimum guidance |
-|---|---|---|
-| macOS | Apple silicon (`arm64`) or Intel (`x86_64`), Docker Desktop, Compose v2 | 16 GB RAM recommended; 15 GB free disk |
-| Windows | Windows 11 or supported Windows 10, hardware virtualization, WSL 2, Docker Desktop using Linux containers, Git | 16 GB RAM recommended; 15 GB free disk |
-
-The first run downloads multiple container images and an approximately 4.7 GB quantized base model. Download time depends on the network and storage.
-
-The default container profile is CPU-compatible. Docker Desktop does not expose Apple Metal acceleration to the Linux Ollama container, and this Compose file does not request a Windows GPU. Do not advertise GPU acceleration for this profile.
-
-## Fresh-install administrator
-
-A new Open WebUI data volume receives this temporary local account:
-
-- Login: `admin@nettap.local`
-- Temporary password: `admin`
-
-Open WebUI requires an email-formatted login, so the identifier is `admin@nettap.local`, not plain `admin`. The account is created only when no Open WebUI users exist. Existing volumes retain their accounts, roles, passwords, chats, and settings.
-
-Additional signup is disabled. Immediately after the first login, open **Settings > Account**, enter `admin` as the current password, and set a unique password containing 12–72 characters with uppercase, lowercase, number, and symbol. Do not change `BIND_ADDRESS` from `127.0.0.1`, configure VirtualBox bridged networking, or expose the UI through a reverse proxy until the temporary password has been replaced.
-
-Open WebUI does not provide a native forced-password-change-on-first-login control. RC8 therefore uses a prominent warning banner and a documented administrator acceptance step; it does not falsely claim technical enforcement.
-
-## Deploy on macOS
-
-1. Install and start Docker Desktop.
-2. Open Terminal and run:
+### macOS
 
 ```bash
 git clone https://github.com/mpdwyer2367/nettap-packet-expert.git
 cd nettap-packet-expert
-chmod +x scripts/*.sh tests/*.sh
+chmod +x scripts/* tests/*.sh
 ./scripts/start-macos.sh
 ```
 
-The script validates the Docker runtime and disk space, creates a protected `.env`, generates the Open WebUI secret, pulls the pinned containers and base model, builds the NetTAP model, and starts Open WebUI.
-
-Open <http://127.0.0.1:3001> after the script completes.
-
-For an independent clean-room evaluation, a colleague can use the [`colleague evaluation guide`](docs/COLLEAGUE_EVALUATION_GUIDE.md) and run one command after cloning:
+Open <http://127.0.0.1:3001>. The script prints the path to a protected local credential file. Sign in as `admin@nettap.local` with that generated password, replace it in **Settings > Account**, verify the generated password no longer works, then run:
 
 ```bash
-./tests/colleague-macos-acceptance.sh
+./scripts/finalize-admin.sh --confirm
 ```
 
-## Deploy on Windows
+There is no shared or committed default password.
 
-Use PowerShell from a normal user account. Docker Desktop must be running with the WSL 2 engine and Linux containers.
+### Windows
+
+Run Docker Desktop with WSL 2 and Linux containers:
 
 ```powershell
 git clone https://github.com/mpdwyer2367/nettap-packet-expert.git
@@ -104,164 +71,82 @@ Set-Location .\nettap-packet-expert
 .\scripts\start-windows.ps1
 ```
 
-If local policy blocks the script, run this one time from the repository directory:
+The PowerShell entry point uses the same generated-credential and temporary-egress design. Complete administrator finalization from WSL or Git Bash. See [Windows deployment](docs/WINDOWS_DEPLOYMENT.md).
 
-```powershell
-powershell -ExecutionPolicy Bypass -File .\scripts\start-windows.ps1
-```
+## Production deployment
 
-Open <http://127.0.0.1:3001>. If a command fails, stop and review the reported error; do not skip model initialization. See [Windows deployment](docs/WINDOWS_DEPLOYMENT.md).
-
-## Complete first administrator setup
-
-1. Open <http://127.0.0.1:3001> from the same host.
-2. Sign in with `admin@nettap.local` and temporary password `admin`.
-3. Open **Settings > Account** and change the password to a unique 12–72 character password containing uppercase, lowercase, number, and symbol.
-4. Sign out and sign in with the new password. Confirm that the old password no longer works.
-5. Confirm that `nettap-packet-expert:0.1.0-rc.8` is selected.
-6. Verify the four starter prompts:
-   - Start an investigation
-   - Understand my evidence
-   - Troubleshoot a network problem
-   - Help me decide
-7. Send: `I am not sure where to start with a suspected network problem. Ask one important question and do not claim you have live data.`
-8. Confirm that the answer asks one bounded question and does not claim access to traffic or telemetry.
-
-Starter prompts are persistent Open WebUI configuration. A fresh Open WebUI data volume receives the repository defaults. An existing volume can retain older prompts; review and update them in the Open WebUI administrator settings instead of deleting the volume and losing user data.
-
-## Load the NetTAP knowledge into Open WebUI
-
-The knowledge file is deliberately not auto-imported because Open WebUI knowledge belongs to its persistent application database and access-control model.
-
-1. Sign in as the first administrator.
-2. Open **Workspace > Knowledge**.
-3. Select **Create** and name the knowledge base `NetTAP Packet Expert`.
-4. Upload [`knowledge/NetTAP_Packet_Expert_Knowledge.md`](knowledge/NetTAP_Packet_Expert_Knowledge.md).
-5. Wait for processing to complete.
-6. Open **Workspace > Models**, edit the NetTAP model or create an Open WebUI model preset based on `nettap-packet-expert:0.1.0-rc.8`, and attach the `NetTAP Packet Expert` knowledge base.
-7. Save, start a new chat with that model, and ask: `What evidence-quality checks should I complete before interpreting supplied network evidence?`
-8. Confirm the response uses the knowledge guidance and still states that no live capture is connected.
-
-Open WebUI supports focused retrieval and full-context attachment. Focused retrieval is the safer default as the knowledge base grows. The current short project file can also use full context if administrators want it present in every request and have confirmed the context-window impact.
-
-Updating the Markdown file in Git does not update a knowledge base that was already imported. Re-upload the approved revision or use a separately designed knowledge-sync process.
-
-## Packaged operating skills
-
-The custom model automatically receives these behaviors from the Modelfile:
-
-- Begin with the symptom, operational decision, or investigation objective.
-- Ask one important question at a time and offer a “Help me decide” path.
-- Move from the goal to the affected endpoint or service, time window, authorized observation point, evidence, and next bounded check.
-- Separate observations from hypotheses and state what evidence would resolve uncertainty.
-- Validate authorization, capture position, direction, filter, snap length, retention, privacy, timestamps, dropped packets, truncation, VLANs, and tunnels where relevant.
-- Request vendor, model, OS version, interfaces, addressing, VLANs, and intended outcome before vendor-specific configuration.
-- Never invent commands, interface names, supported features, counters, packet contents, or completed actions.
-- Present configuration as reviewable steps with validation and rollback.
-
-Open WebUI also has a formal **Workspace > Skills** feature for reusable Markdown instructions. RC8 does not ship a separate importable Skill file; the authoritative Packet Expert instructions are already versioned in the Modelfile. If a future release adds formal Skill files, import them under **Workspace > Skills**, grant users read access, and bind them to the model under **Workspace > Models**. Skills are instructions, not executable integrations or live data access.
-
-## Validate the deployment
-
-The authoritative status and the distinction between source validation, automated runtime verification, manual acceptance, and release acceptance are documented in [`docs/VALIDATION_STATUS.md`](docs/VALIDATION_STATUS.md).
-
-### macOS automated acceptance
+Use a customer-approved DNS name and PEM certificate/private key. Keep keys outside Git.
 
 ```bash
-./scripts/verify-macos-deployment.sh
-./tests/macos-e2e.sh
+./scripts/lock-images.sh --confirm
+./scripts/security-scan.sh
+./scripts/configure-production.sh \
+  --hostname packet-expert.customer.example \
+  --certificate /secure/path/tls.crt \
+  --private-key /secure/path/tls.key
+./scripts/production-preflight.sh
+./scripts/start-production.sh
+./scripts/verify-production-deployment.sh
 ```
 
-The verifier rejects containers created from different Git working directories or Compose files, then checks image identity, model identity, loopback binding, Ollama isolation, administrator presence, UI health, and inference. The E2E harness also checks source controls, model creation, and persistence across service restart. Both write timestamped reports under `reports/`. Complete the manual administrator, prompt, knowledge, model-selection, chat, and sign-in checks printed by the harness.
+If administrator activation is incomplete, production startup deliberately opens only the loopback activation profile and refuses to enable the network gateway.
 
-### Windows acceptance
+Use [the customer deployment guide](docs/CUSTOMER_DEPLOYMENT_GUIDE.md) for firewall, DNS, backup, acceptance, and rollback requirements.
 
-From the repository PowerShell window used for deployment:
-
-```powershell
-$compose = @('compose', '--env-file', '.env', '-f', 'compose.yaml')
-docker @compose ps
-docker @compose exec -T ollama ollama show nettap-packet-expert:0.1.0-rc.8
-docker @compose exec -T ollama ollama run nettap-packet-expert:0.1.0-rc.8 `
-  'Ask one important question and do not claim that you have live packet data.'
-Invoke-WebRequest http://127.0.0.1:3001/health -UseBasicParsing
-```
-
-Expected results: both long-running services are healthy/running, `ollama show` identifies the NetTAP system prompt, inference returns non-empty output, and the health request returns success. Then complete the same manual browser checks listed above.
-
-No Windows automated E2E harness is included in RC8. Do not claim Windows runtime validation until these checks pass on each advertised Windows/Docker Desktop configuration and the results are recorded.
-
-## Daily operations
-
-### macOS
+## Administration
 
 ```bash
-./scripts/status.sh
-./scripts/stop.sh
-./scripts/update-model.sh --confirm
+./scripts/nettap-packet-expert help
+./scripts/nettap-packet-expert status
+./scripts/nettap-packet-expert health
+./scripts/nettap-packet-expert backup --confirm-stop
+./scripts/nettap-packet-expert scan
+./scripts/nettap-packet-expert stop
 ```
 
-`stop.sh` preserves persistent data. `update-model.sh` pulls the declared base and rebuilds the custom model after a reviewed Modelfile change.
+Restore is non-destructive: it verifies checksums and writes only to new, explicitly named volumes.
 
-### Windows
-
-```powershell
-$compose = @('compose', '--env-file', '.env', '-f', 'compose.yaml')
-docker @compose ps
-docker @compose logs --tail 200 ollama open-webui
-docker @compose down
-docker @compose --profile initialize run --rm model-init
-docker @compose up -d open-webui
+```bash
+./scripts/backup.sh /secure/backup/path --confirm-stop
+./scripts/restore.sh /secure/backup/path --target-prefix customer-test-restore
 ```
 
-`docker compose down` preserves named volumes. Never add `-v` unless permanent deletion of all local accounts, chats, configuration, knowledge, and downloaded models is intended. Back up the Open WebUI and Ollama named volumes before upgrades; RC8 does not include an automated backup/restore tool.
+## Knowledge and model behavior
 
-## Troubleshooting
+The authoritative system behavior is in [the Modelfile](model/Modelfile). Supplemental administrator-managed knowledge is in [the knowledge file](knowledge/NetTAP_Packet_Expert_Knowledge.md). Import the Markdown file under **Workspace > Knowledge**, restrict its access, and attach it to the Packet Expert model. Updating Git does not automatically replace an imported Open WebUI knowledge revision.
 
-- **Docker command not found:** install Docker Desktop and reopen the terminal.
-- **Docker engine unavailable:** start Docker Desktop and wait until the engine reports ready.
-- **Open WebUI does not open:** run the status and log commands, then confirm that port 3001 is unused and the bind address remains `127.0.0.1`.
-- **Model is missing:** rerun the model initialization command and inspect its output. Do not create a similarly named model manually.
-- **Old starter prompts remain:** persistent Open WebUI configuration is retaining the old values; update them in administrator settings.
-- **Knowledge answers are generic:** confirm the file completed processing and the knowledge base is attached to the selected Open WebUI model/preset.
-- **Knowledge cannot be found by another user:** verify that the user has access to the attached knowledge resource.
-- **Slow Apple silicon inference:** this containerized profile is CPU-compatible and does not use Metal acceleration.
-- **Port 3001 is already used:** change `WEB_PORT` in `.env`, restart, and open the new loopback URL.
-- **`admin@nettap.local / admin` does not work:** the Open WebUI volume already contains a user. Use the existing administrator or follow the supported password-recovery procedure; bootstrap credentials never overwrite an existing account.
+Four broad first-use prompts are supplied:
 
-## Security and data handling
+- Start an investigation
+- Understand my evidence
+- Troubleshoot a network problem
+- Help me decide
 
-- Keep `BIND_ADDRESS=127.0.0.1` unless an approved reverse proxy, TLS, firewall, identity, and access-control design is deployed.
-- Do not commit `.env`; it contains the Open WebUI secret.
-- Authentication and password validation are enabled. Code execution, the code interpreter, and pip installation are disabled in the supplied Compose configuration.
-- The bootstrap password is intentionally temporary. Replace it before expanding access beyond host loopback.
-- Keep credentials, personal content, secrets, and unnecessary packet payload outside the model boundary.
-- Treat packet captures and forensic evidence as sensitive records subject to authorization, retention, and chain-of-custody requirements.
-- Review [`docs/SECURITY.md`](docs/SECURITY.md), [`SECURITY.md`](SECURITY.md), and [`THIRD_PARTY_NOTICES.md`](THIRD_PARTY_NOTICES.md) before broader deployment.
+## Validation and commercial release
 
-## Release status
+```bash
+./tests/static-checks.sh
+./tests/model-behavior-eval.sh
+./scripts/certify-production.sh
+```
 
-`0.1.0-rc.8` is an evaluation release candidate. Source-level validation is available in CI. It must not be called macOS-validated until `tests/macos-e2e.sh` and the manual acceptance checklist pass on the physical Apple silicon and Intel hosts that will be advertised. Windows runtime acceptance is manual in this release.
+The certification command is fail-closed. It cannot manufacture external evidence and will return `NOT CERTIFIED` until all named approvals and platform reports exist. A signed release package also requires an authorized Cosign key:
 
-NetTAP-authored source in this repository is available under the Apache License 2.0. Third-party software, container images, and model artifacts remain subject to their own licenses.
+```bash
+COSIGN_KEY=/secure/release.key ./scripts/package-release.sh
+./scripts/verify-release.sh dist/nettap-packet-expert-0.2.0-rc.1-source.tar.gz /path/to/cosign.pub
+```
+
+Detailed gates are in [commercial release gates](docs/COMMERCIAL_RELEASE_GATES.md), [threat model](docs/THREAT_MODEL.md), [product roadmap](docs/PRODUCT_ROADMAP.md), and [release acceptance](reports/RELEASE_ACCEPTANCE_TEMPLATE.md).
+
+## Security and support boundary
+
+- Never commit `.env`, TLS private keys, bootstrap credentials, customer evidence, backups, or private reports.
+- Keep one isolated instance per customer or security boundary.
+- Use customer-controlled TLS, host-disk encryption, firewall restrictions, protected backups, retention rules, and centralized monitoring.
+- Treat Packet Expert output as advisory. An authorized human approves operational changes and forensic conclusions.
+- Report vulnerabilities through a private GitHub security advisory as described in [SECURITY.md](SECURITY.md).
 
 ## License
 
-NetTAP-authored source code, configuration, and documentation in this repository are licensed under the [Apache License 2.0](LICENSE).
-
-Copyright 2026 NetTAP Technology Limited. See [NOTICE](NOTICE) for attribution and trademark information.
-
-The project license does not relicense separately distributed dependencies, container images, base-model weights, or other third-party artifacts. See [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md). The Apache License does not grant permission to use NetTAP names, logos, service marks, or product names except as stated in Section 6 of the license.
-
-## Official references
-
-- [Open WebUI Knowledge](https://docs.openwebui.com/features/workspace/knowledge/)
-- [Open WebUI Skills](https://docs.openwebui.com/features/workspace/skills/)
-- [Open WebUI Models](https://docs.openwebui.com/features/workspace/models/)
-- [Open WebUI environment configuration](https://docs.openwebui.com/reference/env-configuration/)
-- [Docker Desktop](https://docs.docker.com/desktop/)
-- [Ollama Modelfile reference](https://docs.ollama.com/modelfile)
-
-For platform-specific detail, see [`docs/MACOS_DEPLOYMENT.md`](docs/MACOS_DEPLOYMENT.md), [`docs/WINDOWS_DEPLOYMENT.md`](docs/WINDOWS_DEPLOYMENT.md), and [`docs/AUTHENTICATION.md`](docs/AUTHENTICATION.md).
-
-For inventory, consolidation, backup, administration, maintenance, sharing, GitHub release management, and operator handoff, use the [`complete operations manual`](docs/COMPLETE_OPERATIONS_MANUAL.md). On macOS, begin duplicate-deployment cleanup with the read-only [`scripts/inventory-macos.sh`](scripts/inventory-macos.sh); review its output before stopping or removing anything.
+NetTAP-authored source, configuration, and documentation are licensed under the [Apache License 2.0](LICENSE), copyright 2026 NetTAP Technology Limited. That license does not relicense container images, base-model artifacts, or other dependencies and does not grant trademark rights. Review [third-party notices](THIRD_PARTY_NOTICES.md) before distribution.

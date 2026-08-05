@@ -1,0 +1,4 @@
+services:
+  open-webui:
+    ports:
+      - "${BIND_ADDRESS}:${WEB_PORT}:8080"

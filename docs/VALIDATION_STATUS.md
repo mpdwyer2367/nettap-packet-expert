@@ -1,82 +1,52 @@
 # Deployment validation status
 
-## Current release
+## Current candidate
 
-- Release: `0.1.0-rc.8`
-- Canonical Compose project: `nettap-packet-expert`
-- Canonical model: `nettap-packet-expert:0.1.0-rc.8`
-- Local URL: `http://127.0.0.1:3001`
-
-## Status definitions
-
-| Status | Meaning |
+| Item | Value |
 |---|---|
-| Source validated | Static checks, syntax, configuration structure, required controls, documentation links, and secret-pattern checks pass. |
-| Automated runtime verified | The canonical containers originate from one working directory and Compose file; images, model, UI health, administrator presence, loopback binding, isolation, inference, and restart checks pass on the named host. |
-| Manually accepted | A tester completes fresh-install login, password replacement, old-password rejection, password persistence, model selection, starter-prompt, knowledge, and browser-chat checks. |
-| Release accepted | The automated report and signed manual acceptance record are attached to the exact release commit and approved for the stated platform. |
+| Release | `0.2.0-rc.1` |
+| Model | `nettap-packet-expert:0.2.0-rc.1` |
+| Architecture | Single-node, single-customer Docker software appliance |
+| Local URL | `http://127.0.0.1:3001` |
+| Production URL | Customer TLS hostname, port `8443` by default |
 
-## RC8 status
+## Current evidence
 
 | Gate | Status |
 |---|---|
-| Repository source validation | PASS |
-| macOS automated runtime verification | PENDING PHYSICAL-HOST REPORT |
-| macOS manual browser acceptance | PENDING |
-| Windows automated runtime verification | NOT IMPLEMENTED IN RC8 |
-| Windows manual runtime acceptance | PENDING |
-| Production-appliance certification | NOT CLAIMED |
+| Production source controls | Implemented; CI must pass on the published commit |
+| Immutable image locking | Implemented; release evidence pending |
+| SBOM and HIGH/CRITICAL CVE gate | Implemented; release scan pending |
+| Backup and non-overwriting restore | Implemented; physical-host recovery test pending |
+| macOS production runtime | Pending physical-host report |
+| Windows production runtime | Pending physical-host report |
+| Browser/manual acceptance | Pending exact release build |
+| Expanded domain accuracy/safety eval | Pending approved test set and thresholds |
+| Independent penetration test | Pending |
+| Legal/third-party/branding approval | Pending |
+| Support readiness and SLA | Pending |
+| Signed artifact and acceptance | Pending |
+| Production/commercial certification | **NOT GRANTED** |
 
-The repository must not describe RC8 as fully runtime validated until a sanitized report from `scripts/verify-macos-deployment.sh` or `tests/macos-e2e.sh` and the completed manual acceptance record are attached to the exact commit being released.
+Static analysis in this workspace cannot prove Docker runtime, browser authentication, model download/inference, TLS behavior, backup recovery, platform compatibility, performance, penetration resistance, or commercial rights. Those gates require the target environments and authorized reviewers.
 
-## Canonical macOS verification
-
-Run from the single Git working copy intended to own the deployment:
+## Required commands
 
 ```bash
-git pull --ff-only
-chmod +x scripts/*.sh tests/*.sh
 ./tests/static-checks.sh
-./scripts/start-macos.sh
-./scripts/verify-macos-deployment.sh
-./tests/macos-e2e.sh
+./scripts/lock-images.sh --confirm
+./scripts/security-scan.sh
+./scripts/production-preflight.sh
+./scripts/start-production.sh
+./scripts/verify-production-deployment.sh
+./tests/model-behavior-eval.sh
+./scripts/backup.sh /protected/test-backup
+./scripts/restore.sh /protected/test-backup --target-prefix acceptance-restore
+./scripts/certify-production.sh
 ```
 
-An independent evaluator can run the consolidated clean-room entry point:
+The last command must fail until all external evidence files in [commercial release gates](COMMERCIAL_RELEASE_GATES.md) are present and reviewed. A successful script result still requires the named authorized approver to sign the release acceptance record.
 
-```bash
-./tests/colleague-macos-acceptance.sh
-```
+## Claim rules
 
-See [`COLLEAGUE_EVALUATION_GUIDE.md`](COLLEAGUE_EVALUATION_GUIDE.md).
-
-The runtime verifier fails when Ollama and Open WebUI were created from different working directories or Compose files. This prevents a mixed-provenance Compose project from being accepted merely because both containers happen to be running.
-
-## Manual acceptance
-
-Complete `reports/RELEASE_ACCEPTANCE_TEMPLATE.md` and verify:
-
-1. A fresh Open WebUI volume creates `admin@nettap.local` with temporary password `admin`.
-2. The administrator replaces the password before any network exposure.
-3. The old password fails and the new password survives restart.
-4. Signup remains disabled.
-5. `nettap-packet-expert:0.1.0-rc.8` is selected.
-6. Four broad starter prompts appear.
-7. The approved knowledge file is imported, attached, permissioned, and retrievable.
-8. The assistant does not claim that unconnected traffic, packets, telemetry, captures, or tools are live.
-9. Open WebUI is available only at `127.0.0.1:3001` for the supplied local profile.
-10. No customer evidence, password, token, private packet payload, or other sensitive data is present in the report.
-
-## Evidence required for a validation claim
-
-- exact Git commit and release tag;
-- macOS version and architecture;
-- Docker Desktop, Engine, and Compose versions;
-- container image names and immutable digests;
-- model identity;
-- automated report with all checks passing;
-- completed manual acceptance record;
-- approver and approval date;
-- known limitations and exceptions.
-
-Static CI is necessary but is not proof that Docker Desktop, model initialization, browser authentication, persistence, or inference works on a target host.
+Use “source validated” only for a passing exact commit. Use “runtime verified” only with a named host report. Use “customer accepted” only for that customer deployment. Use “commercially approved” or “production certified” only after the entire defined gate and approval scope is complete.
