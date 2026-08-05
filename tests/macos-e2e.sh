@@ -20,7 +20,8 @@ source "${project_dir}/scripts/common.sh"
 model_name="$(load_env_value MODEL_NAME)"
 web_port="$(load_env_value WEB_PORT)"
 
-"${compose[@]}" exec -T ollama ollama show "$model_name" | grep -q 'NetTAP Packet Expert'
+model_info="$("${compose[@]}" exec -T ollama ollama show "$model_name")"
+grep -q 'NetTAP Packet Expert' <<< "$model_info"
 
 response="$("${compose[@]}" exec -T ollama ollama run "$model_name" \
   'I am not sure where to start with a suspected network problem. Ask one important question and do not claim you have live data.')"

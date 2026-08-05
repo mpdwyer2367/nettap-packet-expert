@@ -80,36 +80,7 @@ Use PowerShell from a normal user account. Docker Desktop must be running with t
 ```powershell
 git clone https://github.com/mpdwyer2367/nettap-packet-expert.git
 Set-Location .\nettap-packet-expert
-
-Copy-Item .env.example .env
-$bytes = New-Object byte[] 32
-$rng = [System.Security.Cryptography.RandomNumberGenerator]::Create()
-$rng.GetBytes($bytes)
-$rng.Dispose()
-$secret = ($bytes | ForEach-Object { $_.ToString('x2') }) -join ''
-(Get-Content .env -Raw).Replace('GENERATE_ON_FIRST_START', $secret) |
-    Set-Content .env -Encoding ascii
-Remove-Variable bytes, rng, secret
-
-$compose = @('compose', '--env-file', '.env', '-f', 'compose.yaml')
-docker @compose config --quiet
-docker @compose pull
-docker @compose up -d ollama
-
-$ready = $false
-1..90 | ForEach-Object {
-    if (-not $ready) {
-        docker @compose exec -T ollama ollama list 2>$null
-        if ($LASTEXITCODE -eq 0) { $ready = $true }
-        else { Start-Sleep -Seconds 2 }
-    }
-}
-if (-not $ready) { throw 'Ollama did not become ready within three minutes.' }
-
-docker @compose --profile initialize run --rm model-init
-if ($LASTEXITCODE -ne 0) { throw 'Model initialization failed.' }
-docker @compose up -d open-webui
-docker @compose ps
+powershell -ExecutionPolicy Bypass -File .\scripts\Start-Windows.ps1
 ```
 
 Open <http://127.0.0.1:3001>. If a command fails, stop and review the reported error; do not skip model initialization.
@@ -177,17 +148,12 @@ The harness checks source controls, model creation, identity, controlled inferen
 From the repository PowerShell window used for deployment:
 
 ```powershell
-$compose = @('compose', '--env-file', '.env', '-f', 'compose.yaml')
-docker @compose ps
-docker @compose exec -T ollama ollama show nettap-packet-expert:0.1.0-rc.7
-docker @compose exec -T ollama ollama run nettap-packet-expert:0.1.0-rc.7 `
-  'Ask one important question and do not claim that you have live packet data.'
-Invoke-WebRequest http://127.0.0.1:3001/health -UseBasicParsing
+powershell -ExecutionPolicy Bypass -File .\tests\Windows-E2E.ps1
 ```
 
 Expected results: both long-running services are healthy/running, `ollama show` identifies the NetTAP system prompt, inference returns non-empty output, and the health request returns success. Then complete the same manual browser checks listed above.
 
-No Windows automated E2E harness is included in RC7. Do not claim Windows runtime validation until these checks pass on each advertised Windows/Docker Desktop configuration and the results are recorded.
+The Windows harness automates source checks, model identity, inference, WebUI health, loopback binding, and restart persistence. Do not claim Windows runtime validation until it passes on each advertised Windows/Docker Desktop configuration and the manual checks are recorded.
 
 ## Daily operations
 
@@ -204,12 +170,9 @@ No Windows automated E2E harness is included in RC7. Do not claim Windows runtim
 ### Windows
 
 ```powershell
-$compose = @('compose', '--env-file', '.env', '-f', 'compose.yaml')
-docker @compose ps
-docker @compose logs --tail 200 ollama open-webui
-docker @compose down
-docker @compose --profile initialize run --rm model-init
-docker @compose up -d open-webui
+.\scripts\Status-Windows.ps1
+.\scripts\Stop-Windows.ps1
+.\scripts\Update-Model-Windows.ps1 -Confirm
 ```
 
 `docker compose down` preserves named volumes. Never add `-v` unless permanent deletion of all local accounts, chats, configuration, knowledge, and downloaded models is intended. Back up the Open WebUI and Ollama named volumes before upgrades; RC7 does not include an automated backup/restore tool.
@@ -249,4 +212,4 @@ No license has yet been selected for NetTAP-authored source. Public repository v
 - [Docker Desktop](https://docs.docker.com/desktop/)
 - [Ollama Modelfile reference](https://docs.ollama.com/modelfile)
 
-For macOS-specific detail, see [`docs/MACOS_DEPLOYMENT.md`](docs/MACOS_DEPLOYMENT.md).
+See [`docs/MACOS_DEPLOYMENT.md`](docs/MACOS_DEPLOYMENT.md) and [`docs/WINDOWS_DEPLOYMENT.md`](docs/WINDOWS_DEPLOYMENT.md) for platform-specific deployment and acceptance details.

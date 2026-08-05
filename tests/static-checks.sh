@@ -12,6 +12,18 @@ grep -q 'Never claim that a capture' "$project_dir/model/Modelfile"
 grep -q '^BIND_ADDRESS=127.0.0.1$' "$project_dir/.env.example"
 grep -q 'ENABLE_CODE_EXECUTION: "False"' "$project_dir/compose.yaml"
 grep -q 'internal: true' "$project_dir/compose.yaml"
+grep -q 'Start-Windows.ps1' "$project_dir/README.md"
+grep -q 'Windows-E2E.ps1' "$project_dir/docs/WINDOWS_DEPLOYMENT.md"
+for required_file in \
+  "$project_dir/scripts/Windows-Common.ps1" \
+  "$project_dir/scripts/Start-Windows.ps1" \
+  "$project_dir/scripts/Status-Windows.ps1" \
+  "$project_dir/scripts/Stop-Windows.ps1" \
+  "$project_dir/scripts/Update-Model-Windows.ps1" \
+  "$project_dir/tests/Static-Checks.ps1" \
+  "$project_dir/tests/Windows-E2E.ps1"; do
+  [[ -f "$required_file" ]] || { echo "ERROR: Missing $required_file" >&2; exit 1; }
+done
 if grep -RIn --exclude=static-checks.sh 'mapfile' "$project_dir/scripts" "$project_dir/tests"; then
   echo "ERROR: mapfile is unavailable in the Bash 3.2 shipped with macOS." >&2
   exit 1
@@ -40,3 +52,10 @@ else:
     assert {"ollama", "model-init", "open-webui"} <= set(data["services"])
 print("Static checks passed.")
 PY
+
+if command -v docker >/dev/null 2>&1 && docker compose version >/dev/null 2>&1; then
+  temporary_env="$(mktemp)"
+  cp "$project_dir/.env.example" "$temporary_env"
+  docker compose --project-directory "$project_dir" --env-file "$temporary_env" -f "$project_dir/compose.yaml" config --quiet
+  rm -f "$temporary_env"
+fi
