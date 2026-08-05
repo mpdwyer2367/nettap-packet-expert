@@ -1,0 +1,73 @@
+{
+  "schema_version": 1,
+  "release_version": "0.3.0-rc.3",
+  "embedding": {
+    "engine": "",
+    "model_path": "/app/backend/data/nettap-models/all-MiniLM-L6-v2/1110a243fdf4706b3f48f1d95db1a4f5529b4d41",
+    "probe_collection": "shared",
+    "probe_query": "What is the NetTAP offline RAG verification marker?",
+    "probe_expected": "NETTAP-RAG-OFFLINE-PROBE-RC3"
+  },
+  "knowledge_collections": [
+    {
+      "key": "shared",
+      "name": "NetTAP AI Shared (Managed)",
+      "description": "Shared NetTAP safety, evidence, ingestion, and operational guidance.",
+      "files": [
+        "knowledge/NetTAP_AI_Knowledge.md",
+        "knowledge/NetTAP_Ingestion_Analysis_Guidance.md",
+        "knowledge/NetTAP_Provisioning_Probe.md"
+      ]
+    },
+    {
+      "key": "network_visibility",
+      "name": "NetTAP Network & Visibility (Managed)",
+      "description": "Architecture, deployment, visibility-fabric, device, and telemetry guidance.",
+      "files": [
+        "knowledge/NetTAP_Network_Visibility_Knowledge.md"
+      ]
+    },
+    {
+      "key": "packet_expert",
+      "name": "NetTAP Packet Expert (Managed)",
+      "description": "Authorized packet-derived evidence, capture quality, forensic, and investigation guidance.",
+      "files": [
+        "knowledge/NetTAP_Packet_Expert_Knowledge.md"
+      ]
+    }
+  ],
+  "assistants": [
+    {
+      "id": "nettap-network-visibility",
+      "name": "NetTAP Network & Visibility",
+      "description": "Network architecture, device planning, NetTAP visibility, traffic acquisition, and telemetry guidance.",
+      "knowledge_keys": ["shared", "network_visibility"],
+      "system_prompt_files": [
+        "assistants/shared/core-policy.md",
+        "assistants/network-visibility/system-prompt.md"
+      ],
+      "suggestion_prompts": [
+        {"title": ["Understand", "my network"], "content": "Help me understand my network. Ask one important question at a time."},
+        {"title": ["Design or", "configure"], "content": "Help me design or configure my network from the objective and environment."},
+        {"title": ["Connect", "visibility and data"], "content": "Help me add NetTAP visibility or collect the right traffic and telemetry."}
+      ],
+      "tags": ["NetTAP", "Network Visibility"]
+    },
+    {
+      "id": "nettap-packet-expert",
+      "name": "NetTAP Packet Expert",
+      "description": "Authorized packet evidence, performance investigation, cyber visibility, and forensic analysis guidance.",
+      "knowledge_keys": ["shared", "packet_expert"],
+      "system_prompt_files": [
+        "assistants/shared/core-policy.md",
+        "assistants/packet-expert/system-prompt.md"
+      ],
+      "suggestion_prompts": [
+        {"title": ["Start", "an investigation"], "content": "Help me start an authorized network or security investigation."},
+        {"title": ["Understand", "my evidence"], "content": "Help me understand what evidence I have and what it can support."},
+        {"title": ["Plan", "data collection"], "content": "Help me plan the minimum safe traffic, log, or telemetry collection."}
+      ],
+      "tags": ["NetTAP", "Packet Expert"]
+    }
+  ]
+}

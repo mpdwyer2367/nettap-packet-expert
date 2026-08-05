@@ -16,9 +16,13 @@ jobs:
       - name: Install validation dependencies
         run: python3 -m pip install --disable-pip-version-check pyyaml==6.0.3
       - name: Lint shell entry points
-        run: shellcheck scripts/*.sh scripts/nettap-packet-expert tests/*.sh
+        run: shellcheck scripts/*.sh scripts/nettap-ai scripts/nettap-packet-expert tests/*.sh
       - name: Run static checks
         run: ./tests/static-checks.sh
+      - name: Test Open WebUI provisioning contract
+        run: python3 -m unittest -v tests/test_provision_open_webui.py
+      - name: Compile provisioning code
+        run: python3 -m py_compile provisioning/*.py
       - name: Render supported Compose profiles
         run: |
           docker compose --env-file .env.example \

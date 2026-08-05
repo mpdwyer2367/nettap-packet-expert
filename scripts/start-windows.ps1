@@ -38,18 +38,27 @@ if ($content -match '(?m)^WEBUI_SECRET_KEY=GENERATE_ON_FIRST_START$') {
 }
 
 $defaults = [ordered]@{
-    RELEASE_VERSION = '0.2.0-rc.1'
+    RELEASE_VERSION = '0.3.0-rc.3'
     OLLAMA_IMAGE = 'ollama/ollama:0.32.5'
     OPEN_WEBUI_IMAGE = 'ghcr.io/open-webui/open-webui:v0.11.0'
     CADDY_IMAGE = 'caddy:2.11.4-alpine'
     BACKUP_IMAGE = 'alpine:3.24.1'
-    MODEL_NAME = 'nettap-packet-expert:0.2.0-rc.1'
+    BASE_MODEL = 'qwen2.5:7b-instruct-q4_K_M'
+    NETTAP_AI_MODEL = 'nettap-ai:0.3.0-rc.3'
+    MODEL_NAME = 'nettap-ai:0.3.0-rc.3'
     EXPECTED_BASE_MODEL_ID = '845dbda0ea48'
+    NETTAP_VISIBILITY_PROFILE = 'nettap-network-visibility'
+    NETTAP_PACKET_EXPERT_PROFILE = 'nettap-packet-expert'
+    RAG_EMBEDDING_MODEL_ID = 'sentence-transformers/all-MiniLM-L6-v2'
+    RAG_EMBEDDING_MODEL_REVISION = '1110a243fdf4706b3f48f1d95db1a4f5529b4d41'
+    RAG_EMBEDDING_MODEL = '/app/backend/data/nettap-models/all-MiniLM-L6-v2/1110a243fdf4706b3f48f1d95db1a4f5529b4d41'
     BIND_ADDRESS = '127.0.0.1'
-    WEB_PORT = '3001'
+    WEB_PORT = '3100'
+    VISIBILITY_LAUNCHER_PORT = '3000'
+    PACKET_EXPERT_LAUNCHER_PORT = '3001'
     HTTPS_BIND_ADDRESS = '0.0.0.0'
     HTTPS_PORT = '8443'
-    APPLIANCE_HOSTNAME = 'packet-expert.local'
+    APPLIANCE_HOSTNAME = 'nettap-ai.local'
     JWT_EXPIRES_IN = '8h'
     OLLAMA_CPUS = '6'
     OLLAMA_MEMORY = '8g'
@@ -63,7 +72,12 @@ $defaults = [ordered]@{
     DEPLOYMENT_MODE = 'local'
 }
 
-$content = $content -replace '(?m)^MODEL_NAME=nettap-packet-expert:0\.1\.0-rc\.8$', 'MODEL_NAME=nettap-packet-expert:0.2.0-rc.1'
+$content = $content -replace '(?m)^RELEASE_VERSION=(0\.2\.0-rc\.1|0\.3\.0-rc\.[12])$', 'RELEASE_VERSION=0.3.0-rc.3'
+$content = $content -replace '(?m)^MODEL_NAME=(nettap-packet-expert:(0\.1\.0-rc\.8|0\.2\.0-rc\.1|0\.3\.0-rc\.1)|nettap-ai:0\.3\.0-rc\.2)$', 'MODEL_NAME=nettap-ai:0.3.0-rc.3'
+$content = $content -replace '(?m)^NETTAP_AI_MODEL=nettap-ai:0\.3\.0-rc\.2$', 'NETTAP_AI_MODEL=nettap-ai:0.3.0-rc.3'
+$content = $content -replace '(?m)^RAG_EMBEDDING_MODEL=/app/backend/data/nettap-models/all-MiniLM-L6-v2$', 'RAG_EMBEDDING_MODEL=/app/backend/data/nettap-models/all-MiniLM-L6-v2/1110a243fdf4706b3f48f1d95db1a4f5529b4d41'
+$content = $content -replace '(?m)^APPLIANCE_HOSTNAME=packet-expert\.local$', 'APPLIANCE_HOSTNAME=nettap-ai.local'
+$content = $content -replace '(?m)^WEB_PORT=3001$', 'WEB_PORT=3100'
 $content = $content -replace '(?m)^WEBUI_ADMIN_PASSWORD=admin$', 'WEBUI_ADMIN_PASSWORD=GENERATE_ON_FIRST_START'
 
 foreach ($entry in $defaults.GetEnumerator()) {
@@ -101,8 +115,18 @@ $compose = @(
 $bootstrapCompose = $compose + @('-f', $bootstrapComposeFile)
 
 docker @compose config --quiet
+if ($LASTEXITCODE -ne 0) {
+    throw 'Docker Compose configuration is invalid.'
+}
 docker @bootstrapCompose pull
+if ($LASTEXITCODE -ne 0) {
+    throw 'Required container image pull failed.'
+}
 docker @bootstrapCompose up -d ollama
+if ($LASTEXITCODE -ne 0) {
+    docker @bootstrapCompose down 2>$null | Out-Null
+    throw 'Ollama bootstrap service failed to start.'
+}
 
 $ready = $false
 foreach ($attempt in 1..90) {
@@ -115,12 +139,20 @@ foreach ($attempt in 1..90) {
 }
 
 if (-not $ready) {
+    docker @bootstrapCompose down 2>$null | Out-Null
     throw 'Ollama did not become ready within three minutes.'
 }
 
 docker @bootstrapCompose --profile initialize run --rm model-init
 if ($LASTEXITCODE -ne 0) {
+    docker @bootstrapCompose down 2>$null | Out-Null
     throw 'NetTAP model initialization failed.'
+}
+
+docker @bootstrapCompose --profile initialize run --rm rag-cache-init
+if ($LASTEXITCODE -ne 0) {
+    docker @bootstrapCompose down 2>$null | Out-Null
+    throw 'Pinned offline RAG model initialization failed.'
 }
 
 docker @bootstrapCompose down
@@ -129,16 +161,66 @@ if ($LASTEXITCODE -ne 0) {
 }
 
 docker @compose up -d ollama open-webui
+if ($LASTEXITCODE -ne 0) {
+    throw 'Open WebUI failed to start.'
+}
+
+$desiredFingerprint = (docker @compose --profile provision run --rm --no-deps assistant-provisioner --fingerprint | Out-String).Trim()
+if ($LASTEXITCODE -ne 0 -or [string]::IsNullOrWhiteSpace($desiredFingerprint)) {
+    throw 'Unable to calculate the assistant provisioning fingerprint.'
+}
+$actualFingerprint = (docker @compose exec -T open-webui python -c "import json; from pathlib import Path; p=Path('/app/backend/data/nettap-provisioning-state.json'); print(json.loads(p.read_text(encoding='utf-8')).get('fingerprint','') if p.is_file() else '')" | Out-String).Trim()
+
+if ($actualFingerprint -ne $desiredFingerprint) {
+    $adminPassword = ''
+    foreach ($line in [System.IO.File]::ReadAllLines($envPath)) {
+        if ($line -match '^WEBUI_ADMIN_PASSWORD=(.+)$') { $adminPassword = $Matches[1] }
+    }
+    if ([string]::IsNullOrWhiteSpace($adminPassword) -or $adminPassword -eq 'BOOTSTRAP_RETIRED' -or $adminPassword -eq 'GENERATE_ON_FIRST_START') {
+        $securePassword = Read-Host 'Current Open WebUI administrator password' -AsSecureString
+        $passwordPointer = [Runtime.InteropServices.Marshal]::SecureStringToBSTR($securePassword)
+        try {
+            $adminPassword = [Runtime.InteropServices.Marshal]::PtrToStringBSTR($passwordPointer)
+        }
+        finally {
+            [Runtime.InteropServices.Marshal]::ZeroFreeBSTR($passwordPointer)
+        }
+    }
+    $adminPassword | docker @compose --profile provision run --rm -T assistant-provisioner
+    $adminPassword = $null
+    if ($LASTEXITCODE -ne 0) {
+        throw 'Automatic assistant and offline RAG provisioning failed.'
+    }
+    $actualFingerprint = (docker @compose exec -T open-webui python -c "import json; from pathlib import Path; print(json.loads(Path('/app/backend/data/nettap-provisioning-state.json').read_text(encoding='utf-8')).get('fingerprint',''))" | Out-String).Trim()
+    if ($actualFingerprint -ne $desiredFingerprint) {
+        throw 'Assistant provisioning state does not match this release.'
+    }
+}
+
+docker @compose up -d assistant-launcher
+if ($LASTEXITCODE -ne 0) {
+    throw 'Assistant launcher failed to start.'
+}
 docker @compose ps
 
-$webPort = '3001'
+$webPort = '3100'
+$visibilityPort = '3000'
+$packetPort = '3001'
 foreach ($line in [System.IO.File]::ReadAllLines($envPath)) {
     if ($line -match '^WEB_PORT=(.+)$') {
         $webPort = $Matches[1]
     }
+    if ($line -match '^VISIBILITY_LAUNCHER_PORT=(.+)$') {
+        $visibilityPort = $Matches[1]
+    }
+    if ($line -match '^PACKET_EXPERT_LAUNCHER_PORT=(.+)$') {
+        $packetPort = $Matches[1]
+    }
 }
 
-Write-Host "Open WebUI: http://127.0.0.1:$webPort"
+Write-Host "NetTAP AI Suite: http://127.0.0.1:$webPort"
+Write-Host "Network & Visibility: http://127.0.0.1:$visibilityPort"
+Write-Host "Packet Expert: http://127.0.0.1:$packetPort"
 Write-Host "Bootstrap credential file: $bootstrapPasswordPath"
 Write-Host 'Immediately change the generated password in Settings > Account.'
 Write-Host 'Then run finalize-admin.sh from WSL/Git Bash, or follow docs/AUTHENTICATION.md.'

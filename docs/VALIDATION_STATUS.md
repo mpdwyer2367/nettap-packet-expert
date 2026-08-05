@@ -1,56 +1,45 @@
-# Deployment validation status
+# Validation status
 
-## Current candidate
+## Candidate identity
 
-| Item | Value |
+| Field | Value |
 |---|---|
-| Release | `0.2.0-rc.1` |
-| Model | `nettap-packet-expert:0.2.0-rc.1` |
-| Architecture | Single-node, single-customer Docker software appliance |
-| Local URL | `http://127.0.0.1:3001` |
-| Production URL | Customer TLS hostname, port `8443` by default |
+| Suite release | `0.3.0-rc.3` |
+| Shared base | `qwen2.5:7b-instruct-q4_K_M` |
+| Expected base ID | `845dbda0ea48` |
+| Combined NetTAP AI model | `nettap-ai:0.3.0-rc.3` |
+| Experience profiles | `nettap-network-visibility`, `nettap-packet-expert` |
+| Offline embedding model | `sentence-transformers/all-MiniLM-L6-v2@1110a243fdf4706b3f48f1d95db1a4f5529b4d41` |
+| Local launchers | `127.0.0.1:3000`, `127.0.0.1:3001` |
+| Shared local UI | `127.0.0.1:3100` |
 
-## Current evidence
+## Current disposition
 
-| Gate | Status |
-|---|---|
-| Production source controls | Implemented; CI must pass on the published commit |
-| Supported Compose profile rendering | Automated in GitHub Actions |
-| Immutable image locking | Implemented; release evidence pending |
-| SBOM and HIGH/CRITICAL CVE gate | Implemented; release scan pending |
-| Backup and non-overwriting restore | Implemented; physical-host recovery test pending |
-| macOS production runtime | Pending physical-host report |
-| Windows production runtime | Pending physical-host report |
-| Browser/manual acceptance | Pending exact release build |
-| Expanded domain accuracy/safety eval | Pending approved test set and thresholds |
-| Independent penetration test | Pending |
-| Legal/third-party/branding approval | Pending |
-| Support readiness and SLA | Pending |
-| Signed artifact and acceptance | Pending |
-| Production-candidate architecture review | **PASS for controlled qualification** |
-| Production/commercial certification | **NOT GRANTED** |
+The 0.3 suite is an integration release candidate under validation. It is not production-certified, generally available, or approved for commercial appliance distribution.
 
-The completed evidence baseline for this exact candidate is [Release Acceptance 0.2.0-rc.1](../reports/RELEASE_ACCEPTANCE_0.2.0-rc.1.md). It contains no blank decisions: verified source gates are recorded as passed, while all unperformed runtime and organizational gates remain explicitly pending.
+Static source validation can verify repository structure, Compose isolation, one combined model definition, profile manifests, base and embedding identity configuration, provisioning API contract and idempotence, policy controls, launcher routes, documentation links, and fail-closed release controls. It cannot prove the complete container/model path on advertised target hosts, actual disk use, model response quality for all prompts, application migration success, penetration resistance, legal approval, or support readiness.
 
-Static analysis in this workspace cannot prove Docker runtime, browser authentication, model download/inference, TLS behavior, backup recovery, platform compatibility, performance, penetration resistance, or commercial rights. Those gates require the target environments and authorized reviewers.
+## Required evidence for release decision
 
-## Required commands
+- Passing static and Compose checks for the exact commit
+- Clean macOS runtime report
+- Clean Windows runtime report
+- One-base/one-combined-model storage measurement
+- Existing 0.2 account, chat, and knowledge migration acceptance
+- Profile-specific prompt, knowledge, permission, and launcher tests
+- Negative RBAC and tool-access tests
+- Backup, restore, upgrade, and rollback evidence
+- SBOM and accepted vulnerability scan
+- Independent penetration-test approval
+- Legal, licensing, trademark, and third-party distribution approval
+- Support readiness and lifecycle approval
+- Signed artifacts and verified provenance
+- Authorized release acceptance
 
-```bash
-./tests/static-checks.sh
-./scripts/lock-images.sh --confirm
-./scripts/security-scan.sh
-./scripts/production-preflight.sh
-./scripts/start-production.sh
-./scripts/verify-production-deployment.sh
-./tests/model-behavior-eval.sh
-./scripts/backup.sh /protected/test-backup
-./scripts/restore.sh /protected/test-backup --target-prefix acceptance-restore
-./scripts/certify-production.sh
-```
+The historical [0.2.0-rc.1 release record](../reports/RELEASE_ACCEPTANCE_0.2.0-rc.1.md) remains valid only for that earlier candidate and does not satisfy the 0.3 gates.
 
-The last command must fail until all external evidence files in [commercial release gates](COMMERCIAL_RELEASE_GATES.md) are present and reviewed. A successful script result still requires the named authorized approver to sign the release acceptance record.
+## Honest claim
 
-## Claim rules
+Until all evidence is complete, the accurate statement is:
 
-Use “valid production candidate” only for controlled, non-production qualification of the defined architecture and a passing exact source commit. Use “source validated” only for a passing exact commit. Use “runtime verified” only with a named host report. Use “customer accepted” only for that customer deployment. Use “commercially approved” or “production certified” only after the entire defined gate and approval scope is complete.
+> NetTAP AI Suite 0.3.0-rc.3 is an integration release candidate for controlled evaluation of one combined NetTAP AI model over one Qwen2.5 7B base, with two distinct Open WebUI experience profiles.

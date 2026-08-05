@@ -9,10 +9,11 @@ source "${script_dir}/common.sh"
 }
 require_runtime
 [[ -f "$env_file" ]] || { echo "ERROR: Run start-macos.sh first." >&2; exit 3; }
+initialize_env
 mode="$(load_env_value DEPLOYMENT_MODE)"
 if [[ "$mode" == "production" ]]; then
   initialize_model_with_temporary_egress production
 else
   initialize_model_with_temporary_egress local
 fi
-echo "Model rebuilt. Run ./tests/macos-e2e.sh before publishing a release."
+echo "The combined NetTAP AI model was rebuilt from the shared base. Run ./tests/macos-e2e.sh before publishing a release."

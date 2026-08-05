@@ -1,0 +1,21 @@
+schema_version: 1
+id: nettap-network-visibility
+display_name: NetTAP Network & Visibility
+version: 0.3.0-rc.3
+base_model: qwen2.5:7b-instruct-q4_K_M
+runtime_model: nettap-ai:0.3.0-rc.3
+workspace_model_id: nettap-network-visibility
+mode: network_visibility
+modelfile: model/nettap-ai.Modelfile
+knowledge:
+  - knowledge/NetTAP_AI_Knowledge.md
+  - knowledge/NetTAP_Ingestion_Analysis_Guidance.md
+  - knowledge/NetTAP_Provisioning_Probe.md
+  - knowledge/NetTAP_Network_Visibility_Knowledge.md
+launcher_port: 3000
+starter_prompts:
+  - Start here
+  - Design or configure
+  - Connect visibility and data
+tool_policy: no_tools_by_default
+live_data_default: unavailable

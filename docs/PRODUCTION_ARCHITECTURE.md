@@ -10,12 +10,15 @@ The supported commercial candidate is a single-node, single-customer Docker soft
 flowchart LR
     B["Customer browser"] -->|HTTPS| G["Caddy TLS gateway"]
     G -->|internal HTTP| W["Open WebUI"]
-    W -->|internal API| O["Ollama"]
-    O --> M["Qwen2.5 7B<br/>NetTAP policy"]
+    W --> V["Network & Visibility profile"]
+    W --> P["Packet Expert profile"]
+    V -->|internal API| N["One nettap-ai model"]
+    P -->|internal API| N
+    N --> M["One Qwen2.5 7B base"]
     D["Authorized normalized data"] --> W
 ```
 
-Only the gateway publishes a production port. Open WebUI and Ollama remain on internal Docker networks. The model registry network exists only while an administrator explicitly initializes or updates the model, and the startup process removes it before ordinary runtime.
+Only the gateway publishes a production port. Open WebUI and Ollama remain on internal Docker networks. Registry/model-hub egress exists only while an administrator explicitly initializes or updates the Qwen and pinned embedding models, and startup removes it before ordinary runtime. A one-shot internal provisioner then uses authenticated Open WebUI APIs to create/update managed knowledge and profiles, prove offline retrieval, and exit.
 
 ## Trust boundaries
 
@@ -37,7 +40,9 @@ Open WebUI administrators can access and control the application instance. They 
 | Caddy | TLS termination and security headers | Customer identity provider |
 | Open WebUI | Authentication, chat, model and knowledge access | Strong tenant isolation inside one instance |
 | Ollama | Local model serving and model storage | Network capture or telemetry collector |
-| Packet Expert model | Evidence-disciplined advisory reasoning | Autonomous remediation or forensic proof |
+| Combined NetTAP AI model | Architecture, visibility, telemetry, packet, performance and forensic advisory reasoning | Live collection, autonomous remediation or forensic proof |
+| Open WebUI profiles | Separate names, suggestions, specialist knowledge, permissions and optional tools over one model | Cryptographic or process isolation from the shared administrator |
+| Offline RAG cache and provisioner | Exact-revision local embeddings, managed collection/profile reconciliation and retrieval proof | General-purpose evidence store or customer-document lifecycle |
 | NetTAP TAP/NPB | Separately supplied traffic visibility | Included by this software repository |
 
 ## Availability and recovery
@@ -46,4 +51,4 @@ This is a single-node design. A host or volume failure causes service interrupti
 
 ## Sizing
 
-Production preflight enforces at least 8 CPUs, 16 GiB Docker memory, and 40 GiB free disk. For more than a small number of concurrent users, performance must be benchmarked with representative prompt length, retrieval context, and concurrency before sale. GPU acceleration is not part of the certified candidate profile.
+Production preflight enforces at least 8 CPUs, 16 GiB Docker memory, and 40 GiB free disk. One combined NetTAP AI manifest reuses one base-model store, but the exact release must measure disk consumption. For more than a small number of concurrent users, performance must be benchmarked with representative prompt length, retrieval context, and concurrency before sale. GPU acceleration is not part of the certified candidate profile.

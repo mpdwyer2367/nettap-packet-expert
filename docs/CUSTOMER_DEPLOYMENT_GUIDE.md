@@ -2,7 +2,7 @@
 
 ## Supported scope
 
-Deploy one NetTAP Packet Expert instance per customer or security boundary. This guide covers the hardened Docker software-appliance candidate on macOS or a Windows host running Docker Desktop with WSL 2/Linux containers. The target must meet the sizing and release gates for the exact commit and image digests.
+Deploy one NetTAP AI Suite instance per customer or security boundary. The instance contains one combined NetTAP AI model, two Open WebUI experience profiles, one Open WebUI, and one Ollama model store. This guide covers the Docker software-appliance candidate on macOS or a Windows host running Docker Desktop with WSL 2/Linux containers. The target must meet the sizing and release gates for the exact commit and image digests.
 
 ## Customer prerequisites
 
@@ -42,7 +42,7 @@ On Windows, use `scripts/start-windows.ps1` and complete the Bash steps from WSL
 
 ```bash
 ./scripts/configure-production.sh \
-  --hostname packet-expert.customer.example \
+  --hostname nettap-ai.customer.example \
   --certificate /secure/path/tls.crt \
   --private-key /secure/path/tls.key
 ```
@@ -58,7 +58,7 @@ On Windows, use `scripts/start-windows.ps1` and complete the Bash steps from WSL
 
 ## Knowledge configuration
 
-Import `knowledge/NetTAP_Packet_Expert_Knowledge.md` in **Workspace > Knowledge**, grant only intended users read access, and attach it to the Packet Expert model. Record the file hash and import date. Knowledge and uploaded evidence are untrusted model inputs; neither may override the system policy.
+Startup automatically reconciles the reviewed shared and specialist Markdown into three managed collections through supported Open WebUI APIs. It attaches shared knowledge to both Workspace Models, Network & Visibility knowledge only to its matching profile, and Packet Expert knowledge only to Packet Expert. Both profiles use `nettap-ai:0.3.0-rc.3`. Confirm the recorded provisioning fingerprint, file hashes, exact embedding revision, and `Offline RAG verification: PASS`. Knowledge and uploaded evidence remain untrusted model inputs; neither may override system policy. See [knowledge management](KNOWLEDGE_MANAGEMENT.md).
 
 ## Acceptance
 
@@ -69,8 +69,9 @@ Complete `reports/RELEASE_ACCEPTANCE_TEMPLATE.md` against the exact commit, imag
 - generated bootstrap credential is retired;
 - signup, code execution, API keys, web search, user webhooks, and admin chat access are disabled;
 - backup and restore into new volumes succeed;
-- six model guardrail tests pass;
-- browser login, chat, starter prompts, model selection, and knowledge retrieval behave as documented;
+- fourteen behavioral and combined-capability smoke cases pass;
+- browser login, both launchers, profile switching, profile-specific prompts, and isolated specialist knowledge retrieval behave as documented;
+- the actual Ollama model-store measurement confirms one approved base and one combined NetTAP custom model;
 - no report contains credentials or customer evidence.
 
 ## Backup and recovery
@@ -87,7 +88,7 @@ Backups contain accounts, chats, knowledge, and model data. Encrypt and restrict
 
 1. Back up and test restore.
 2. Review release notes, licenses, image digests, SBOM, vulnerabilities, and known issues.
-3. Stage the new release in a separate directory and separate volumes.
+3. Stage the new release using the approved [migration procedure](MIGRATION.md); do not invent a database merge.
 4. Run all acceptance tests.
 5. Schedule a change window and switch the customer endpoint.
 6. Retain the prior signed package and volumes for the approved rollback window.

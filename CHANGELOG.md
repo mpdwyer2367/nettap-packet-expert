@@ -1,5 +1,31 @@
 # Changelog
 
+## 0.3.0-rc.3 automatic assistants and offline RAG candidate — 2026-08-05
+
+- Added fail-closed, idempotent provisioning of two Open WebUI Workspace Models and three managed knowledge collections through pinned Open WebUI v0.11.0 APIs.
+- Added controlled initialization of `all-MiniLM-L6-v2` at exact revision `1110a243fdf4706b3f48f1d95db1a4f5529b4d41`, followed by local-only embedding and retrieval configuration.
+- Added a deterministic offline retrieval proof that must pass before launcher pages start.
+- Changed launchers to select the managed Network & Visibility and Packet Expert profiles, both backed by one `nettap-ai:0.3.0-rc.3` Ollama model.
+- Added API-contract/idempotence tests, provisioning state evidence, target-host verification gates, migration guidance, and fail-closed recovery.
+- Retained production and commercial approval gates pending exact-build macOS and Windows runtime evidence and the existing security, legal, support, signing, and acceptance records.
+
+## 0.3.0-rc.2 combined NetTAP AI model candidate — 2026-08-05
+
+- Replaced two NetTAP Ollama model tags with one combined `nettap-ai:0.3.0-rc.2` model containing Network & Visibility, Packet Expert, and unified cross-domain capabilities.
+- Retained two thin experience profiles with separate names, specialist knowledge, suggestions, launcher ports, permissions, and future tool allowlists over the same model.
+- Updated deployment, migration, backup, storage, behavioral, runtime, documentation, and release controls for the one-model architecture.
+- Kept retired 0.2 and 0.3-rc.1 model tags non-destructively for rollback; they are no longer selected by rc.2.
+- Kept production and commercial approval fail-closed pending exact-build target-host, security, legal, support, signing, and acceptance evidence.
+
+## 0.3.0-rc.1 unified NetTAP AI Suite candidate — 2026-08-05
+
+- Added Network & Visibility and retained Packet Expert as separate assistant policies over one Qwen2.5 7B base.
+- Consolidated both assistants into one Ollama service, one model volume, one Open WebUI, one account/chat database, and one administration lifecycle.
+- Added stateless branded launchers on local ports 3000 and 3001 with a shared Open WebUI on port 3100.
+- Added assistant manifests, isolated knowledge sources, a unified `nettap-ai` CLI, migration and rollback controls, and expanded behavioral/isolation tests.
+- Preserved the Compose project and volume identity for controlled migration from 0.2.0-rc.1.
+- Kept production and commercial approval fail-closed pending exact-build target-host, security, legal, support, signing, and acceptance evidence.
+
 ## 0.2.0-rc.1 production-candidate validation update — 2026-08-04
 
 - Added GitHub Actions shell lint and rendering of local, production and bootstrap Compose profiles.

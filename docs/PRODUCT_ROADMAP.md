@@ -2,6 +2,23 @@
 
 This roadmap separates implemented candidate capability from future commercial editions. Dates and commitments require product approval.
 
+## Stage 0.3 — unified assistant integration candidate
+
+Implemented in `0.3.0-rc.3` source:
+
+- one shared Qwen2.5 7B base, one combined `nettap-ai` model, and one Ollama volume;
+- one combined Network & Visibility, Packet Expert, and cross-domain reasoning policy;
+- one Open WebUI account, chat, administration, and backup surface;
+- stateless assistant-specific launchers on local ports 3000 and 3001;
+- two thin profile manifests with separate specialist knowledge and suggested starts;
+- exact-revision offline embedding cache, API-managed knowledge/profile reconciliation, and a deterministic retrieval proof;
+- unified `nettap-ai` administration command;
+- in-place 0.2 environment migration with retained Compose volume identity;
+- API-contract idempotence, combined-capability, launcher, and profile-isolation smoke controls; and
+- migration, customization, knowledge, tool-security, and administration guidance.
+
+Exit: fresh and upgrade runtime reports on macOS and Windows, measured single-model storage, Workspace Model and knowledge-isolation acceptance, backup/restore/rollback, security review, and signed release decision.
+
 ## Stage 1 — hardened advisory candidate
 
 Implemented in `0.2.0-rc.1`:
@@ -40,7 +57,7 @@ flowchart LR
     C --> V["Normalize, validate, redact"]
     V --> S["Evidence store / search"]
     S --> A["Read-only retrieval API"]
-    A --> P["Packet Expert"]
+    A --> P["NetTAP AI in authorized evidence mode"]
 ```
 
 Prioritized inputs:

@@ -20,6 +20,8 @@ services:
         condition: service_healthy
     environment:
       APPLIANCE_HOSTNAME: ${APPLIANCE_HOSTNAME}
+      NETTAP_VISIBILITY_PROFILE: ${NETTAP_VISIBILITY_PROFILE}
+      NETTAP_PACKET_EXPERT_PROFILE: ${NETTAP_PACKET_EXPERT_PROFILE}
     ports:
       - "${HTTPS_BIND_ADDRESS}:${HTTPS_PORT}:443"
     volumes:

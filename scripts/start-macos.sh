@@ -35,10 +35,15 @@ initialize_model_with_temporary_egress local
 "${compose_local[@]}" ps
 
 web_port="$(load_env_value WEB_PORT)"
-echo "Open WebUI: http://127.0.0.1:${web_port}"
+visibility_port="$(load_env_value VISIBILITY_LAUNCHER_PORT)"
+packet_port="$(load_env_value PACKET_EXPERT_LAUNCHER_PORT)"
+echo "NetTAP AI Suite: http://127.0.0.1:${web_port}"
+echo "Network & Visibility: http://127.0.0.1:${visibility_port}"
+echo "Packet Expert: http://127.0.0.1:${packet_port}"
 echo "Bootstrap credential file: $bootstrap_password_file"
 echo "Immediately change the generated password in Settings > Account."
 echo "Then run ./scripts/finalize-admin.sh --confirm after verifying the old password fails."
 echo "Existing Open WebUI volumes keep their existing accounts and passwords."
 echo "Keep loopback binding until TLS and access controls are configured."
+echo "Both assistant experiences use one combined NetTAP AI model and one Qwen2.5 7B base in the shared Ollama volume."
 echo "Apple Silicon note: Dockerized Ollama is CPU-compatible; Docker Desktop does not expose Metal acceleration to this Linux container."
