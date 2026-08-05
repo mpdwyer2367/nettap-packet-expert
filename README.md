@@ -1,12 +1,12 @@
 # NetTAP Packet Expert
 
-NetTAP Packet Expert is a customer-isolated network and security operations assistant. It combines a Qwen2.5 7B instruction model, a version-controlled NetTAP operating policy, Ollama, Open WebUI, and an optional TLS gateway.
+NetTAP Packet Expert is a customer-isolated network and security operations assistant. It combines a Qwen3 8B model, a version-controlled NetTAP operating policy, Ollama, Open WebUI, and an optional TLS gateway.
 
-The repository builds a custom Ollama model definition; it does **not** contain separately fine-tuned weights. First initialization downloads `qwen2.5:7b-instruct-q4_K_M` and creates `nettap-packet-expert:0.2.0-rc.1`.
+The repository builds a custom Ollama model definition; it does **not** contain separately fine-tuned weights. First initialization downloads `qwen3:8b` and creates `nettap-packet-expert:latest`.
 
 ## Product status
 
-`0.2.0-rc.1` is a valid production candidate for controlled, non-production qualification of the documented single-node architecture. It is not a production-ready, generally available, or certified appliance. Source, Compose, runtime-identity, recovery, release-provenance, and fail-closed certification controls are included. Customer production use and commercial release remain blocked until the exact build has passing macOS and Windows runtime evidence, SBOM/CVE acceptance, independent penetration-test approval, legal/licensing approval, support readiness, signature verification, and authorized release acceptance. See [validation status](docs/VALIDATION_STATUS.md).
+`0.3.0-rc.1` is a valid production candidate for controlled, non-production qualification of the documented single-node architecture. It is not a production-ready, generally available, or certified appliance. Source, Compose, runtime-identity, recovery, release-provenance, and fail-closed certification controls are included. Customer production use and commercial release remain blocked until the exact build has passing macOS and Windows runtime evidence, SBOM/CVE acceptance, independent penetration-test approval, legal/licensing approval, support readiness, signature verification, and authorized release acceptance. See [validation status](docs/VALIDATION_STATUS.md).
 
 ## What the product does
 
@@ -26,7 +26,7 @@ flowchart TB
     U["Authorized customer user"] --> G["TLS gateway<br/>customer certificate"]
     G --> W["Open WebUI<br/>authentication and chat"]
     W --> O["Ollama<br/>internal-only API"]
-    O --> M["Packet Expert 0.2.0-rc.1<br/>Qwen2.5 7B + NetTAP policy"]
+    O --> M["Packet Expert current model<br/>Qwen3 8B + NetTAP policy"]
     E["Approved normalized evidence<br/>minimized and untrusted"] --> W
     A["Administrator<br/>CLI and audited release process"] --> G
 ```
@@ -57,6 +57,7 @@ Open <http://127.0.0.1:3001>. The script prints the path to a protected local cr
 
 ```bash
 ./scripts/finalize-admin.sh --confirm
+./scripts/install-openwebui-bundle.sh
 ```
 
 There is no shared or committed default password.
@@ -71,7 +72,7 @@ Set-Location .\nettap-packet-expert
 .\scripts\start-windows.ps1
 ```
 
-The PowerShell entry point uses the same generated-credential and temporary-egress design. Complete administrator finalization from WSL or Git Bash. See [Windows deployment](docs/WINDOWS_DEPLOYMENT.md).
+The PowerShell entry point uses the same generated-credential and temporary-egress design. Complete administrator finalization and run `./scripts/install-openwebui-bundle.sh` from WSL or Git Bash. See [Windows deployment](docs/WINDOWS_DEPLOYMENT.md).
 
 ## Production deployment
 
@@ -113,18 +114,25 @@ Restore is non-destructive: it verifies checksums, requires the matching softwar
 
 ## Knowledge and model behavior
 
-The authoritative system behavior is in [the Modelfile](model/Modelfile). Supplemental administrator-managed knowledge is in [the knowledge file](knowledge/NetTAP_Packet_Expert_Knowledge.md). Import the Markdown file under **Workspace > Knowledge**, restrict its access, and attach it to the Packet Expert model. Updating Git does not automatically replace an imported Open WebUI knowledge revision.
+The Ollama behavior and exact current inference parameters are in [the Modelfile](model/Modelfile). The application-level prompt, capability policy, tags, and suggestions are in [`openwebui/models/nettap-pcap-expert.json`](openwebui/models/nettap-pcap-expert.json). The shared NetTAP chat and suggestion-card theme is mounted from `openwebui/static/`. The Packet Expert skill and its checksum are in `openwebui/skills/`. The source deployment has no custom Open WebUI tools or legacy functions; that inventory is recorded in `openwebui/settings/extensions.json`.
 
-Four broad first-use prompts are supplied:
+Supplemental administrator-managed knowledge is in [the knowledge file](knowledge/NetTAP_Packet_Expert_Knowledge.md), with its expected checksum in `knowledge/manifest.json`. Import the Markdown file under **Workspace > Knowledge**, restrict its access, and attach it to the Packet Expert model. Updating Git does not automatically replace an imported Open WebUI knowledge revision. Confidential internal and customer knowledge is intentionally excluded from this public repository.
 
-- Start an investigation
-- Understand my evidence
-- Troubleshoot a network problem
-- Help me decide
+Six expertise-specific first-use prompts are supplied:
+
+- Analyze Packet Capture
+- Diagnose TCP Performance
+- Validate Capture Quality
+- Investigate Suspicious Host
+- Audit DNS and TLS
+- Hunt C2 and Exfiltration
+
+The complete settings, tool, model, skill, and knowledge operating procedure is in the [operations manual](docs/COMPLETE_OPERATIONS_MANUAL.md).
 
 ## Validation and commercial release
 
 ```bash
+python3 -m pip install -r requirements-validation.txt
 ./tests/static-checks.sh
 ./tests/model-behavior-eval.sh
 ./scripts/certify-production.sh
@@ -134,12 +142,12 @@ The certification command is fail-closed. It cannot manufacture external evidenc
 
 ```bash
 COSIGN_KEY=/secure/release.key ./scripts/package-release.sh
-./scripts/verify-release.sh dist/nettap-packet-expert-0.2.0-rc.1-source.tar.gz /path/to/cosign.pub
+./scripts/verify-release.sh dist/nettap-packet-expert-0.3.0-rc.1-source.tar.gz /path/to/cosign.pub
 ```
 
 Packaging records the source commit, Git tree, artifact digest and release version in a separately signed provenance record. A checksum-only result is suitable for integrity testing, not commercial release acceptance.
 
-Detailed gates are in [commercial release gates](docs/COMMERCIAL_RELEASE_GATES.md), [threat model](docs/THREAT_MODEL.md), [product roadmap](docs/PRODUCT_ROADMAP.md), the reusable [acceptance template](reports/RELEASE_ACCEPTANCE_TEMPLATE.md), and the completed [0.2.0-rc.1 evidence record](reports/RELEASE_ACCEPTANCE_0.2.0-rc.1.md).
+Detailed gates are in [commercial release gates](docs/COMMERCIAL_RELEASE_GATES.md), [threat model](docs/THREAT_MODEL.md), [product roadmap](docs/PRODUCT_ROADMAP.md), the reusable [acceptance template](reports/RELEASE_ACCEPTANCE_TEMPLATE.md), and the completed [0.3.0-rc.1 evidence record](reports/RELEASE_ACCEPTANCE_0.3.0-rc.1.md).
 
 ## Security and support boundary
 

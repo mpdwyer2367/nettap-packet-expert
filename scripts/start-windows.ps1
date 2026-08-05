@@ -38,13 +38,13 @@ if ($content -match '(?m)^WEBUI_SECRET_KEY=GENERATE_ON_FIRST_START$') {
 }
 
 $defaults = [ordered]@{
-    RELEASE_VERSION = '0.2.0-rc.1'
+    RELEASE_VERSION = '0.3.0-rc.1'
     OLLAMA_IMAGE = 'ollama/ollama:0.32.5'
     OPEN_WEBUI_IMAGE = 'ghcr.io/open-webui/open-webui:v0.11.0'
     CADDY_IMAGE = 'caddy:2.11.4-alpine'
     BACKUP_IMAGE = 'alpine:3.24.1'
-    MODEL_NAME = 'nettap-packet-expert:0.2.0-rc.1'
-    EXPECTED_BASE_MODEL_ID = '845dbda0ea48'
+    MODEL_NAME = 'nettap-packet-expert:latest'
+    EXPECTED_BASE_MODEL_ID = '500a1f067a9f'
     BIND_ADDRESS = '127.0.0.1'
     WEB_PORT = '3001'
     HTTPS_BIND_ADDRESS = '0.0.0.0'
@@ -63,7 +63,9 @@ $defaults = [ordered]@{
     DEPLOYMENT_MODE = 'local'
 }
 
-$content = $content -replace '(?m)^MODEL_NAME=nettap-packet-expert:0\.1\.0-rc\.8$', 'MODEL_NAME=nettap-packet-expert:0.2.0-rc.1'
+$content = $content -replace '(?m)^MODEL_NAME=nettap-packet-expert:(0\.1\.0-rc\.8|0\.2\.0-rc\.1)$', 'MODEL_NAME=nettap-packet-expert:latest'
+$content = $content -replace '(?m)^RELEASE_VERSION=0\.2\.0-rc\.1$', 'RELEASE_VERSION=0.3.0-rc.1'
+$content = $content -replace '(?m)^EXPECTED_BASE_MODEL_ID=845dbda0ea48$', 'EXPECTED_BASE_MODEL_ID=500a1f067a9f'
 $content = $content -replace '(?m)^WEBUI_ADMIN_PASSWORD=admin$', 'WEBUI_ADMIN_PASSWORD=GENERATE_ON_FIRST_START'
 
 foreach ($entry in $defaults.GetEnumerator()) {

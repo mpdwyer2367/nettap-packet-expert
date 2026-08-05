@@ -1,6 +1,6 @@
 # NetTAP Packet Expert operations manual
 
-Release `0.2.0-rc.1` is a production-hardening candidate for a single-node, single-customer Docker software appliance. It is not a certified GA appliance until every [commercial release gate](COMMERCIAL_RELEASE_GATES.md) passes.
+Release `0.3.0-rc.1` is a production-hardening candidate for a single-node, single-customer Docker software appliance. It is not a certified GA appliance until every [commercial release gate](COMMERCIAL_RELEASE_GATES.md) passes.
 
 ## Sources of truth
 
@@ -18,12 +18,18 @@ Release `0.2.0-rc.1` is a production-hardening candidate for a single-node, sing
 | Item | Identity |
 |---|---|
 | Compose project | `nettap-packet-expert` |
-| Custom model | `nettap-packet-expert:0.2.0-rc.1` |
-| Base model | `qwen2.5:7b-instruct-q4_K_M` |
+| Custom model | `nettap-packet-expert:latest` |
+| Base model | `qwen3:8b` |
+| Ollama context | 16384 tokens |
+| Open WebUI workspace context | 8192 tokens; 4096 predicted-token limit |
 | Local UI | `127.0.0.1:3001` |
 | Production UI | customer HTTPS name, port `8443` by default |
 | Administrator login | `admin@nettap.local` with locally generated bootstrap password |
 | Persistent volumes | Ollama models; Open WebUI accounts/chats/knowledge |
+| Workspace model definition | `openwebui/models/nettap-pcap-expert.json` |
+| Active Packet Expert skill | `openwebui/skills/` |
+| Custom tools/functions | none installed; `openwebui/settings/extensions.json` |
+| Suggestions | six model-specific packet-analysis actions |
 
 Image tags in `.env.example` are bootstrap references. Production uses the platform-specific digests recorded by `scripts/lock-images.sh` in ignored `.env`.
 
@@ -57,6 +63,19 @@ The startup sequence:
 7. starts the loopback-only application.
 
 Activate the administrator according to [AUTHENTICATION.md](AUTHENTICATION.md). Never expose the local profile to another host.
+
+From macOS, WSL, or Git Bash, install or refresh the version-controlled Open
+WebUI customizations:
+
+```bash
+./scripts/install-openwebui-bundle.sh
+```
+
+This idempotently installs the Packet Expert workspace model, the packet-evidence
+skill, and its six suggestions. Import and permission the knowledge Markdown
+separately so an administrator controls the approved revision and embeddings.
+The checked-in profile image uses the local evaluation URL. For production,
+replace it with the approved customer HTTPS URL before installing the bundle.
 
 ## Production conversion
 
@@ -121,7 +140,18 @@ Customer production is release-based, not branch-based. Never run an unreviewed 
 
 All Open WebUI state—including accounts, chats and imported knowledge—is in the Open WebUI volume. Ollama models are in the Ollama volume. Deleting containers does not normally delete named volumes. `docker compose down -v` is destructive and is not a supported routine operation.
 
-The NetTAP policy in `model/Modelfile` loads automatically when the custom model is built. Supplemental Markdown knowledge requires a controlled import and model attachment. Record its hash; Git changes do not update existing WebUI data.
+The NetTAP Ollama policy and current Qwen3 parameters in `model/Modelfile` load
+when the custom model is built. The Open WebUI JSON adds the current extended
+packet-analysis prompt, description, safe capability policy, tags, and six
+suggestions. Supplemental Markdown knowledge requires a controlled import and
+model attachment. Record and compare its hash to `knowledge/manifest.json`; Git
+changes do not update existing WebUI data.
+
+The deployment deliberately has no custom Open WebUI tools or legacy functions.
+Web search, code execution, image generation, terminal access, direct tool
+servers, API keys, and end-user workspace editing are disabled in Compose. If a
+future approved release adds any tool, document its code, permissions, outbound
+destinations, secrets, and acceptance evidence before enabling it.
 
 ## Troubleshooting
 

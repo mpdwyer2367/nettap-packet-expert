@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Fail-closed structural checks for the production Compose profiles."""
 from pathlib import Path
+import json
 import sys
 import yaml
 
@@ -76,11 +77,15 @@ assert "./config/tls:/etc/caddy/tls:ro" in gateway["volumes"]
 assert gateway["security_opt"] == ["no-new-privileges:true"]
 
 env_example = (root / ".env.example").read_text(encoding="utf-8")
-assert "MODEL_NAME=nettap-packet-expert:0.2.0-rc.1" in env_example
-assert "EXPECTED_BASE_MODEL_ID=845dbda0ea48" in env_example
+assert "MODEL_NAME=nettap-packet-expert:latest" in env_example
+assert "EXPECTED_BASE_MODEL_ID=500a1f067a9f" in env_example
 assert "WEBUI_ADMIN_PASSWORD=GENERATE_ON_FIRST_START" in env_example
 assert "WEBUI_ADMIN_PASSWORD=admin" not in env_example
 assert "BIND_ADDRESS=127.0.0.1" in env_example
+
+prompt_suggestions = json.loads(base["services"]["open-webui"]["environment"]["DEFAULT_PROMPT_SUGGESTIONS"])
+assert len(prompt_suggestions) == 6
+assert prompt_suggestions[0]["title"][0] == "Analyze Packet Capture"
 
 caddy = (root / "config/Caddyfile").read_text(encoding="utf-8")
 for control in ("tls /etc/caddy/tls/tls.crt", "Strict-Transport-Security", "X-Frame-Options", "-Server"):

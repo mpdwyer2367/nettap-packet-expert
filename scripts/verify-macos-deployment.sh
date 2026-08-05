@@ -32,7 +32,7 @@ bind_address="$(load_env_value BIND_ADDRESS)"
 ollama_image="$(load_env_value OLLAMA_IMAGE)"
 webui_image="$(load_env_value OPEN_WEBUI_IMAGE)"
 
-[[ "$model_name" == "nettap-packet-expert:0.2.0-rc.1" ]] || fail "Unexpected model identity: $model_name"
+[[ "$model_name" == "nettap-packet-expert:latest" ]] || fail "Unexpected model identity: $model_name"
 [[ "$bind_address" == "127.0.0.1" ]] || fail "BIND_ADDRESS must remain 127.0.0.1 for the local profile."
 "${compose[@]}" config >/dev/null || fail "Compose configuration is invalid."
 

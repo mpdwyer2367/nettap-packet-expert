@@ -40,8 +40,8 @@ services:
     entrypoint: ["/bin/sh", "-c"]
     command:
       - >-
-        ollama pull qwen2.5:7b-instruct-q4_K_M &&
-        actual_id="$$(ollama list | awk '$$1 == "qwen2.5:7b-instruct-q4_K_M" {print $$2}')" &&
+        ollama pull qwen3:8b &&
+        actual_id="$$(ollama list | awk '$$1 == "qwen3:8b" {print $$2}')" &&
         test "$$actual_id" = "${EXPECTED_BASE_MODEL_ID}" &&
         ollama create ${MODEL_NAME} -f /model/Modelfile &&
         ollama show ${MODEL_NAME}
@@ -127,10 +127,13 @@ services:
       WEBUI_BANNERS: >-
         [{"id":"nettap-bootstrap-password-rc9","type":"warning","title":"Complete administrator activation","content":"This installation generated a unique bootstrap credential. Change it in Settings > Account, verify the old credential fails, then run the administrator finalization command before enabling production access.","dismissible":false,"timestamp":1785864000}]
       DEFAULT_PROMPT_SUGGESTIONS: >-
-        [{"title":["Start an","investigation"],"content":"Help me start a network or security investigation."},{"title":["Understand my","evidence"],"content":"Help me understand what evidence I have and what it can prove."},{"title":["Troubleshoot a","network problem"],"content":"Guide me through a network performance or availability problem."},{"title":["Help me","decide"],"content":"I am not sure where to start. Ask me one important question at a time."}]
+        [{"title":["Analyze Packet Capture","Build an evidence-led L2-L7 assessment"],"content":"Analyze the attached PCAP or PCAPNG. Establish capture context and evidence quality first, then summarize protocol distribution, endpoints, conversations, application behavior, performance symptoms, and security findings. Separate observed facts, derived metrics, hypotheses, and recommended validation. Cite frame numbers and timestamps for substantive findings."},{"title":["Diagnose TCP Performance","Separate network, server, and client symptoms"],"content":"Diagnose TCP performance in the attached capture. Evaluate handshakes, RTT indicators, retransmissions, duplicate ACKs, out-of-order traffic, resets, zero windows, window scaling, stalls, and throughput. Identify the affected flows and distinguish network loss, endpoint delay, receiver pressure, and capture artifacts with frame and time evidence."},{"title":["Validate Capture Quality","Check whether the evidence supports conclusions"],"content":"Assess the quality and limitations of this capture before interpreting traffic. Review acquisition point, directionality, snap length, packet drops, timestamp behavior, duplicates, truncation, SPAN or TAP limitations, NPB filtering or slicing, and endpoint offload artifacts. State what is reliable, uncertain, missing, and the best next capture to collect."},{"title":["Investigate Suspicious Host","Trace behavior and test benign alternatives"],"content":"Investigate the suspicious host in the attached capture. Build a timeline of its flows, peers, DNS activity, TLS or QUIC metadata, authentication exposure, lateral movement indicators, and unusual periodicity or data transfer. Compare suspicious evidence with benign alternatives, state confidence, and cite frames and timestamps."},{"title":["Audit DNS and TLS","Evaluate resolution, encryption, and anomalies"],"content":"Audit DNS and TLS or QUIC behavior in the attached capture. Evaluate query and response health, latency, failures, unusual names, tunneling indicators, TLS versions, SNI, certificate metadata, alerts, handshake failures, and encrypted-session patterns. Cite the supporting flows, frames, and timestamps and explain what encrypted payloads do not reveal."},{"title":["Hunt C2 and Exfiltration","Baseline traffic before assessing threats"],"content":"Hunt for command-and-control and data-exfiltration indicators in the attached capture. Establish a normal-traffic baseline, then examine periodic connections, rare destinations, DNS behavior, TLS metadata, traffic asymmetry, unusual volumes, tunneling, and long-lived sessions. Distinguish suspicious from confirmed malicious activity and include evidence, alternatives, and confidence."}]
     expose: ["8080"]
     volumes:
       - packet-expert-open-webui-data:/app/backend/data
+      - ./openwebui/static/custom.css:/app/backend/open_webui/static/custom.css:ro
+      - ./openwebui/static/loader.js:/app/backend/open_webui/static/loader.js:ro
+      - ./openwebui/static/nettap-main-logo.png:/app/backend/open_webui/static/nettap-main-logo.png:ro
     networks: [backend, user-access]
     security_opt:
       - no-new-privileges:true

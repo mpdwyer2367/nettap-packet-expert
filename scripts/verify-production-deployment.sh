@@ -56,7 +56,7 @@ if docker inspect --format '{{range $name, $_ := .NetworkSettings.Networks}}{{$n
 fi
 model_name="$(load_env_value MODEL_NAME)"
 model_rows="$("${compose_production[@]}" exec -T ollama ollama list)"
-base_id="$(printf '%s\n' "$model_rows" | awk '$1 == "qwen2.5:7b-instruct-q4_K_M" {print $2}')"
+base_id="$(printf '%s\n' "$model_rows" | awk '$1 == "qwen3:8b" {print $2}')"
 custom_id="$(printf '%s\n' "$model_rows" | awk -v name="$model_name" '$1 == name {print $2}')"
 [[ "$base_id" == "$(load_env_value EXPECTED_BASE_MODEL_ID)" ]] || {
   echo "FAIL: Runtime base-model identity does not match the approved manifest." >&2

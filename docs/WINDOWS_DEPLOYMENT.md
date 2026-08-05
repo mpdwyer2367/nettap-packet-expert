@@ -22,6 +22,8 @@ Open <http://127.0.0.1:3001>. Use `admin@nettap.local` and the locally generated
 
 ```bash
 ./scripts/finalize-admin.sh --confirm
+./scripts/install-openwebui-bundle.sh
+python3 -m pip install -r requirements-validation.txt
 ./tests/static-checks.sh
 ./tests/model-behavior-eval.sh
 ```
@@ -31,11 +33,16 @@ PowerShell runtime checks:
 ```powershell
 $compose = @('compose','--env-file','.env','-f','compose.yaml','-f','compose.local.yaml')
 docker @compose ps
-docker @compose exec -T ollama ollama show nettap-packet-expert:0.2.0-rc.1
+docker @compose exec -T ollama ollama show nettap-packet-expert:latest
 Invoke-WebRequest http://127.0.0.1:3001/health -UseBasicParsing
 ```
 
 Record Windows build, architecture, Docker Desktop/Engine/Compose versions, CPU/memory allocation, commit, image digests, model identity, browser results, and tester.
+
+In Open WebUI, import `knowledge/NetTAP_Packet_Expert_Knowledge.md`, verify its
+SHA-256 against `knowledge/manifest.json`, restrict access, and attach it to the
+Packet Expert workspace model. Windows runtime validation must confirm all six
+specialist suggestion cards and the installed Packet Expert skill.
 
 ## Production candidate
 

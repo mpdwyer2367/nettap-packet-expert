@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.3.0-rc.1
+
+- Updated the base LLM from Qwen2.5 7B to the current `qwen3:8b` manifest.
+- Synchronized the live principal-level Packet Expert Ollama and Open WebUI prompts.
+- Added the version-controlled Open WebUI workspace model and Packet Expert skill.
+- Replaced four generic starters with six packet-specialist suggestions.
+- Added a checksum knowledge manifest and a zero-custom-tools inventory.
+- Updated and cross-checked macOS and Windows deployment instructions.
+- Reset production and commercial acceptance to pending for the changed candidate.
+
 ## 0.2.0-rc.1 production-candidate validation update — 2026-08-04
 
 - Added GitHub Actions shell lint and rendering of local, production and bootstrap Compose profiles.

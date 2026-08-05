@@ -4,9 +4,9 @@ This roadmap separates implemented candidate capability from future commercial e
 
 ## Stage 1 — hardened advisory candidate
 
-Implemented in `0.2.0-rc.1`:
+Implemented in `0.3.0-rc.1`:
 
-- Qwen2.5 7B plus versioned NetTAP policy
+- Qwen3 8B plus versioned NetTAP Ollama and Open WebUI policies
 - local evaluation and TLS single-customer profiles
 - generated administrator activation and fail-closed production start
 - internal-only model runtime and temporary registry egress

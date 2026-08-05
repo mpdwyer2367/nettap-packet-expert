@@ -13,9 +13,21 @@ chmod +x scripts/* tests/*.sh
 
 Open <http://127.0.0.1:3001>. Sign in as `admin@nettap.local` with the password in the protected path printed by the script. Change it, prove the generated value fails, then run `./scripts/finalize-admin.sh --confirm`.
 
+Install the version-controlled Open WebUI workspace model, Packet Expert skill,
+and six specialist suggestions:
+
+```bash
+./scripts/install-openwebui-bundle.sh
+```
+
+Import `knowledge/NetTAP_Packet_Expert_Knowledge.md` in **Workspace →
+Knowledge**, verify its checksum against `knowledge/manifest.json`, restrict its
+access, and attach it to **NetTAP Packet Expert**.
+
 Validate:
 
 ```bash
+python3 -m pip install -r requirements-validation.txt
 ./tests/static-checks.sh
 ./scripts/verify-macos-deployment.sh
 ./tests/macos-e2e.sh

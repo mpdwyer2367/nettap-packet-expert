@@ -1,0 +1,16 @@
+{
+  "schema_version": 1,
+  "collections": [
+    {
+      "name": "NetTAP Packet Expert Knowledge",
+      "scope": "Public, administrator-managed packet analysis operating knowledge",
+      "files": [
+        {
+          "filename": "NetTAP_Packet_Expert_Knowledge.md",
+          "sha256": "cff58adc5794c12a8ecfb9276d37ca70eecf67cec4470c7260d57d8b60575275"
+        }
+      ]
+    }
+  ],
+  "private_knowledge": "Customer evidence and the internal NetTAP engineering collection are intentionally excluded from this public repository."
+}

@@ -1,0 +1,13 @@
+[
+  {
+    "description": "",
+    "file": "nettap-packet-evidence--traffic-analysis-specialist.md",
+    "id": "nettap-packet-evidence--traffic-analysis-specialist",
+    "is_active": true,
+    "meta": {
+      "tags": []
+    },
+    "name": "NetTAP Packet Evidence & Traffic Analysis Specialist",
+    "sha256": "db63573710c4221f878caa5bb4f7ccd6bf41b41fe1b0be6eb6ac795aedc38aa4"
+  }
+]

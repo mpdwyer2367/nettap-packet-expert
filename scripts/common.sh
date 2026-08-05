@@ -28,13 +28,13 @@ initialize_env() {
     cp "${project_dir}/.env.example" "$env_file"
   fi
   chmod 0600 "$env_file"
-  ensure_env_default RELEASE_VERSION "0.2.0-rc.1"
+  ensure_env_default RELEASE_VERSION "0.3.0-rc.1"
   ensure_env_default OLLAMA_IMAGE "ollama/ollama:0.32.5"
   ensure_env_default OPEN_WEBUI_IMAGE "ghcr.io/open-webui/open-webui:v0.11.0"
   ensure_env_default CADDY_IMAGE "caddy:2.11.4-alpine"
   ensure_env_default BACKUP_IMAGE "alpine:3.24.1"
-  ensure_env_default MODEL_NAME "nettap-packet-expert:0.2.0-rc.1"
-  ensure_env_default EXPECTED_BASE_MODEL_ID "845dbda0ea48"
+  ensure_env_default MODEL_NAME "nettap-packet-expert:latest"
+  ensure_env_default EXPECTED_BASE_MODEL_ID "500a1f067a9f"
   ensure_env_default DEPLOYMENT_MODE "local"
   ensure_env_default BIND_ADDRESS "127.0.0.1"
   ensure_env_default WEB_PORT "3001"
@@ -49,8 +49,14 @@ initialize_env() {
   ensure_env_default WEBUI_MEMORY "3g"
   ensure_env_default GATEWAY_CPUS "1"
   ensure_env_default GATEWAY_MEMORY "512m"
-  if grep -q '^MODEL_NAME=nettap-packet-expert:0.1.0-rc.8$' "$env_file"; then
-    set_env_value MODEL_NAME "nettap-packet-expert:0.2.0-rc.1"
+  if grep -Eq '^MODEL_NAME=nettap-packet-expert:(0\.1\.0-rc\.8|0\.2\.0-rc\.1)$' "$env_file"; then
+    set_env_value MODEL_NAME "nettap-packet-expert:latest"
+  fi
+  if grep -q '^RELEASE_VERSION=0.2.0-rc.1$' "$env_file"; then
+    set_env_value RELEASE_VERSION "0.3.0-rc.1"
+  fi
+  if grep -q '^EXPECTED_BASE_MODEL_ID=845dbda0ea48$' "$env_file"; then
+    set_env_value EXPECTED_BASE_MODEL_ID "500a1f067a9f"
   fi
   if grep -q '^WEBUI_ADMIN_PASSWORD=admin$' "$env_file"; then
     set_env_value WEBUI_ADMIN_PASSWORD "GENERATE_ON_FIRST_START"
@@ -211,7 +217,7 @@ record_model_identity() {
   else
     rows="$("${compose_local[@]}" exec -T ollama ollama list)"
   fi
-  base_id="$(printf '%s\n' "$rows" | awk '$1 == "qwen2.5:7b-instruct-q4_K_M" {print $2}')"
+  base_id="$(printf '%s\n' "$rows" | awk '$1 == "qwen3:8b" {print $2}')"
   custom_id="$(printf '%s\n' "$rows" | awk -v name="$custom_name" '$1 == name {print $2}')"
   [[ "$base_id" == "$expected_id" ]] || {
     echo "ERROR: Base-model identity is $base_id; expected $expected_id. Release review is required." >&2
@@ -221,7 +227,7 @@ record_model_identity() {
   mkdir -p "${project_dir}/reports/generated"
   {
     printf 'Recorded UTC: %s\n' "$(date -u +%FT%TZ)"
-    printf 'Base model: qwen2.5:7b-instruct-q4_K_M\n'
+    printf 'Base model: qwen3:8b\n'
     printf 'Base model ID: %s\n' "$base_id"
     printf 'Custom model: %s\n' "$custom_name"
     printf 'Custom model ID: %s\n' "$custom_id"

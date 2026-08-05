@@ -43,7 +43,7 @@ Do not enter passwords, secrets, private keys, customer evidence, packet payload
 - Password replaced; generated password rejected:
 - New password persists:
 - Signup and disabled features verified:
-- Model and four broad prompts:
+- Current model, Packet Expert skill, and six specialist prompts:
 - Approved knowledge hash, access, attachment and retrieval:
 - Prompt-injection and evidence-boundary behavior:
 - Browser and customer DNS/TLS:

@@ -30,7 +30,7 @@ Evidence filenames under ignored `reports/production/private/`:
 - `support-readiness-approval.txt`
 - `signed-acceptance.txt`
 
-Presence alone is not a substitute for review. Each text record must include exact lines `Version: 0.2.0-rc.1`, `Commit: <full-commit>` and `Result: PASS` plus signer, date, scope, exceptions, and linked protected evidence. `signed-acceptance.txt` must also contain `Signature verification: PASS`. The script validates these markers; authorized people validate their truth and attachments.
+Presence alone is not a substitute for review. Each text record must include exact lines `Version: 0.3.0-rc.1`, `Commit: <full-commit>` and `Result: PASS` plus signer, date, scope, exceptions, and linked protected evidence. `signed-acceptance.txt` must also contain `Signature verification: PASS`. The script validates these markers; authorized people validate their truth and attachments.
 
 ## Certification vocabulary
 

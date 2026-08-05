@@ -11,7 +11,7 @@ flowchart LR
     B["Customer browser"] -->|HTTPS| G["Caddy TLS gateway"]
     G -->|internal HTTP| W["Open WebUI"]
     W -->|internal API| O["Ollama"]
-    O --> M["Qwen2.5 7B<br/>NetTAP policy"]
+    O --> M["Qwen3 8B<br/>NetTAP policy"]
     D["Authorized normalized data"] --> W
 ```
 
