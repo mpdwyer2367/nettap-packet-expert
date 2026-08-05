@@ -2,7 +2,10 @@
 
 Assessment date: 2026-08-04  
 Assessor role: application architecture and source-control review  
-Certification decision: **NOT GRANTED — production-hardening candidate**
+Candidate decision: **VALID PRODUCTION CANDIDATE for controlled runtime qualification**
+Production certification decision: **NOT GRANTED — external evidence and approvals remain open**
+
+“Valid production candidate” means the source has a coherent supported scope, automated policy checks, immutable release identity, fail-closed deployment controls, testable acceptance criteria, and no known code-level blocker to entering controlled runtime/security qualification. It does not authorize customer production use or commercial distribution.
 
 ## Architectural disposition
 
@@ -27,9 +30,12 @@ This design is feasible for a small customer deployment when the release gates p
 | Consistent stop/archive/restart backup | Implemented |
 | Checksum validation and non-overwriting restore | Implemented |
 | TLS, host sizing and runtime verification gates | Implemented |
-| Signed package/checksum verification | Implemented |
+| Runtime image/model identity and least-privilege verification | Implemented |
+| Backup release/model/image provenance and same-release restore gate | Implemented |
+| Signed package/checksum/provenance verification | Implemented |
 | Prompt-injection, human-approval and evidence guardrails | Implemented |
 | Fail-closed external certification evidence command | Implemented |
+| Shell lint, policy checks and real Compose-profile rendering in CI | Implemented |
 
 ## Evidence still required
 
@@ -49,15 +55,18 @@ This design is feasible for a small customer deployment when the release gates p
 
 Native IPFIX, NetFlow, syslog, SNMPv3, gNMI, REST/webhook collectors, PCAP decoding, WinPcap/Npcap capture, NetTAP NPB control, centralized immutable audit export, SSO/MFA, HA, dashboard widgets, signed OS updates, OVA/OVF/VMDK packaging, licensing enforcement, and virtual-hardware validation are not implemented by this repository. They must not appear in customer claims for this candidate.
 
-## Claim authorized today
+## Claims authorized today
 
-“NetTAP Packet Expert 0.2.0-rc.1 is a source-validated production-hardening candidate with a defined single-customer architecture and fail-closed commercial release gates.”
+“NetTAP Packet Expert 0.2.0-rc.1 is a valid production candidate for controlled, non-production qualification of the defined single-node, single-customer Docker architecture.”
 
-Do not use “production certified,” “commercially approved,” “fully validated,” “100 percent accurate,” or “100 percent secure” until the exact-scope evidence and approvals in `docs/COMMERCIAL_RELEASE_GATES.md` are complete.
+“The candidate has automated source and Compose validation plus fail-closed runtime, supply-chain, recovery and commercial-release gates.”
+
+Do not use “production ready,” “production certified,” “commercially approved,” “fully validated,” “100 percent accurate,” or “100 percent secure” until the exact-scope evidence and approvals in `docs/COMMERCIAL_RELEASE_GATES.md` are complete.
 
 ## Verification basis
 
 Source checks: `tests/static-checks.sh`  
+Compose-profile validation: `.github/workflows/validate.yml`
 Runtime checks: `scripts/verify-production-deployment.sh`  
 Certification refusal gate: `scripts/certify-production.sh`  
 Acceptance record: `reports/RELEASE_ACCEPTANCE_TEMPLATE.md`

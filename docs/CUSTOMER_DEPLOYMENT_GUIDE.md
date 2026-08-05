@@ -16,7 +16,7 @@ Deploy one NetTAP Packet Expert instance per customer or security boundary. This
 
 ## Installation
 
-1. Verify the signed release package and checksum with `scripts/verify-release.sh`.
+1. Verify the signed release package, checksum and signed provenance with `scripts/verify-release.sh`.
 2. Extract it into a customer-owned directory with restricted permissions.
 3. Start the loopback profile and activate the generated administrator:
 
@@ -81,7 +81,7 @@ Complete `reports/RELEASE_ACCEPTANCE_TEMPLATE.md` against the exact commit, imag
 ./tests/backup-restore-e2e.sh
 ```
 
-Backups contain accounts, chats, knowledge, and model data. Encrypt and restrict them. The command briefly stops and restarts the application to obtain consistent SQLite/vector/model files. Restore creates new volumes and never overwrites existing ones. Connecting restored volumes to a deployment is a deliberate change procedure and is not automated.
+Backups contain accounts, chats, knowledge, and model data. Encrypt and restrict them. The command briefly stops and restarts the application to obtain consistent SQLite/vector/model files. Its manifest records the release, model IDs, source identity and approved image references. Restore requires the matching software release, creates new volumes and never overwrites existing ones. Cross-version migration and connecting restored volumes to a deployment are deliberate change procedures and are not automated.
 
 ## Update and rollback
 

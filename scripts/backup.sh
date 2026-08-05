@@ -27,6 +27,11 @@ fi
 project_name="nettap-packet-expert"
 mode="$(load_env_value DEPLOYMENT_MODE)"
 restart_required=false
+model_lock="${project_dir}/reports/generated/model-lock.txt"
+if [[ "$mode" == production && ! -s "$model_lock" ]]; then
+  echo "ERROR: Production backup requires the model identity record created during initialization." >&2
+  exit 4
+fi
 
 restart_application() {
   if [[ "$restart_required" == true ]]; then
@@ -68,6 +73,21 @@ backup_volume "${project_name}_packet-expert-open-webui-data" open-webui-data.tg
   printf 'Release: %s\n' "$(load_env_value RELEASE_VERSION)"
   printf 'Model: %s\n' "$(load_env_value MODEL_NAME)"
   printf 'Source project: %s\n' "$project_name"
+  printf 'Deployment mode: %s\n' "$mode"
+  for key in OLLAMA_IMAGE OPEN_WEBUI_IMAGE CADDY_IMAGE BACKUP_IMAGE; do
+    printf '%s=%s\n' "$key" "$(load_env_value "$key")"
+  done
+  if git -C "$project_dir" rev-parse --verify HEAD >/dev/null 2>&1; then
+    printf 'Source commit: %s\n' "$(git -C "$project_dir" rev-parse HEAD)"
+  else
+    printf 'Source commit: packaged-release-no-git-metadata\n'
+  fi
+  if [[ -s "$model_lock" ]]; then
+    sed -n '/^Base model ID: /p;/^Custom model ID: /p' "$model_lock"
+  else
+    printf 'Base model ID: unavailable-local-evaluation\n'
+    printf 'Custom model ID: unavailable-local-evaluation\n'
+  fi
 } > "${output_dir}/manifest.txt"
 (cd "$output_dir" && {
   sha256_file ollama-data.tgz

@@ -4,6 +4,7 @@ set -euo pipefail
 project_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 env_file="${project_dir}/.env"
 bootstrap_password_file="${project_dir}/.bootstrap-admin-password"
+# shellcheck disable=SC2034 # exported to scripts that source this library
 admin_finalized_file="${project_dir}/.admin-bootstrap-finalized"
 
 require_command() {
@@ -116,6 +117,7 @@ compose_local=("${compose_base[@]}" -f "${project_dir}/compose.local.yaml")
 compose_local_bootstrap=("${compose_local[@]}" -f "${project_dir}/compose.bootstrap.yaml")
 compose_production=("${compose_base[@]}" -f "${project_dir}/compose.production.yaml")
 compose_production_bootstrap=("${compose_production[@]}" -f "${project_dir}/compose.bootstrap.yaml")
+# shellcheck disable=SC2034 # compatibility alias consumed by local test entry points
 compose=("${compose_local[@]}")
 
 wait_for_ollama_local_bootstrap() {

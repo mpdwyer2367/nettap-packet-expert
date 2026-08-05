@@ -15,6 +15,7 @@
 | Gate | Status |
 |---|---|
 | Production source controls | Implemented; CI must pass on the published commit |
+| Supported Compose profile rendering | Automated in GitHub Actions |
 | Immutable image locking | Implemented; release evidence pending |
 | SBOM and HIGH/CRITICAL CVE gate | Implemented; release scan pending |
 | Backup and non-overwriting restore | Implemented; physical-host recovery test pending |
@@ -26,6 +27,7 @@
 | Legal/third-party/branding approval | Pending |
 | Support readiness and SLA | Pending |
 | Signed artifact and acceptance | Pending |
+| Production-candidate architecture review | **PASS for controlled qualification** |
 | Production/commercial certification | **NOT GRANTED** |
 
 Static analysis in this workspace cannot prove Docker runtime, browser authentication, model download/inference, TLS behavior, backup recovery, platform compatibility, performance, penetration resistance, or commercial rights. Those gates require the target environments and authorized reviewers.
@@ -49,4 +51,4 @@ The last command must fail until all external evidence files in [commercial rele
 
 ## Claim rules
 
-Use “source validated” only for a passing exact commit. Use “runtime verified” only with a named host report. Use “customer accepted” only for that customer deployment. Use “commercially approved” or “production certified” only after the entire defined gate and approval scope is complete.
+Use “valid production candidate” only for controlled, non-production qualification of the defined architecture and a passing exact source commit. Use “source validated” only for a passing exact commit. Use “runtime verified” only with a named host report. Use “customer accepted” only for that customer deployment. Use “commercially approved” or “production certified” only after the entire defined gate and approval scope is complete.

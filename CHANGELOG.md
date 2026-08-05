@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.2.0-rc.1 production-candidate validation update — 2026-08-04
+
+- Added GitHub Actions shell lint and rendering of local, production and bootstrap Compose profiles.
+- Bound production runtime verification to approved image references, least-privilege controls, exact gateway exposure, HSTS and locked base/custom model identities.
+- Added release/model/image/source identity to backup manifests and a same-release restore gate.
+- Added signed artifact provenance containing the release, commit, tree and SHA-256 digest.
+- Classified the exact supported architecture as a valid candidate for controlled qualification while retaining fail-closed production/commercial certification gates.
+
 ## 0.2.0-rc.1
 
 - Added separate local, bootstrap-egress, and TLS production Compose profiles.

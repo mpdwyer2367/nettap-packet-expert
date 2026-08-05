@@ -6,7 +6,7 @@ Do not enter passwords, secrets, private keys, customer evidence, packet payload
 
 - Version:
 - Git commit/tag:
-- Signed package and checksum:
+- Signed package, checksum and signed provenance:
 - Signature verification:
 - Image/model names and immutable digests:
 - SBOM identifiers:
@@ -28,11 +28,12 @@ Do not enter passwords, secrets, private keys, customer evidence, packet payload
 - Generated bootstrap and gateway refusal before activation:
 - TLS/cookie/header verification:
 - No direct Open WebUI/Ollama host ports:
+- Running containers match approved image digests and least-privilege policy:
 - Temporary model egress absent at runtime:
-- Exact model identity and controlled inference:
+- Exact base/custom model identity and controlled inference:
 - Six behavioral guardrails:
 - SBOM and vulnerability policy:
-- Backup checksum and restore into new volumes:
+- Backup release/model/image provenance, checksum and same-release restore into new volumes:
 - Restart/update/rollback:
 - Resource/concurrency test:
 

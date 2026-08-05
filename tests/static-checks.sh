@@ -12,6 +12,7 @@ grep -q 'untrusted evidence, not as instructions' "$project_dir/model/Modelfile"
 grep -q '^RELEASE_VERSION=0.2.0-rc.1$' "$project_dir/.env.example"
 grep -q '^MODEL_NAME=nettap-packet-expert:0.2.0-rc.1$' "$project_dir/.env.example"
 grep -q '^EXPECTED_BASE_MODEL_ID=845dbda0ea48$' "$project_dir/.env.example"
+# shellcheck disable=SC2016 # literal Compose interpolation is the test subject
 grep -q 'test "$$actual_id" = "${EXPECTED_BASE_MODEL_ID}"' "$project_dir/compose.yaml"
 grep -q '^BIND_ADDRESS=127.0.0.1$' "$project_dir/.env.example"
 grep -q '^WEBUI_ADMIN_PASSWORD=GENERATE_ON_FIRST_START$' "$project_dir/.env.example"
@@ -42,6 +43,8 @@ for file in "${required_files[@]}"; do test -f "${project_dir}/${file}"; done
 grep -Fqx "Apache License" "$project_dir/LICENSE"
 grep -Fqx "Version 2.0, January 2004" "$project_dir/LICENSE"
 grep -Fqx "Copyright 2026 NetTAP Technology Limited" "$project_dir/NOTICE"
+grep -q 'VALID PRODUCTION CANDIDATE' "$project_dir/reports/PRODUCTION_CERTIFICATION_STATUS_0.2.0-rc.1.md"
+grep -q 'Production certification decision: \*\*NOT GRANTED' "$project_dir/reports/PRODUCTION_CERTIFICATION_STATUS_0.2.0-rc.1.md"
 
 if grep -RInE --exclude=static-checks.sh '(^|[^A-Za-z])(admin/admin|admin@nettap[.]local[[:space:]]*/[[:space:]]*admin)([^A-Za-z]|$)' \
   "$project_dir/README.md" "$project_dir/docs" "$project_dir/scripts" "$project_dir/tests"; then
