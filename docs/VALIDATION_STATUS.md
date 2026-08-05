@@ -30,6 +30,8 @@
 | Production-candidate architecture review | **PASS for controlled qualification** |
 | Production/commercial certification | **NOT GRANTED** |
 
+The completed evidence baseline for this exact candidate is [Release Acceptance 0.2.0-rc.1](../reports/RELEASE_ACCEPTANCE_0.2.0-rc.1.md). It contains no blank decisions: verified source gates are recorded as passed, while all unperformed runtime and organizational gates remain explicitly pending.
+
 Static analysis in this workspace cannot prove Docker runtime, browser authentication, model download/inference, TLS behavior, backup recovery, platform compatibility, performance, penetration resistance, or commercial rights. Those gates require the target environments and authorized reviewers.
 
 ## Required commands
