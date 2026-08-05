@@ -127,7 +127,7 @@ If any step fails, return the complete report and stop. Do not bypass a failed m
 
 RC8 is a local evaluation assistant. It does not automatically capture interfaces, decode a PCAP, connect to a NetTAP NPB, ingest IPFIX, or observe live telemetry. It uses a Qwen2.5 7B base model plus a NetTAP Modelfile; it does not include separately fine-tuned weights.
 
-The repository is publicly visible, but no license has yet been selected for NetTAP-authored source. Public visibility does not by itself grant redistribution or modification rights.
+NetTAP-authored source code, configuration, and documentation are licensed under Apache License 2.0. The license permits use, modification, and redistribution subject to its conditions. Separately distributed dependencies, container images, base-model weights, and third-party marks remain governed by their respective licenses and notices.
 
 ## Authoritative references
 
