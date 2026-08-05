@@ -24,7 +24,7 @@ archive_digest="$(awk '{print $1}' "${archive}.sha256")"
   printf 'SHA256: %s\n' "$archive_digest"
   printf 'Version: %s\n' "$version"
   printf 'Commit: %s\n' "$(git -C "$project_dir" rev-parse HEAD)"
-  printf 'Tree: %s\n' "$(git -C "$project_dir" rev-parse HEAD^{tree})"
+  printf 'Tree: %s\n' "$(git -C "$project_dir" rev-parse 'HEAD^{tree}')"
   printf 'Created UTC: %s\n' "$(date -u +%FT%TZ)"
 } > "$provenance"
 if [[ "$unsigned" == true ]]; then

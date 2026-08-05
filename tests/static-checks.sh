@@ -12,6 +12,7 @@ grep -q 'untrusted evidence, not as instructions' "$project_dir/model/Modelfile"
 grep -q '^RELEASE_VERSION=0.2.0-rc.1$' "$project_dir/.env.example"
 grep -q '^MODEL_NAME=nettap-packet-expert:0.2.0-rc.1$' "$project_dir/.env.example"
 grep -q '^EXPECTED_BASE_MODEL_ID=845dbda0ea48$' "$project_dir/.env.example"
+# shellcheck disable=SC2016 # literal Compose interpolation is the test subject
 grep -q 'test "$$actual_id" = "${EXPECTED_BASE_MODEL_ID}"' "$project_dir/compose.yaml"
 grep -q '^BIND_ADDRESS=127.0.0.1$' "$project_dir/.env.example"
 grep -q '^WEBUI_ADMIN_PASSWORD=GENERATE_ON_FIRST_START$' "$project_dir/.env.example"
