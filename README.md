@@ -139,7 +139,7 @@ COSIGN_KEY=/secure/release.key ./scripts/package-release.sh
 
 Packaging records the source commit, Git tree, artifact digest and release version in a separately signed provenance record. A checksum-only result is suitable for integrity testing, not commercial release acceptance.
 
-Detailed gates are in [commercial release gates](docs/COMMERCIAL_RELEASE_GATES.md), [threat model](docs/THREAT_MODEL.md), [product roadmap](docs/PRODUCT_ROADMAP.md), and [release acceptance](reports/RELEASE_ACCEPTANCE_TEMPLATE.md).
+Detailed gates are in [commercial release gates](docs/COMMERCIAL_RELEASE_GATES.md), [threat model](docs/THREAT_MODEL.md), [product roadmap](docs/PRODUCT_ROADMAP.md), the reusable [acceptance template](reports/RELEASE_ACCEPTANCE_TEMPLATE.md), and the completed [0.2.0-rc.1 evidence record](reports/RELEASE_ACCEPTANCE_0.2.0-rc.1.md).
 
 ## Security and support boundary
 
