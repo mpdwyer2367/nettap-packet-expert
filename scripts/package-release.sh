@@ -10,8 +10,7 @@ unsigned=false
   echo "ERROR: Release packaging requires a clean Git worktree." >&2
   exit 13
 }
-initialize_env
-version="$(load_env_value RELEASE_VERSION)"
+version="$(sed -n 's/^RELEASE_VERSION=//p' "${project_dir}/.env.example")"
 [[ "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-rc\.[0-9]+)?$ ]] || { echo "ERROR: Invalid release version." >&2; exit 13; }
 mkdir -p "${project_dir}/dist"
 archive="${project_dir}/dist/nettap-ai-suite-${version}-source.tar.gz"

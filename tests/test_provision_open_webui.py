@@ -23,6 +23,7 @@ class OpenWebUIState:
         self.knowledge = {}
         self.files = {}
         self.models = {}
+        self.skills = {}
         self.uploads = 0
         self.rag_marker = "NETTAP-RAG-OFFLINE-PROBE-RC3"
         self.config = {
@@ -71,6 +72,13 @@ class Handler(BaseHTTPRequestHandler):
             if model_id not in self.state.models:
                 return self.send_json(404, {"detail": "not found"})
             return self.send_json(200, self.state.models[model_id])
+        if path == "/api/v1/skills/":
+            return self.send_json(200, list(self.state.skills.values()))
+        if path.startswith("/api/v1/skills/id/"):
+            skill_id = urllib.parse.unquote(path.removeprefix("/api/v1/skills/id/"))
+            if skill_id not in self.state.skills:
+                return self.send_json(404, {"detail": "not found"})
+            return self.send_json(200, self.state.skills[skill_id])
         if path == "/api/v1/retrieval/embedding":
             return self.send_json(200, {
                 "RAG_EMBEDDING_ENGINE": "",
@@ -138,6 +146,16 @@ class Handler(BaseHTTPRequestHandler):
             payload = self.read_json()
             self.state.models[payload["id"]] = payload
             return self.send_json(200, payload)
+        if path == "/api/v1/skills/create":
+            payload = self.read_json()
+            self.state.skills[payload["id"]] = payload
+            return self.send_json(200, payload)
+        if path.startswith("/api/v1/skills/id/") and path.endswith("/update"):
+            skill_id = urllib.parse.unquote(path.removeprefix("/api/v1/skills/id/").removesuffix("/update"))
+            payload = self.read_json()
+            payload["id"] = skill_id
+            self.state.skills[skill_id] = payload
+            return self.send_json(200, payload)
         if path == "/api/v1/configs/models":
             payload = self.read_json()
             self.state.config = payload
@@ -160,6 +178,7 @@ class ProvisioningTest(unittest.TestCase):
             "RELEASE_VERSION": "0.3.0-rc.3",
             "NETTAP_AI_MODEL": "nettap-ai:0.3.0-rc.3",
             "NETTAP_PROVISIONING_MANIFEST": str(ROOT / "provisioning/open-webui.json"),
+            "NETTAP_PROVISIONING_CHECKSUMS": str(ROOT / "provisioning/knowledge-sources.sha256"),
             "NETTAP_PROVISIONING_SOURCE_ROOT": str(ROOT),
             "NETTAP_PROVISIONING_STATE": str(self.state_path),
         })
@@ -189,10 +208,25 @@ class ProvisioningTest(unittest.TestCase):
         self.assertEqual(set(Handler.state.models), {
             "nettap-network-visibility", "nettap-packet-expert"
         })
+        self.assertEqual(set(Handler.state.skills), {
+            "nettap-network-visibility", "nettap-packet-expert"
+        })
+        for skill in Handler.state.skills.values():
+            self.assertTrue(skill["content"].startswith("# NetTAP "))
+            self.assertNotIn("\nname: nettap-", skill["content"])
         for model in Handler.state.models.values():
             self.assertEqual(model["base_model_id"], "nettap-ai:0.3.0-rc.3")
             self.assertEqual(model["params"]["function_calling"], "legacy")
             self.assertEqual(len(model["meta"]["knowledge"]), 2)
+            self.assertEqual(len(model["meta"]["skillIds"]), 1)
+        self.assertEqual(
+            Handler.state.models["nettap-network-visibility"]["meta"]["skillIds"],
+            ["nettap-network-visibility"],
+        )
+        self.assertEqual(
+            Handler.state.models["nettap-packet-expert"]["meta"]["skillIds"],
+            ["nettap-packet-expert"],
+        )
         self.assertEqual(
             Handler.state.config["DEFAULT_PINNED_MODELS"],
             "nettap-network-visibility,nettap-packet-expert",
@@ -205,11 +239,15 @@ class ProvisioningTest(unittest.TestCase):
         Handler.state.models["nettap-network-visibility"]["access_grants"] = [
             {"group_id": "network-team", "permission": "read"}
         ]
+        Handler.state.skills["nettap-network-visibility"]["access_grants"] = [
+            {"group_id": "network-team", "permission": "read"}
+        ]
         second = self.run_provisioner()
         self.assertIn("Offline RAG verification: PASS", second.stdout)
         self.assertEqual(Handler.state.uploads, 5)
         self.assertEqual(len(Handler.state.knowledge), 3)
         self.assertEqual(len(Handler.state.models), 2)
+        self.assertEqual(len(Handler.state.skills), 2)
         self.assertEqual(
             next(iter(Handler.state.knowledge.values()))["access_grants"],
             [{"group_id": "network-team", "permission": "read"}],
@@ -218,9 +256,21 @@ class ProvisioningTest(unittest.TestCase):
             Handler.state.models["nettap-network-visibility"]["access_grants"],
             [{"group_id": "network-team", "permission": "read"}],
         )
+        self.assertEqual(
+            Handler.state.skills["nettap-network-visibility"]["access_grants"],
+            [{"group_id": "network-team", "permission": "read"}],
+        )
         state = json.loads(self.state_path.read_text(encoding="utf-8"))
         self.assertEqual(state["release_version"], "0.3.0-rc.3")
         self.assertEqual(state["offline_rag"]["result"], "PASS")
+        self.assertEqual(set(state["skills"]), {"network_visibility", "packet_expert"})
+        self.assertEqual(
+            {item["id"]: item["skill_ids"] for item in state["assistants"]},
+            {
+                "nettap-network-visibility": ["nettap-network-visibility"],
+                "nettap-packet-expert": ["nettap-packet-expert"],
+            },
+        )
 
     def test_fingerprint_is_deterministic_without_api_access(self):
         one = self.run_provisioner("--fingerprint").stdout.strip()
@@ -240,6 +290,22 @@ class ProvisioningTest(unittest.TestCase):
         self.assertFalse(self.state_path.exists())
         self.assertEqual(Handler.state.uploads, 0)
 
+    def test_refuses_unmanaged_skill_identity_collision(self):
+        Handler.state.skills["nettap-network-visibility"] = {
+            "id": "nettap-network-visibility",
+            "name": "Operator-owned skill",
+            "description": "not managed by NetTAP",
+            "content": "operator instructions",
+            "meta": {"tags": []},
+            "is_active": True,
+            "access_grants": [],
+        }
+        result = self.run_provisioner(check=False)
+        self.assertEqual(result.returncode, 1)
+        self.assertIn("refusing to overwrite unmanaged Open WebUI Skill", result.stderr)
+        self.assertFalse(self.state_path.exists())
+        self.assertEqual(Handler.state.models, {})
+
     def test_fails_closed_when_offline_retrieval_marker_is_missing(self):
         Handler.state.rag_marker = "unexpected result"
         result = self.run_provisioner(check=False)
@@ -247,6 +313,21 @@ class ProvisioningTest(unittest.TestCase):
         self.assertIn("did not return the managed verification marker", result.stderr)
         self.assertFalse(self.state_path.exists())
         self.assertEqual(Handler.state.models, {})
+
+    def test_fails_closed_when_pinned_source_identity_changes(self):
+        checksum_path = Path(self.tempdir.name) / "knowledge-sources.sha256"
+        checksum_path.write_text(
+            (ROOT / "provisioning/knowledge-sources.sha256").read_text(encoding="utf-8").replace(
+                "a9bf608d2965f2c9b69e63b8344cf6150a86c7511a3699b524f82eeb54373a91",
+                "0" * 64,
+                1,
+            ),
+            encoding="utf-8",
+        )
+        self.env["NETTAP_PROVISIONING_CHECKSUMS"] = str(checksum_path)
+        result = self.run_provisioner("--fingerprint", check=False)
+        self.assertEqual(result.returncode, 1)
+        self.assertIn("pinned source identity mismatch", result.stderr)
 
 
 if __name__ == "__main__":

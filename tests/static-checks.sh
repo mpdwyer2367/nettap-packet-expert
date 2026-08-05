@@ -43,6 +43,7 @@ grep -q 'force_download=True' "$project_dir/provisioning/cache_embedding_model.p
 grep -q 'files_metadata=True' "$project_dir/provisioning/cache_embedding_model.py"
 grep -q 'local_files_only=True' "$project_dir/provisioning/cache_embedding_model.py"
 grep -q 'assistant-provisioner:' "$project_dir/compose.yaml"
+grep -q 'NETTAP_PROVISIONING_CHECKSUMS: /provision/knowledge-sources.sha256' "$project_dir/compose.yaml"
 grep -q 'rag-cache-init:' "$project_dir/compose.yaml"
 grep -q 'provision_assistants local' "$project_dir/scripts/common.sh"
 grep -q 'require_digest_pins' "$project_dir/scripts/start-production.sh"
@@ -56,23 +57,35 @@ required_files=(
   assistants/shared/core-policy.md
   assistants/network-visibility/assistant.yaml assistants/packet-expert/assistant.yaml
   assistants/network-visibility/system-prompt.md assistants/packet-expert/system-prompt.md
+  skills/nettap-network-visibility/SKILL.md skills/nettap-packet-expert/SKILL.md
   knowledge/NetTAP_AI_Knowledge.md knowledge/NetTAP_Ingestion_Analysis_Guidance.md
   knowledge/NetTAP_Provisioning_Probe.md provisioning/open-webui.json
   provisioning/cache_embedding_model.py provisioning/provision_open_webui.py
+  provisioning/knowledge-sources.sha256
   knowledge/NetTAP_Network_Visibility_Knowledge.md
   knowledge/NetTAP_Packet_Expert_Knowledge.md model/nettap-ai.Modelfile
+  model/MODEL_CARD.md
   launchers/network-visibility/index.html launchers/packet-expert/index.html launchers/shared.css
   docs/AUTHENTICATION.md docs/COMMERCIAL_RELEASE_GATES.md
   docs/CUSTOMER_DEPLOYMENT_GUIDE.md docs/PRODUCTION_ARCHITECTURE.md
   docs/PRODUCT_ROADMAP.md docs/THREAT_MODEL.md docs/VALIDATION_STATUS.md
+  docs/RC3_ACCEPTANCE_PLAN.md
   scripts/backup.sh scripts/restore.sh scripts/lock-images.sh
   scripts/provision-assistants.sh
   scripts/security-scan.sh scripts/production-preflight.sh
   scripts/verify-production-deployment.sh scripts/package-release.sh
-  scripts/verify-release.sh scripts/certify-production.sh
+  scripts/install-model-native.sh scripts/install-model-native.ps1
+  scripts/package-model-bundle.sh scripts/verify-model-bundle.sh
+  scripts/verify-release.sh scripts/verify-archive-tree.py scripts/certify-production.sh
+  scripts/start-wsl2.sh
   tests/model-behavior-eval.sh tests/model-storage-sharing.sh tests/backup-restore-e2e.sh
+  tests/normalized-ingestion-eval.sh tests/failed-update-rollback-e2e.sh
+  tests/clean-package-acceptance.sh tests/compare-platform-acceptance.sh
+  tests/native-model-installer-mock.sh
+  tests/fixtures/normalized-pcap.json tests/fixtures/normalized-logs.jsonl
+  tests/fixtures/normalized-ipfix.jsonl
   tests/production-config-checks.py
-  tests/test_provision_open_webui.py
+  tests/test_provision_open_webui.py tests/test_verify_archive_tree.py
   reports/PRODUCTION_CERTIFICATION_STATUS_0.2.0-rc.1.md
   reports/RELEASE_ACCEPTANCE_0.2.0-rc.1.md
   reports/PRODUCTION_CERTIFICATION_STATUS_0.3.0-rc.2.md
@@ -81,6 +94,8 @@ required_files=(
   reports/PRODUCTION_CERTIFICATION_STATUS_0.3.0-rc.3.md
   reports/RELEASE_ACCEPTANCE_0.3.0-rc.3.md
   reports/STATIC_VALIDATION_2026-08-05_0.3.0-rc.3.md
+  reports/RC3_ACCEPTANCE_AUTOMATION_STATUS.md
+  reports/NATIVE_MODEL_CREATION_2026-08-05_0.3.0-rc.3.md
 )
 for file in "${required_files[@]}"; do test -f "${project_dir}/${file}"; done
 
@@ -102,11 +117,31 @@ grep -q 'chain of custody' "$ingestion_guidance"
 grep -q 'indicators or hypotheses' "$ingestion_guidance"
 
 python3 - "$project_dir" <<'PY'
+import hashlib
+import json
 import sys
 from pathlib import Path
 import yaml
 
 root = Path(sys.argv[1])
+checksums = {}
+for line in (root / "provisioning/knowledge-sources.sha256").read_text(encoding="utf-8").splitlines():
+    if not line.strip():
+        continue
+    digest, relative = line.split("  ", 1)
+    assert len(digest) == 64 and relative not in checksums
+    source = root / relative
+    assert source.is_file()
+    assert hashlib.sha256(source.read_bytes()).hexdigest() == digest
+    checksums[relative] = digest
+
+json.loads((root / "tests/fixtures/normalized-pcap.json").read_text(encoding="utf-8"))
+for fixture in ("normalized-logs.jsonl", "normalized-ipfix.jsonl"):
+    lines = (root / "tests/fixtures" / fixture).read_text(encoding="utf-8").splitlines()
+    assert lines
+    for line in lines:
+        json.loads(line)
+
 assistants = []
 for manifest_path in sorted((root / "assistants").glob("*/assistant.yaml")):
     manifest = yaml.safe_load(manifest_path.read_text(encoding="utf-8"))
@@ -115,12 +150,31 @@ for manifest_path in sorted((root / "assistants").glob("*/assistant.yaml")):
     assert (root / manifest["modelfile"]).is_file()
     for knowledge in manifest["knowledge"]:
         assert (root / knowledge).is_file()
+    for skill in manifest["skills"]:
+        skill_path = root / skill
+        assert skill_path.is_file()
+        content = skill_path.read_text(encoding="utf-8")
+        assert content.startswith("---\nname: ")
+        assert "\ndescription: " in content
 assert {item["id"] for item in assistants} == {"nettap-network-visibility", "nettap-packet-expert"}
 assert len({item["launcher_port"] for item in assistants}) == 2
 assert {item["runtime_model"] for item in assistants} == {"nettap-ai:0.3.0-rc.3"}
 assert {item["modelfile"] for item in assistants} == {"model/nettap-ai.Modelfile"}
+assert {tuple(item["skills"]) for item in assistants} == {
+    ("skills/nettap-network-visibility/SKILL.md",),
+    ("skills/nettap-packet-expert/SKILL.md",),
+}
 assert {item["workspace_model_id"] for item in assistants} == {"nettap-network-visibility", "nettap-packet-expert"}
 assert {item["mode"] for item in assistants} == {"network_visibility", "packet_expert"}
+expected_sources = {
+    "assistants/shared/core-policy.md",
+    "assistants/network-visibility/system-prompt.md",
+    "assistants/packet-expert/system-prompt.md",
+}
+for assistant in assistants:
+    expected_sources.update(assistant["knowledge"])
+    expected_sources.update(assistant["skills"])
+assert set(checksums) == expected_sources
 print("Assistant manifests passed.")
 PY
 

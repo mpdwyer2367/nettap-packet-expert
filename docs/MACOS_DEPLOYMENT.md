@@ -37,6 +37,17 @@ There is no shared default password. Existing volumes retain existing accounts a
 
 Complete the manual checks printed by the test, including both profiles, profile-specific launchers, shared model identity, specialist knowledge isolation, restart persistence, backup, and rollback.
 
+For release acceptance, do not validate a mutable checkout. Copy the signed archive, checksum, provenance, artifact/provenance signatures, and release public key to the host, then run:
+
+```bash
+./tests/clean-package-acceptance.sh \
+  --archive /approved/nettap-ai-suite-0.3.0-rc.3-source.tar.gz \
+  --evidence-dir /protected/nettap-rc3-macos \
+  --public-key /approved/cosign.pub
+```
+
+The evidence directory must be empty. The test uses a unique Compose project and verifies empty initial volumes. `--allow-unsigned-evaluation` is available only for non-release evaluation and cannot produce signature-passing release evidence. Preserve the generated summary and supporting reports outside the temporary runtime. See [the RC3 acceptance plan](RC3_ACCEPTANCE_PLAN.md).
+
 ## Apple Silicon boundary
 
 The Docker profile is CPU-compatible. Docker Desktop does not expose Apple Metal acceleration to the Linux Ollama container. A separate native-Ollama profile would require a different connection, lifecycle, security, backup, and acceptance procedure and is not claimed by this release.

@@ -41,3 +41,17 @@ docker compose --env-file .env -f compose.yaml -f compose.local.yaml exec -T ope
 Windows runtime acceptance must record the Windows build, WSL version, Docker Desktop version, CPU architecture, container image digests, base and combined model IDs, both profile responses, both launcher results, login and password-change result, restart persistence, backup, restore, and rollback.
 
 The supplied profile is CPU-compatible and does not claim Windows GPU acceleration. Existing Packet Expert 0.2 users must follow [the migration guide](MIGRATION.md).
+
+## Clean release acceptance in WSL2
+
+Use the exact signed package used by the macOS tester. From an Ubuntu WSL2 shell with Docker Desktop integration enabled:
+
+```bash
+chmod +x scripts/* tests/*.sh
+./tests/clean-package-acceptance.sh \
+  --archive /mnt/c/approved/nettap-ai-suite-0.3.0-rc.3-source.tar.gz \
+  --evidence-dir /mnt/c/protected/nettap-rc3-windows \
+  --public-key /mnt/c/approved/cosign.pub
+```
+
+The evidence directory must be empty. The test verifies WSL2, starts a unique clean Compose project, and records Windows/WSL2 acceptance against the package commit, tree, and SHA-256. `--allow-unsigned-evaluation` is not acceptable for release evidence. After both platform runs, compare their summaries as described in [the RC3 acceptance plan](RC3_ACCEPTANCE_PLAN.md).

@@ -44,6 +44,8 @@ assert provisioner["networks"] == ["backend"]
 assert provisioner["read_only"] is True
 assert provisioner["cap_drop"] == ["ALL"]
 assert "ports" not in provisioner
+assert provisioner["environment"]["NETTAP_PROVISIONING_CHECKSUMS"] == "/provision/knowledge-sources.sha256"
+assert "./skills:/source/skills:ro" in provisioner["volumes"]
 
 for service_name in ("ollama", "open-webui"):
     service = base["services"][service_name]
@@ -135,6 +137,8 @@ workflow = (root / ".github/workflows/validate.yml").read_text(encoding="utf-8")
 for profile in ("compose.local.yaml", "compose.production.yaml", "compose.bootstrap.yaml"):
     assert profile in workflow
 assert "shellcheck scripts/*.sh scripts/nettap-ai scripts/nettap-packet-expert tests/*.sh" in workflow
+assert "package-model-bundle.sh" in workflow
+assert "verify-model-bundle.sh" in workflow
 
 runtime_verifier = (root / "scripts/verify-production-deployment.sh").read_text(encoding="utf-8")
 for control in (".Config.Image", "no-new-privileges:true", "EXPECTED_BASE_MODEL_ID", "NetTAP AI model ID", "strict-transport-security"):
@@ -146,5 +150,29 @@ assert 'Release: $current_release' in restore
 package = (root / "scripts/package-release.sh").read_text(encoding="utf-8")
 for field in ("provenance", "Commit:", "Tree:", "SHA256:"):
     assert field in package
+assert "initialize_env" not in package
+
+release_verifier = (root / "scripts/verify-release.sh").read_text(encoding="utf-8")
+assert "verify-archive-tree.py" in release_verifier
+
+acceptance = (root / "tests/clean-package-acceptance.sh").read_text(encoding="utf-8")
+for control in (
+    "--public-key",
+    "--allow-unsigned-evaluation",
+    "start-wsl2.sh",
+    "model-behavior-eval.sh",
+    "normalized-ingestion-eval.sh",
+    "model-storage-sharing.sh",
+    "backup-restore-e2e.sh",
+    "failed-update-rollback-e2e.sh",
+    "Signature verification: %s",
+    "Base model ID: %s",
+    "Embedding aggregate SHA256: %s",
+):
+    assert control in acceptance
+
+certification = (root / "scripts/certify-production.sh").read_text(encoding="utf-8")
+for control in ("Tree: $tree", "Package: $package_name", "Package SHA256: $package_sha256", "compare-platform-acceptance.sh"):
+    assert control in certification
 
 print("Production configuration checks passed.")

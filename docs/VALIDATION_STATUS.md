@@ -9,6 +9,7 @@
 | Expected base ID | `845dbda0ea48` |
 | Combined NetTAP AI model | `nettap-ai:0.3.0-rc.3` |
 | Experience profiles | `nettap-network-visibility`, `nettap-packet-expert` |
+| Managed Skills | `nettap-network-visibility`, `nettap-packet-expert` |
 | Offline embedding model | `sentence-transformers/all-MiniLM-L6-v2@1110a243fdf4706b3f48f1d95db1a4f5529b4d41` |
 | Local launchers | `127.0.0.1:3000`, `127.0.0.1:3001` |
 | Shared local UI | `127.0.0.1:3100` |
@@ -17,7 +18,7 @@
 
 The 0.3 suite is an integration release candidate under validation. It is not production-certified, generally available, or approved for commercial appliance distribution.
 
-Static source validation can verify repository structure, Compose isolation, one combined model definition, profile manifests, base and embedding identity configuration, provisioning API contract and idempotence, policy controls, launcher routes, documentation links, and fail-closed release controls. It cannot prove the complete container/model path on advertised target hosts, actual disk use, model response quality for all prompts, application migration success, penetration resistance, legal approval, or support readiness.
+Static source validation can verify repository structure, Compose isolation, one combined model definition, profile and Skill manifests, base and embedding identity configuration, provisioning API contract and idempotence, exact Skill attachment, model-bundle integrity controls, policy controls, launcher routes, documentation links, and fail-closed release controls. It cannot prove the complete container/model path on advertised target hosts, actual disk use, model response quality for all prompts, application migration success, penetration resistance, legal approval, or support readiness.
 
 ## Required evidence for release decision
 
