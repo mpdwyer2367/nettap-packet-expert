@@ -12,4 +12,10 @@ This release candidate is a local decision-support assistant, not an autonomous 
 
 Before any non-local exposure, deploy an approved TLS reverse proxy, restrict source networks, configure organizational identity controls, back up volumes, define retention, review audit requirements, and perform threat modeling and penetration testing.
 
+## Packet captures and sensitive information
+
+Treat all packet captures and packet-derived artifacts as confidential restricted security data by default. They may contain personal information, credentials, session material, communications content, browsing activity, customer data, proprietary content, and regulated information. Do not email captures to outside parties or upload them to unapproved cloud, AI, sharing, messaging, support, or repository services.
+
+External disclosure requires the documented internal corporate process, written authorization from the data owner, required security, privacy, management, and legal approval, minimum-necessary disclosure, and an approved encrypted transfer mechanism. Follow [`LEGAL_AND_DATA_HANDLING.md`](LEGAL_AND_DATA_HANDLING.md) and controlling corporate policy.
+
 For vulnerability reports, use a private GitHub security advisory after the repository is created. Do not open a public issue containing exploit details or secrets.

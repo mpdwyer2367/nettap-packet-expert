@@ -24,3 +24,9 @@ Passive TAPs provide independent copies but may separate directions and require 
 Use the narrowest authorized capture that can answer the question. Define endpoints, networks, protocols, ports, time window, trigger, ring-buffer limits, retention, access, encryption, payload policy, and deletion procedure. Prefer capture filters for collection minimization and display filters for repeatable analysis. Validate the filter with known test traffic before relying on it.
 
 Packet payload can contain passwords, tokens, cookies, personal information, regulated data, proprietary content, and transferred files. Minimize payload, use masking where appropriate, restrict access, and never provide unnecessary content to a language model.
+
+## NetTAP restricted-data handling
+
+Treat PCAP, PCAPNG, decoded records, screenshots, extracted objects, and reports as NetTAP Confidential — Restricted Security Data unless the authorized data owner assigns another classification in writing. Do not email captures to outside parties or place them in personal email, consumer sharing, public repositories, unapproved cloud or AI services, external support portals, unmanaged devices, or removable media.
+
+Any external transfer requires the documented internal corporate process, written data-owner approval, required NetTAP security, privacy, management, and legal approval, minimum-necessary content, named recipients, an approved encrypted transfer channel, access logging, retention, and deletion terms. If authorization is uncertain, stop and escalate internally.

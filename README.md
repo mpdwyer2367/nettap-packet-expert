@@ -220,3 +220,5 @@ No license has yet been selected for NetTAP-authored source. Public repository v
 See [`docs/MACOS_DEPLOYMENT.md`](docs/MACOS_DEPLOYMENT.md) and [`docs/WINDOWS_DEPLOYMENT.md`](docs/WINDOWS_DEPLOYMENT.md) for platform-specific deployment and acceptance details.
 
 For maintaining the Ollama model, knowledge corpus, Skills, local model backups, validation, and GitHub releases, see [`docs/MODEL_LIFECYCLE.md`](docs/MODEL_LIFECYCLE.md).
+
+Use is subject to the authorization, privacy, packet-capture handling, warranty, and liability notice in [`docs/LEGAL_AND_DATA_HANDLING.md`](docs/LEGAL_AND_DATA_HANDLING.md). That notice requires qualified-counsel review and does not claim to eliminate all legal exposure.

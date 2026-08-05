@@ -1,7 +1,7 @@
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 $projectDir = (Resolve-Path (Join-Path $PSScriptRoot '..')).Path
-$required = @('compose.yaml', '.env.example', 'model\Modelfile', 'scripts\Start-Windows.ps1', 'scripts\Windows-Common.ps1', 'scripts\Update-Release-Windows.ps1', 'docs\MACOS_DEPLOYMENT.md', 'docs\WINDOWS_DEPLOYMENT.md', 'docs\MODEL_LIFECYCLE.md', 'workspace\provision.py', 'workspace\skills\manifest.json', 'knowledge\manifest.json', 'tests\retrieval-e2e.sh')
+$required = @('compose.yaml', '.env.example', 'model\Modelfile', 'scripts\Start-Windows.ps1', 'scripts\Windows-Common.ps1', 'scripts\Update-Release-Windows.ps1', 'docs\MACOS_DEPLOYMENT.md', 'docs\WINDOWS_DEPLOYMENT.md', 'docs\MODEL_LIFECYCLE.md', 'docs\LEGAL_AND_DATA_HANDLING.md', 'workspace\provision.py', 'workspace\skills\manifest.json', 'knowledge\manifest.json', 'tests\retrieval-e2e.sh')
 foreach ($relative in $required) { if (-not (Test-Path (Join-Path $projectDir $relative))) { throw "Missing required file: $relative" } }
 $composeText = Get-Content (Join-Path $projectDir 'compose.yaml') -Raw
 $envExample = Get-Content (Join-Path $projectDir '.env.example') -Raw
