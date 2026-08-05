@@ -8,4 +8,6 @@ This repository orchestrates separately distributed components; it does not cont
 
 Container tags in `.env.example` are release-candidate pins, not a supply-chain attestation. A production release must record immutable digests, generate an SBOM, scan images and source, and retain the reports with the release.
 
-No license is granted here for NetTAP names, logos, or trademarks. The repository owner must select and add a license for NetTAP-authored source before representing the project as open source.
+NetTAP-authored source code, configuration, and documentation in this repository are licensed under Apache License 2.0. This does not relicense the separately distributed components listed above, their container images, or their model artifacts.
+
+No permission is granted to use NetTAP names, logos, service marks, or product names except as stated in Section 6 of the Apache License 2.0.

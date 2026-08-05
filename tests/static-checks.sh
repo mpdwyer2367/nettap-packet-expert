@@ -21,6 +21,11 @@ grep -q 'ENABLE_PASSWORD_CHANGE_FORM: "True"' "$project_dir/compose.yaml"
 grep -q 'nettap-bootstrap-password-rc8' "$project_dir/compose.yaml"
 grep -q 'ENABLE_CODE_EXECUTION: "False"' "$project_dir/compose.yaml"
 grep -q 'internal: true' "$project_dir/compose.yaml"
+test -f "$project_dir/LICENSE"
+test -f "$project_dir/NOTICE"
+grep -Fqx "Apache License" "$project_dir/LICENSE"
+grep -Fqx "Version 2.0, January 2004" "$project_dir/LICENSE"
+grep -Fqx "Copyright 2026 NetTAP Technology Limited" "$project_dir/NOTICE"
 test -f "$project_dir/scripts/start-windows.ps1"
 test -f "$project_dir/scripts/inventory-macos.sh"
 test -f "$project_dir/scripts/verify-macos-deployment.sh"
@@ -42,6 +47,15 @@ fi
 if grep -RInE '(BEGIN (RSA |EC |OPENSSH )?PRIVATE KEY|ghp_[A-Za-z0-9]{30,}|github_pat_[A-Za-z0-9_]{30,})' \
   --exclude-dir=.git "$project_dir"; then
   echo "ERROR: Possible private key or GitHub token found." >&2
+  exit 1
+fi
+
+if grep -InE 'no license (has|has yet) been selected|must select and add a license' \
+  "$project_dir/README.md" \
+  "$project_dir/THIRD_PARTY_NOTICES.md" \
+  "$project_dir/docs/COLLEAGUE_EVALUATION_GUIDE.md" \
+  "$project_dir/reports/PUBLIC_COLLEAGUE_READINESS_2026-08-04.md"; then
+  echo "ERROR: Stale project-license warning found." >&2
   exit 1
 fi
 

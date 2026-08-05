@@ -45,9 +45,11 @@ Before describing RC8 as independently macOS runtime verified, obtain from the c
 5. confirmation that the temporary password was replaced and the old password rejected;
 6. confirmation that knowledge import, attachment, access, and retrieval passed.
 
-## Licensing boundary
+## Licensing status
 
-The repository is public, but no license has been selected for NetTAP-authored source. Public visibility does not by itself grant redistribution, modification, or contribution rights. Resolve licensing before representing the project as open source or inviting external reuse beyond evaluation.
+**PASS — Apache License 2.0 applied to NetTAP-authored source**
+
+Copyright is held by NetTAP Technology Limited. The repository includes the standard Apache License 2.0 text and a NOTICE file. Separately distributed dependencies, container images, base-model weights, and third-party marks remain subject to their respective licenses and notices.
 
 ## Authoritative references
 
