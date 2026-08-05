@@ -10,12 +10,24 @@ permissions:
 jobs:
   static:
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
       - name: Install validation dependencies
         run: python3 -m pip install --disable-pip-version-check pyyaml==6.0.3
+      - name: Lint shell entry points
+        run: shellcheck scripts/*.sh scripts/nettap-packet-expert tests/*.sh
       - name: Run static checks
         run: ./tests/static-checks.sh
+      - name: Render supported Compose profiles
+        run: |
+          docker compose --env-file .env.example \
+            -f compose.yaml -f compose.local.yaml config --quiet
+          docker compose --env-file .env.example \
+            -f compose.yaml -f compose.production.yaml config --quiet
+          docker compose --env-file .env.example \
+            -f compose.yaml -f compose.production.yaml -f compose.bootstrap.yaml \
+            --profile initialize config --quiet
       - name: Parse PowerShell deployment
         shell: pwsh
         run: |

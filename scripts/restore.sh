@@ -24,6 +24,19 @@ done
 else
   sha256sum -c SHA256SUMS
 fi)
+grep -Fqx 'Backup format: NetTAP Packet Expert volume backup v1' "${backup_dir}/manifest.txt" || {
+  echo "ERROR: Unsupported or malformed backup manifest." >&2
+  exit 4
+}
+grep -Fqx 'Source project: nettap-packet-expert' "${backup_dir}/manifest.txt" || {
+  echo "ERROR: Backup was not created by NetTAP Packet Expert." >&2
+  exit 4
+}
+current_release="$(load_env_value RELEASE_VERSION)"
+grep -Fqx "Release: $current_release" "${backup_dir}/manifest.txt" || {
+  echo "ERROR: Backup release differs from $current_release. Restore it with the matching signed software release, then follow an approved migration procedure." >&2
+  exit 4
+}
 ollama_volume="${target_prefix}-ollama-data"
 webui_volume="${target_prefix}-open-webui-data"
 for volume in "$ollama_volume" "$webui_volume"; do

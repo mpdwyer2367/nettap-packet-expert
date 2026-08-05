@@ -4,7 +4,7 @@ Commercial distribution is fail-closed. Passing source CI is necessary but insuf
 
 | Gate | Required evidence | Owner | Candidate status |
 |---|---|---|---|
-| Source integrity | CI, secret scan, exact commit | Engineering | Automated |
+| Source integrity | Shell lint, policy/secret checks, Compose rendering, exact commit | Engineering | Automated |
 | Functional runtime | Fresh-install reports on advertised macOS and Windows configurations | QA | Pending physical hosts |
 | Model behavior | Six guardrail cases plus representative domain eval set | AI/QA | Smoke suite implemented; expanded eval pending |
 | Supply chain | Immutable digests, SPDX SBOM, no unapproved HIGH/CRITICAL findings | Security | Tooling implemented; release scan pending |
@@ -13,7 +13,7 @@ Commercial distribution is fail-closed. Passing source CI is necessary but insuf
 | Third-party rights | Open WebUI, Ollama, Qwen, Caddy, Alpine and branding review | Legal | Pending approval |
 | Recovery | Encrypted backup plus test restore and measured recovery time | Operations | Tooling implemented; host evidence pending |
 | Support | SLA, escalation, supported-host matrix, update and EOL policy | Support/Product | Pending |
-| Release signing | Cosign signature, public-key publication, checksum verification | Release manager | Tooling implemented; signature pending |
+| Release signing | Cosign signatures for artifact and provenance, public-key publication, checksum verification | Release manager | Tooling implemented; signatures pending |
 | Acceptance | Signed release record tied to commit, digests, hosts and exceptions | Authorized approver | Pending |
 
 ## Automated refusal
@@ -34,6 +34,7 @@ Presence alone is not a substitute for review. Each text record must include exa
 
 ## Certification vocabulary
 
+- **Valid production candidate:** source and architecture may enter controlled non-production runtime/security qualification; this is not a deployment approval.
 - **Source validated:** automated source checks passed.
 - **Runtime verified:** the exact build passed on one named host.
 - **Customer accepted:** one customer deployment passed its signed acceptance.

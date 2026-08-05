@@ -6,7 +6,7 @@ The repository builds a custom Ollama model definition; it does **not** contain 
 
 ## Product status
 
-`0.2.0-rc.1` is a production-hardening candidate, not a generally available certified appliance. Source controls and reproducible certification gates are included. Commercial release remains blocked until the exact build has passing macOS and Windows runtime evidence, SBOM/CVE acceptance, independent penetration-test approval, legal/licensing approval, support readiness, signature verification, and authorized release acceptance. See [validation status](docs/VALIDATION_STATUS.md).
+`0.2.0-rc.1` is a valid production candidate for controlled, non-production qualification of the documented single-node architecture. It is not a production-ready, generally available, or certified appliance. Source, Compose, runtime-identity, recovery, release-provenance, and fail-closed certification controls are included. Customer production use and commercial release remain blocked until the exact build has passing macOS and Windows runtime evidence, SBOM/CVE acceptance, independent penetration-test approval, legal/licensing approval, support readiness, signature verification, and authorized release acceptance. See [validation status](docs/VALIDATION_STATUS.md).
 
 ## What the product does
 
@@ -104,7 +104,7 @@ Use [the customer deployment guide](docs/CUSTOMER_DEPLOYMENT_GUIDE.md) for firew
 ./scripts/nettap-packet-expert stop
 ```
 
-Restore is non-destructive: it verifies checksums and writes only to new, explicitly named volumes.
+Restore is non-destructive: it verifies checksums, requires the matching software release, and writes only to new, explicitly named volumes.
 
 ```bash
 ./scripts/backup.sh /secure/backup/path --confirm-stop
@@ -136,6 +136,8 @@ The certification command is fail-closed. It cannot manufacture external evidenc
 COSIGN_KEY=/secure/release.key ./scripts/package-release.sh
 ./scripts/verify-release.sh dist/nettap-packet-expert-0.2.0-rc.1-source.tar.gz /path/to/cosign.pub
 ```
+
+Packaging records the source commit, Git tree, artifact digest and release version in a separately signed provenance record. A checksum-only result is suitable for integrity testing, not commercial release acceptance.
 
 Detailed gates are in [commercial release gates](docs/COMMERCIAL_RELEASE_GATES.md), [threat model](docs/THREAT_MODEL.md), [product roadmap](docs/PRODUCT_ROADMAP.md), and [release acceptance](reports/RELEASE_ACCEPTANCE_TEMPLATE.md).
 

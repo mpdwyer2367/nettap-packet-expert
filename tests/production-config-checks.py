@@ -86,4 +86,20 @@ caddy = (root / "config/Caddyfile").read_text(encoding="utf-8")
 for control in ("tls /etc/caddy/tls/tls.crt", "Strict-Transport-Security", "X-Frame-Options", "-Server"):
     assert control in caddy
 
+workflow = (root / ".github/workflows/validate.yml").read_text(encoding="utf-8")
+for profile in ("compose.local.yaml", "compose.production.yaml", "compose.bootstrap.yaml"):
+    assert profile in workflow
+assert "shellcheck scripts/*.sh scripts/nettap-packet-expert tests/*.sh" in workflow
+
+runtime_verifier = (root / "scripts/verify-production-deployment.sh").read_text(encoding="utf-8")
+for control in (".Config.Image", "no-new-privileges:true", "EXPECTED_BASE_MODEL_ID", "Custom model ID", "strict-transport-security"):
+    assert control in runtime_verifier
+
+restore = (root / "scripts/restore.sh").read_text(encoding="utf-8")
+assert 'Release: $current_release' in restore
+
+package = (root / "scripts/package-release.sh").read_text(encoding="utf-8")
+for field in ("provenance", "Commit:", "Tree:", "SHA256:"):
+    assert field in package
+
 print("Production configuration checks passed.")
