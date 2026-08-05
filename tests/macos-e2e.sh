@@ -22,6 +22,8 @@ nettap_model="$(load_env_value NETTAP_AI_MODEL)"
 web_port="$(load_env_value WEB_PORT)"
 visibility_port="$(load_env_value VISIBILITY_LAUNCHER_PORT)"
 packet_port="$(load_env_value PACKET_EXPERT_LAUNCHER_PORT)"
+visibility_profile="$(load_env_value NETTAP_VISIBILITY_PROFILE)"
+packet_profile="$(load_env_value NETTAP_PACKET_EXPERT_PROFILE)"
 
 "${compose[@]}" exec -T ollama ollama show "$nettap_model" | grep -q 'You are NetTAP AI'
 
@@ -59,9 +61,9 @@ done
 curl --fail --silent --show-error "http://127.0.0.1:${visibility_port}/" | grep -q 'Network &amp; Visibility'
 curl --fail --silent --show-error "http://127.0.0.1:${packet_port}/" | grep -q 'Packet Expert'
 curl --fail --silent --show-error --output /dev/null \
-  --write-out '%{redirect_url}' "http://127.0.0.1:${visibility_port}/open" | grep -Fq "model=${nettap_model}"
+  --write-out '%{redirect_url}' "http://127.0.0.1:${visibility_port}/open" | grep -Fq "model=${visibility_profile}"
 curl --fail --silent --show-error --output /dev/null \
-  --write-out '%{redirect_url}' "http://127.0.0.1:${packet_port}/open" | grep -Fq "model=${nettap_model}"
+  --write-out '%{redirect_url}' "http://127.0.0.1:${packet_port}/open" | grep -Fq "model=${packet_profile}"
 
 "${compose[@]}" restart ollama open-webui assistant-launcher
 "${compose[@]}" exec -T ollama ollama show "$nettap_model" >/dev/null
@@ -75,6 +77,6 @@ for _ in $(seq 1 60); do
 done
 [[ "$ui_ready" == true ]] || { echo "FAIL: Open WebUI did not recover after restart."; exit 8; }
 
-echo "PASS: administrator presence, one combined model identity, inference, both launchers, UI health, and restart persistence checks completed."
-echo "Manual acceptance is still required on a fresh data volume: use the generated credential, change it, confirm it fails, finalize activation, confirm the new password survives restart, verify both profiles use the same combined model, and validate each profile's specialist knowledge and starter experience."
+echo "PASS: administrator presence, one combined model identity, automatic profile/RAG provisioning, inference, both launchers, UI health, and restart persistence checks completed."
+echo "Manual acceptance is still required on a fresh data volume: use the generated credential, change it, confirm it fails, finalize activation, confirm the new password survives restart, and validate representative browser chats in both managed profiles."
 echo "Report: $report_file"

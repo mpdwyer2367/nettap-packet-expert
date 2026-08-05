@@ -21,8 +21,10 @@ flowchart TB
 |---|---:|---|---|
 | Open WebUI | 1 | Accounts, chats, settings, imported knowledge | Only browser and authenticated application surface |
 | Ollama | 1 | One base-model store and one combined NetTAP AI manifest | No host port in the supplied profiles |
-| Network & Visibility profile | 1 | Optional Workspace Model and isolated specialist knowledge collection | Broad architecture, deployment, visibility, and telemetry workflow |
-| Packet Expert profile | 1 | Optional Workspace Model and isolated specialist knowledge collection | Packet evidence, capture planning, forensics, and security investigation |
+| Network & Visibility profile | 1 | Managed Workspace Model and isolated specialist knowledge collection | Broad architecture, deployment, visibility, and telemetry workflow |
+| Packet Expert profile | 1 | Managed Workspace Model and isolated specialist knowledge collection | Packet evidence, capture planning, forensics, and security investigation |
+| Offline embedding cache | 1 | Exact-revision MiniLM model and integrity metadata | Local-only knowledge indexing and retrieval |
+| One-shot provisioner | 1 per release change | Provisioning fingerprint and API-created objects | No host port; supported Open WebUI APIs only |
 | Local launcher | 1 small Caddy container | None | Ports 3000 and 3001; no authentication or application data |
 | Production gateway | 1 Caddy container | Gateway operational data | TLS entry point on port 8443 by default |
 
@@ -36,7 +38,9 @@ The Compose project name and existing volume names remain `nettap-packet-expert`
 | `http://127.0.0.1:3001` | Branded Packet Expert starting page |
 | `http://127.0.0.1:3100` | Shared Open WebUI application |
 
-The launchers submit only documented Open WebUI `model` and `q` URL parameters. Both select `nettap-ai:0.3.0-rc.2`; their prompts establish the starting mode. They do not hold accounts, chats, model weights, tools, or knowledge.
+The launchers submit only documented Open WebUI `model` and `q` URL parameters. Port 3000 selects `nettap-network-visibility`; port 3001 selects `nettap-packet-expert`. Both profiles resolve to `nettap-ai:0.3.0-rc.3`. The launchers do not hold accounts, chats, model weights, tools, or knowledge.
+
+During initialization only, the bootstrap overlay supplies egress to Ollama and the embedding-cache job. Normal runtime has internal Docker networks, `OFFLINE_MODE=True`, `HF_HUB_OFFLINE=1`, a pinned local embedding path, automatic model updates disabled, and no remote-code trust. The assistant provisioner starts only after Open WebUI is healthy, authenticates as the administrator, reconciles knowledge and profiles, proves local retrieval, writes a state record, and exits.
 
 ## Production addresses
 

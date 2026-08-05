@@ -17,7 +17,7 @@ Set-Location .\nettap-packet-expert
 .\scripts\start-windows.ps1
 ```
 
-The first start downloads the approved Qwen2.5 7B base once, verifies its expected ID, builds one combined `nettap-ai:0.3.0-rc.2` model, and starts one Open WebUI with two stateless experience launchers.
+The first start downloads the approved Qwen2.5 7B base and exact offline embedding revision, verifies them, builds one combined `nettap-ai:0.3.0-rc.3` model, removes temporary egress, provisions three knowledge collections and two Workspace Models, proves offline retrieval, and then starts one Open WebUI with two stateless experience launchers.
 
 Open:
 
@@ -31,10 +31,11 @@ Use `admin@nettap.local` with the locally generated password file printed by the
 
 ```powershell
 docker compose --env-file .env -f compose.yaml -f compose.local.yaml ps
-docker compose --env-file .env -f compose.yaml -f compose.local.yaml exec -T ollama ollama show nettap-ai:0.3.0-rc.2
+docker compose --env-file .env -f compose.yaml -f compose.local.yaml exec -T ollama ollama show nettap-ai:0.3.0-rc.3
 Invoke-WebRequest http://127.0.0.1:3100/health -UseBasicParsing
 Invoke-WebRequest http://127.0.0.1:3000/ -UseBasicParsing
 Invoke-WebRequest http://127.0.0.1:3001/ -UseBasicParsing
+docker compose --env-file .env -f compose.yaml -f compose.local.yaml exec -T open-webui python -c "import json; from pathlib import Path; print(json.loads(Path('/app/backend/data/nettap-provisioning-state.json').read_text())['offline_rag']['result'])"
 ```
 
 Windows runtime acceptance must record the Windows build, WSL version, Docker Desktop version, CPU architecture, container image digests, base and combined model IDs, both profile responses, both launcher results, login and password-change result, restart persistence, backup, restore, and rollback.

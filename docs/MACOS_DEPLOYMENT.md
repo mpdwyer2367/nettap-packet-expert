@@ -12,7 +12,7 @@ chmod +x scripts/* tests/*.sh
 ./scripts/start-macos.sh
 ```
 
-The first start downloads the approved Qwen2.5 7B base once, verifies its expected ID, builds one combined `nettap-ai:0.3.0-rc.2` model, and starts one Open WebUI with two stateless experience launchers.
+The first start downloads the approved Qwen2.5 7B base and exact offline embedding revision, verifies them, builds one combined `nettap-ai:0.3.0-rc.3` model, removes temporary egress, provisions three knowledge collections and two Workspace Models, proves offline retrieval, and then starts one Open WebUI with two stateless experience launchers.
 
 Open:
 

@@ -5,13 +5,13 @@
 
 :3000 {
 	@open path /open
-	redir @open "{$SUITE_URL}/?model={$NETTAP_AI_MODEL}&q=Begin%20in%20Network%20%26%20Visibility%20mode.%20Ask%20one%20simple%20question%20to%20understand%20my%20network%20goal." 302
+	redir @open "{$SUITE_URL}/?model={$NETTAP_VISIBILITY_PROFILE}&q=Begin%20in%20Network%20%26%20Visibility%20mode.%20Ask%20one%20simple%20question%20to%20understand%20my%20network%20goal." 302
 	@start path /start
-	redir @start "{$SUITE_URL}/?model={$NETTAP_AI_MODEL}&q=Use%20Network%20%26%20Visibility%20mode.%20I%27m%20not%20sure%20where%20to%20begin.%20Ask%20me%20one%20simple%20question%20at%20a%20time%20to%20understand%20my%20network%2C%20my%20goal%2C%20and%20what%20information%20is%20available." 302
+	redir @start "{$SUITE_URL}/?model={$NETTAP_VISIBILITY_PROFILE}&q=Use%20Network%20%26%20Visibility%20mode.%20I%27m%20not%20sure%20where%20to%20begin.%20Ask%20me%20one%20simple%20question%20at%20a%20time%20to%20understand%20my%20network%2C%20my%20goal%2C%20and%20what%20information%20is%20available." 302
 	@design path /design
-	redir @design "{$SUITE_URL}/?model={$NETTAP_AI_MODEL}&q=Use%20Network%20%26%20Visibility%20mode.%20Help%20me%20design%20or%20improve%20my%20network.%20Ask%20for%20the%20minimum%20environment%20details%20you%20need." 302
+	redir @design "{$SUITE_URL}/?model={$NETTAP_VISIBILITY_PROFILE}&q=Use%20Network%20%26%20Visibility%20mode.%20Help%20me%20design%20or%20improve%20my%20network.%20Ask%20for%20the%20minimum%20environment%20details%20you%20need." 302
 	@connect path /connect
-	redir @connect "{$SUITE_URL}/?model={$NETTAP_AI_MODEL}&q=Use%20Network%20%26%20Visibility%20mode.%20Help%20me%20choose%20how%20to%20add%20NetTAP%20visibility%20and%20collect%20the%20right%20traffic%20or%20telemetry%20for%20my%20goal." 302
+	redir @connect "{$SUITE_URL}/?model={$NETTAP_VISIBILITY_PROFILE}&q=Use%20Network%20%26%20Visibility%20mode.%20Help%20me%20choose%20how%20to%20add%20NetTAP%20visibility%20and%20collect%20the%20right%20traffic%20or%20telemetry%20for%20my%20goal." 302
 	handle /shared.css {
 		root * /srv
 		file_server
@@ -31,13 +31,13 @@
 
 :3001 {
 	@open path /open
-	redir @open "{$SUITE_URL}/?model={$NETTAP_AI_MODEL}&q=Begin%20in%20Packet%20Expert%20mode.%20Ask%20one%20simple%20question%20to%20define%20my%20authorized%20investigation." 302
+	redir @open "{$SUITE_URL}/?model={$NETTAP_PACKET_EXPERT_PROFILE}&q=Begin%20in%20Packet%20Expert%20mode.%20Ask%20one%20simple%20question%20to%20define%20my%20authorized%20investigation." 302
 	@start path /start
-	redir @start "{$SUITE_URL}/?model={$NETTAP_AI_MODEL}&q=Use%20Packet%20Expert%20mode.%20I%20have%20a%20network%20or%20security%20issue%20but%20do%20not%20know%20what%20evidence%20I%20need.%20Ask%20me%20one%20simple%20question%20at%20a%20time." 302
+	redir @start "{$SUITE_URL}/?model={$NETTAP_PACKET_EXPERT_PROFILE}&q=Use%20Packet%20Expert%20mode.%20I%20have%20a%20network%20or%20security%20issue%20but%20do%20not%20know%20what%20evidence%20I%20need.%20Ask%20me%20one%20simple%20question%20at%20a%20time." 302
 	@evidence path /evidence
-	redir @evidence "{$SUITE_URL}/?model={$NETTAP_AI_MODEL}&q=Use%20Packet%20Expert%20mode.%20Help%20me%20understand%20what%20packet-derived%20evidence%20is%20actually%20available%20and%20what%20it%20can%20prove." 302
+	redir @evidence "{$SUITE_URL}/?model={$NETTAP_PACKET_EXPERT_PROFILE}&q=Use%20Packet%20Expert%20mode.%20Help%20me%20understand%20what%20packet-derived%20evidence%20is%20actually%20available%20and%20what%20it%20can%20prove." 302
 	@capture path /capture
-	redir @capture "{$SUITE_URL}/?model={$NETTAP_AI_MODEL}&q=Use%20Packet%20Expert%20mode.%20Help%20me%20plan%20a%20safe%2C%20authorized%20capture%20for%20my%20investigation%20without%20assuming%20a%20capture%20already%20exists." 302
+	redir @capture "{$SUITE_URL}/?model={$NETTAP_PACKET_EXPERT_PROFILE}&q=Use%20Packet%20Expert%20mode.%20Help%20me%20plan%20a%20safe%2C%20authorized%20capture%20for%20my%20investigation%20without%20assuming%20a%20capture%20already%20exists." 302
 	handle /shared.css {
 		root * /srv
 		file_server

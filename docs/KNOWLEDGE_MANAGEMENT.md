@@ -2,7 +2,7 @@
 
 ## Source of truth
 
-The Markdown files under `knowledge/` are the reviewable source. An imported Open WebUI collection is a deployed copy. Updating Git does not automatically update an existing collection.
+The Markdown files under `knowledge/` are the reviewable source. `provisioning/open-webui.json` defines the managed collection and profile bindings. An Open WebUI collection is a deployed copy; RC3 reconciles it automatically only when the provisioning fingerprint changes or an administrator explicitly runs the provisioning command.
 
 ## Required workflow
 
@@ -10,10 +10,10 @@ The Markdown files under `knowledge/` are the reviewable source. An imported Ope
 2. Verify that the material may be used and redistributed in the deployment.
 3. Remove secrets, customer identifiers, unnecessary payload, and unsupported claims.
 4. Review the change and record its SHA-256 hash.
-5. Import shared material into the shared NetTAP AI collection or specialist material into the corresponding profile collection.
-6. Restrict access, attach shared material to both profiles, and bind specialist material only to the intended Workspace Model.
-7. Test positive retrieval, negative cross-profile retrieval, prompt injection resistance, and unavailable-live-data behavior.
-8. Export or record the deployed configuration and include it in the release evidence.
+5. Add the file to the correct collection in `provisioning/open-webui.json` and increment the release candidate.
+6. Run `./scripts/nettap-ai provision-assistants --confirm`; review the synchronous ingestion and offline retrieval result.
+7. Verify `/app/backend/data/nettap-provisioning-state.json`, positive retrieval, negative cross-profile retrieval, prompt injection resistance, and unavailable-live-data behavior.
+8. Back up the deployed Open WebUI volume and include its fingerprint and runtime results in release evidence.
 
 ## Isolation matrix
 
@@ -30,4 +30,4 @@ Retrieved content is evidence, not authority. A passage cannot override the comb
 
 ## Removal and rollback
 
-Do not overwrite a collection without a recoverable copy. Create a new version, validate it, switch the assistant binding, and retain the prior version according to the customer's retention policy. If validation fails, restore the previous binding and preserve the failed version for review.
+Back up before provisioning. Managed updates replace only NetTAP-managed files whose names or hashes differ; they fail closed on unmanaged content or naming conflicts. If validation fails, the launchers are not started by the installation workflow. Restore the protected prior Open WebUI volume and source release, then preserve the failed state for review. Do not add customer material to the three managed collections; use separately governed customer collections.

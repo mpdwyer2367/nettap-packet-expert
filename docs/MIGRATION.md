@@ -47,23 +47,25 @@ For Windows:
 
 Initialization performs these bounded changes:
 
-1. Updates recognized 0.2 and 0.3-rc.1 environment defaults to the 0.3-rc.2 suite values.
+1. Updates recognized 0.2, 0.3-rc.1, and 0.3-rc.2 environment defaults to the 0.3-rc.3 suite values.
 2. Retains the Compose project name so existing volumes remain attached.
 3. Pulls the same approved Qwen2.5 7B base model and verifies its expected ID.
-4. Creates one combined `nettap-ai:0.3.0-rc.2` model.
-5. Starts one Open WebUI and the two stateless launcher pages.
+4. Creates one combined `nettap-ai:0.3.0-rc.3` model.
+5. Caches the exact approved embedding-model revision during temporary egress, then removes that egress.
+6. Starts Open WebUI in offline mode, reconciles three managed knowledge collections and two Workspace Models through supported APIs, and proves local retrieval.
+7. Starts the two stateless launcher pages only after provisioning succeeds.
 
-It does not remove old Packet Expert or Network & Visibility model tags, modify Open WebUI tables directly, or delete the retired environment variables. The old tags and variables are unused by rc.2 and remain available for rollback until an administrator removes them after acceptance.
+It does not remove old Packet Expert or Network & Visibility model tags, modify Open WebUI tables directly, or delete retired environment variables. Old tags remain available for rollback until an administrator removes them after acceptance. The provisioner adopts only recognized NetTAP RC1/RC2 profiles, preserves their access grants, and refuses unmanaged naming or file conflicts.
 
 ## Application migration
 
 1. Sign in with the existing administrator account. A populated Open WebUI volume keeps its existing accounts and passwords; the bootstrap credential is not reapplied.
 2. Confirm existing chats are present.
-3. Confirm `nettap-ai:0.3.0-rc.2` appears in the model selector and that the retired assistant tags are not selected by default.
-4. Import `knowledge/NetTAP_AI_Knowledge.md` as the reviewed shared collection and `knowledge/NetTAP_Network_Visibility_Knowledge.md` as a new restricted specialist collection.
-5. Retain the existing Packet Expert knowledge collection and verify its source hash. Re-import it only through a documented change procedure.
-6. Create or update two separate Workspace Model presets over the same `nettap-ai` base. Attach the shared collection to both and bind each specialist collection only to its matching profile. Follow [assistant customization](ASSISTANT_CUSTOMIZATION.md).
-7. Do not attach both specialist collections to both profiles merely to simplify administration; that would weaken experience-specific retrieval and permissions.
+3. Confirm `nettap-ai:0.3.0-rc.3` appears in the model selector and that the retired assistant tags are not selected by default.
+4. Confirm the installation reported `Offline RAG verification: PASS` and created the shared, Network & Visibility, and Packet Expert managed collections.
+5. Confirm both managed Workspace Models use the same `nettap-ai` base, shared knowledge is attached to both, and each specialist collection is attached only to its matching profile.
+6. Keep legacy or customer-created collections outside the managed NetTAP collection names; review and migrate them separately.
+7. If provisioning reports an unmanaged conflict, back up and rename or relocate that content after review; do not bypass the check or edit SQLite directly.
 
 ## Acceptance
 
@@ -87,7 +89,7 @@ Manually verify:
 - port 3100 is one shared Open WebUI;
 - assistant switching does not require a second login;
 - existing chats and accounts remain available;
-- both profiles use the same `nettap-ai:0.3.0-rc.2` runtime model;
+- both profiles use the same `nettap-ai:0.3.0-rc.3` runtime model;
 - each profile retains its intended name, prompts, specialist knowledge, and permissions;
 - no assistant claims unavailable live data; and
 - a new backup and non-overwriting restore pass.

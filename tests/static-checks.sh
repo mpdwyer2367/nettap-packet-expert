@@ -20,10 +20,13 @@ grep -q 'IPsec is a security suite; its ESP mode can provide confidentiality thr
 grep -q 'Raw PCAP, logs, flow exports, cloud records, and telemetry require a supported parser and validated schema' "$model_file"
 grep -q 'timezone, clock-synchronization status, observation point, schema version, sampling configuration' "$model_file"
 grep -q 'Treat possible command-and-control as an evidence-supported indicator or hypothesis' "$model_file"
-grep -q '^RELEASE_VERSION=0.3.0-rc.2$' "$project_dir/.env.example"
+grep -q '^RELEASE_VERSION=0.3.0-rc.3$' "$project_dir/.env.example"
 grep -q '^BASE_MODEL=qwen2.5:7b-instruct-q4_K_M$' "$project_dir/.env.example"
-grep -q '^NETTAP_AI_MODEL=nettap-ai:0.3.0-rc.2$' "$project_dir/.env.example"
+grep -q '^NETTAP_AI_MODEL=nettap-ai:0.3.0-rc.3$' "$project_dir/.env.example"
 grep -q '^EXPECTED_BASE_MODEL_ID=845dbda0ea48$' "$project_dir/.env.example"
+grep -q '^NETTAP_VISIBILITY_PROFILE=nettap-network-visibility$' "$project_dir/.env.example"
+grep -q '^NETTAP_PACKET_EXPERT_PROFILE=nettap-packet-expert$' "$project_dir/.env.example"
+grep -q '^RAG_EMBEDDING_MODEL_REVISION=1110a243fdf4706b3f48f1d95db1a4f5529b4d41$' "$project_dir/.env.example"
 # shellcheck disable=SC2016 # literal Compose interpolation is the test subject
 grep -q 'test "$$actual_id" = "${EXPECTED_BASE_MODEL_ID}"' "$project_dir/compose.yaml"
 grep -q '^BIND_ADDRESS=127.0.0.1$' "$project_dir/.env.example"
@@ -34,6 +37,14 @@ grep -q '^WEBUI_ADMIN_PASSWORD=GENERATE_ON_FIRST_START$' "$project_dir/.env.exam
 grep -q 'ENABLE_SIGNUP: "False"' "$project_dir/compose.yaml"
 grep -q 'nettap-bootstrap-password-rc9' "$project_dir/compose.yaml"
 grep -q 'internal: true' "$project_dir/compose.yaml"
+grep -q 'HF_HUB_OFFLINE: "1"' "$project_dir/compose.yaml"
+grep -q 'RAG_EMBEDDING_MODEL_TRUST_REMOTE_CODE: "False"' "$project_dir/compose.yaml"
+grep -q 'force_download=True' "$project_dir/provisioning/cache_embedding_model.py"
+grep -q 'files_metadata=True' "$project_dir/provisioning/cache_embedding_model.py"
+grep -q 'local_files_only=True' "$project_dir/provisioning/cache_embedding_model.py"
+grep -q 'assistant-provisioner:' "$project_dir/compose.yaml"
+grep -q 'rag-cache-init:' "$project_dir/compose.yaml"
+grep -q 'provision_assistants local' "$project_dir/scripts/common.sh"
 grep -q 'require_digest_pins' "$project_dir/scripts/start-production.sh"
 grep -q 'production-preflight.sh' "$project_dir/scripts/start-production.sh"
 grep -q 'NOT CERTIFIED' "$project_dir/scripts/certify-production.sh"
@@ -44,7 +55,10 @@ required_files=(
   config/Caddyfile config/Launcher.Caddyfile
   assistants/shared/core-policy.md
   assistants/network-visibility/assistant.yaml assistants/packet-expert/assistant.yaml
+  assistants/network-visibility/system-prompt.md assistants/packet-expert/system-prompt.md
   knowledge/NetTAP_AI_Knowledge.md knowledge/NetTAP_Ingestion_Analysis_Guidance.md
+  knowledge/NetTAP_Provisioning_Probe.md provisioning/open-webui.json
+  provisioning/cache_embedding_model.py provisioning/provision_open_webui.py
   knowledge/NetTAP_Network_Visibility_Knowledge.md
   knowledge/NetTAP_Packet_Expert_Knowledge.md model/nettap-ai.Modelfile
   launchers/network-visibility/index.html launchers/packet-expert/index.html launchers/shared.css
@@ -52,16 +66,21 @@ required_files=(
   docs/CUSTOMER_DEPLOYMENT_GUIDE.md docs/PRODUCTION_ARCHITECTURE.md
   docs/PRODUCT_ROADMAP.md docs/THREAT_MODEL.md docs/VALIDATION_STATUS.md
   scripts/backup.sh scripts/restore.sh scripts/lock-images.sh
+  scripts/provision-assistants.sh
   scripts/security-scan.sh scripts/production-preflight.sh
   scripts/verify-production-deployment.sh scripts/package-release.sh
   scripts/verify-release.sh scripts/certify-production.sh
   tests/model-behavior-eval.sh tests/model-storage-sharing.sh tests/backup-restore-e2e.sh
   tests/production-config-checks.py
+  tests/test_provision_open_webui.py
   reports/PRODUCTION_CERTIFICATION_STATUS_0.2.0-rc.1.md
   reports/RELEASE_ACCEPTANCE_0.2.0-rc.1.md
   reports/PRODUCTION_CERTIFICATION_STATUS_0.3.0-rc.2.md
   reports/RELEASE_ACCEPTANCE_0.3.0-rc.2.md
   reports/STATIC_VALIDATION_2026-08-05_0.3.0-rc.2.md
+  reports/PRODUCTION_CERTIFICATION_STATUS_0.3.0-rc.3.md
+  reports/RELEASE_ACCEPTANCE_0.3.0-rc.3.md
+  reports/STATIC_VALIDATION_2026-08-05_0.3.0-rc.3.md
 )
 for file in "${required_files[@]}"; do test -f "${project_dir}/${file}"; done
 
@@ -98,7 +117,7 @@ for manifest_path in sorted((root / "assistants").glob("*/assistant.yaml")):
         assert (root / knowledge).is_file()
 assert {item["id"] for item in assistants} == {"nettap-network-visibility", "nettap-packet-expert"}
 assert len({item["launcher_port"] for item in assistants}) == 2
-assert {item["runtime_model"] for item in assistants} == {"nettap-ai:0.3.0-rc.2"}
+assert {item["runtime_model"] for item in assistants} == {"nettap-ai:0.3.0-rc.3"}
 assert {item["modelfile"] for item in assistants} == {"model/nettap-ai.Modelfile"}
 assert {item["workspace_model_id"] for item in assistants} == {"nettap-network-visibility", "nettap-packet-expert"}
 assert {item["mode"] for item in assistants} == {"network_visibility", "packet_expert"}
@@ -117,6 +136,10 @@ grep -q 'Production certification decision: \*\*NOT GRANTED' "$project_dir/repor
 grep -q 'Release disposition: \*\*EVALUATION ONLY' "$project_dir/reports/RELEASE_ACCEPTANCE_0.3.0-rc.2.md"
 grep -q 'Production/customer deployment approval: \*\*NOT GRANTED' "$project_dir/reports/RELEASE_ACCEPTANCE_0.3.0-rc.2.md"
 grep -q 'Commercial distribution approval: \*\*NOT GRANTED' "$project_dir/reports/RELEASE_ACCEPTANCE_0.3.0-rc.2.md"
+grep -q 'Production certification decision: \*\*NOT GRANTED' "$project_dir/reports/PRODUCTION_CERTIFICATION_STATUS_0.3.0-rc.3.md"
+grep -q 'Release disposition: \*\*EVALUATION ONLY' "$project_dir/reports/RELEASE_ACCEPTANCE_0.3.0-rc.3.md"
+grep -q 'Production/customer deployment approval: \*\*NOT GRANTED' "$project_dir/reports/RELEASE_ACCEPTANCE_0.3.0-rc.3.md"
+grep -q 'Commercial distribution approval: \*\*NOT GRANTED' "$project_dir/reports/RELEASE_ACCEPTANCE_0.3.0-rc.3.md"
 
 if grep -RInE --exclude=static-checks.sh '(^|[^A-Za-z])(admin/admin|admin@nettap[.]local[[:space:]]*/[[:space:]]*admin)([^A-Za-z]|$)' \
   "$project_dir/README.md" "$project_dir/docs" "$project_dir/scripts" "$project_dir/tests"; then

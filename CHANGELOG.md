@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.3.0-rc.3 automatic assistants and offline RAG candidate — 2026-08-05
+
+- Added fail-closed, idempotent provisioning of two Open WebUI Workspace Models and three managed knowledge collections through pinned Open WebUI v0.11.0 APIs.
+- Added controlled initialization of `all-MiniLM-L6-v2` at exact revision `1110a243fdf4706b3f48f1d95db1a4f5529b4d41`, followed by local-only embedding and retrieval configuration.
+- Added a deterministic offline retrieval proof that must pass before launcher pages start.
+- Changed launchers to select the managed Network & Visibility and Packet Expert profiles, both backed by one `nettap-ai:0.3.0-rc.3` Ollama model.
+- Added API-contract/idempotence tests, provisioning state evidence, target-host verification gates, migration guidance, and fail-closed recovery.
+- Retained production and commercial approval gates pending exact-build macOS and Windows runtime evidence and the existing security, legal, support, signing, and acceptance records.
+
 ## 0.3.0-rc.2 combined NetTAP AI model candidate — 2026-08-05
 
 - Replaced two NetTAP Ollama model tags with one combined `nettap-ai:0.3.0-rc.2` model containing Network & Visibility, Packet Expert, and unified cross-domain capabilities.

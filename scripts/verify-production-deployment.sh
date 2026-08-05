@@ -70,6 +70,48 @@ grep -Fqx "NetTAP AI model ID: $nettap_id" "$model_lock" || {
   echo "FAIL: NetTAP AI identity differs from the initialization record." >&2
   exit 12
 }
+if ! "${compose_production[@]}" exec -T open-webui python - <<'PY'
+import json
+import hashlib
+from pathlib import Path
+embedding = json.loads(Path('/app/backend/data/nettap-embedding-model.json').read_text(encoding='utf-8'))
+provisioning = json.loads(Path('/app/backend/data/nettap-provisioning-state.json').read_text(encoding='utf-8'))
+assert embedding['revision'] == '1110a243fdf4706b3f48f1d95db1a4f5529b4d41'
+assert embedding['model_path'] == '/app/backend/data/nettap-models/all-MiniLM-L6-v2/1110a243fdf4706b3f48f1d95db1a4f5529b4d41'
+assert embedding['embedding_dimension'] > 0
+aggregate = hashlib.sha256()
+expected_files = set()
+for item in embedding['files']:
+    expected_files.add(item['path'])
+    path = Path(embedding['model_path']) / item['path']
+    digest = hashlib.sha256(path.read_bytes()).hexdigest()
+    assert digest == item['sha256']
+    aggregate.update(item['path'].encode('utf-8'))
+    aggregate.update(b'\0')
+    aggregate.update(digest.encode('ascii'))
+    aggregate.update(b'\n')
+actual_files = {
+    path.relative_to(embedding['model_path']).as_posix()
+    for path in Path(embedding['model_path']).rglob('*')
+    if path.is_file() and '.cache' not in path.parts
+}
+assert actual_files == expected_files
+assert aggregate.hexdigest() == embedding['aggregate_sha256']
+assert provisioning['release_version'] == '0.3.0-rc.3'
+assert provisioning['offline_rag']['result'] == 'PASS'
+assert {item['id'] for item in provisioning['assistants']} == {
+    'nettap-network-visibility', 'nettap-packet-expert'
+}
+assert set(provisioning['knowledge']) == {'shared', 'network_visibility', 'packet_expert'}
+PY
+then
+  echo "FAIL: Managed assistant or offline RAG state is invalid." >&2
+  exit 12
+fi
+[[ "$(installed_provisioning_fingerprint production)" == "$(provisioning_fingerprint production)" ]] || {
+  echo "FAIL: Installed provisioning fingerprint differs from the RC3 source." >&2
+  exit 12
+}
 hostname="$(load_env_value APPLIANCE_HOSTNAME)"
 https_port="$(load_env_value HTTPS_PORT)"
 headers_file="$(mktemp "${TMPDIR:-/tmp}/nettap-headers.XXXXXX")"
@@ -79,6 +121,20 @@ curl --fail --silent --show-error --dump-header "$headers_file" --output /dev/nu
   --resolve "${hostname}:${https_port}:127.0.0.1" "https://${hostname}:${https_port}/health"
 grep -Eiq '^strict-transport-security:[[:space:]]*max-age=31536000; includeSubDomains[[:space:]]*$' "$headers_file" || {
   echo "FAIL: HTTPS response is missing the required HSTS policy." >&2
+  exit 12
+}
+visibility_redirect="$(curl --fail --silent --show-error --output /dev/null --write-out '%{redirect_url}' \
+  --cacert "${project_dir}/config/tls/tls.crt" --resolve "${hostname}:${https_port}:127.0.0.1" \
+  "https://${hostname}:${https_port}/visibility")"
+packet_redirect="$(curl --fail --silent --show-error --output /dev/null --write-out '%{redirect_url}' \
+  --cacert "${project_dir}/config/tls/tls.crt" --resolve "${hostname}:${https_port}:127.0.0.1" \
+  "https://${hostname}:${https_port}/packet-expert")"
+[[ "$visibility_redirect" == *'model=nettap-network-visibility'* ]] || {
+  echo "FAIL: Production Network & Visibility route selected the wrong profile." >&2
+  exit 12
+}
+[[ "$packet_redirect" == *'model=nettap-packet-expert'* ]] || {
+  echo "FAIL: Production Packet Expert route selected the wrong profile." >&2
   exit 12
 }
 rm -f "$headers_file"
@@ -96,6 +152,6 @@ mkdir -p "$(dirname "$output")"
   printf 'OPEN_WEBUI_IMAGE=%s\n' "$(load_env_value OPEN_WEBUI_IMAGE)"
   printf 'CADDY_IMAGE=%s\n' "$(load_env_value CADDY_IMAGE)"
   printf 'Endpoint: https://%s:%s\n' "$hostname" "$https_port"
-  printf 'Controls: exact images, TLS/HSTS gateway, least privilege, exact gateway binding, no direct Ollama/WebUI host ports, runtime model egress absent, locked shared base and combined NetTAP AI identities, healthy services\n'
+  printf 'Controls: exact images, TLS/HSTS gateway, least privilege, exact gateway binding, no direct Ollama/WebUI host ports, runtime model egress absent, locked shared base and combined NetTAP AI identities, pinned offline embedding cache, managed assistant profiles and knowledge, offline RAG proof, healthy services\n'
 } > "$output"
 echo "Production runtime verification passed: $output"

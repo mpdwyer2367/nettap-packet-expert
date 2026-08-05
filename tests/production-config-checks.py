@@ -14,7 +14,9 @@ local = load("compose.local.yaml")
 bootstrap = load("compose.bootstrap.yaml")
 production = load("compose.production.yaml")
 
-assert set(base["services"]) == {"ollama", "model-init", "open-webui"}
+assert set(base["services"]) == {
+    "ollama", "model-init", "rag-cache-init", "open-webui", "assistant-provisioner"
+}
 assert base["networks"]["backend"]["internal"] is True
 assert base["networks"]["user-access"]["internal"] is True
 assert "ports" not in base["services"]["ollama"]
@@ -28,6 +30,20 @@ assert local["services"]["assistant-launcher"]["networks"] == ["user-access"]
 assert local["services"]["assistant-launcher"]["security_opt"] == ["no-new-privileges:true"]
 assert local["services"]["assistant-launcher"]["cap_drop"] == ["ALL"]
 assert bootstrap["services"]["ollama"]["networks"] == ["backend", "model-egress"]
+assert bootstrap["services"]["rag-cache-init"]["networks"] == ["backend", "model-egress"]
+
+rag_init = base["services"]["rag-cache-init"]
+assert rag_init["profiles"] == ["initialize"]
+assert rag_init["read_only"] is True
+assert rag_init["cap_drop"] == ["ALL"]
+assert rag_init["environment"]["RAG_EMBEDDING_MODEL_REVISION"] == "${RAG_EMBEDDING_MODEL_REVISION}"
+
+provisioner = base["services"]["assistant-provisioner"]
+assert provisioner["profiles"] == ["provision"]
+assert provisioner["networks"] == ["backend"]
+assert provisioner["read_only"] is True
+assert provisioner["cap_drop"] == ["ALL"]
+assert "ports" not in provisioner
 
 for service_name in ("ollama", "open-webui"):
     service = base["services"][service_name]
@@ -70,6 +86,11 @@ assert env["WEBUI_AUTH"] == "True"
 assert env["JWT_EXPIRES_IN"] == "${JWT_EXPIRES_IN}"
 assert env["ENABLE_PERSISTENT_CONFIG"] == "False"
 assert env["OFFLINE_MODE"] == "True"
+assert env["HF_HUB_OFFLINE"] == "1"
+assert env["RAG_EMBEDDING_ENGINE"] == ""
+assert env["RAG_EMBEDDING_MODEL"] == "${RAG_EMBEDDING_MODEL}"
+assert env["RAG_EMBEDDING_MODEL_AUTO_UPDATE"] == "False"
+assert env["RAG_EMBEDDING_MODEL_TRUST_REMOTE_CODE"] == "False"
 assert env["AUDIT_LOG_LEVEL"] == "METADATA"
 
 prod_web_env = production["services"]["open-webui"]["environment"]
@@ -81,12 +102,17 @@ assert gateway["ports"] == ["${HTTPS_BIND_ADDRESS}:${HTTPS_PORT}:443"]
 assert gateway["networks"] == ["user-access"]
 assert "./config/tls:/etc/caddy/tls:ro" in gateway["volumes"]
 assert gateway["security_opt"] == ["no-new-privileges:true"]
+assert gateway["environment"]["NETTAP_VISIBILITY_PROFILE"] == "${NETTAP_VISIBILITY_PROFILE}"
+assert gateway["environment"]["NETTAP_PACKET_EXPERT_PROFILE"] == "${NETTAP_PACKET_EXPERT_PROFILE}"
 
 env_example = (root / ".env.example").read_text(encoding="utf-8")
-assert "RELEASE_VERSION=0.3.0-rc.2" in env_example
+assert "RELEASE_VERSION=0.3.0-rc.3" in env_example
 assert "BASE_MODEL=qwen2.5:7b-instruct-q4_K_M" in env_example
-assert "NETTAP_AI_MODEL=nettap-ai:0.3.0-rc.2" in env_example
+assert "NETTAP_AI_MODEL=nettap-ai:0.3.0-rc.3" in env_example
 assert "EXPECTED_BASE_MODEL_ID=845dbda0ea48" in env_example
+assert "NETTAP_VISIBILITY_PROFILE=nettap-network-visibility" in env_example
+assert "NETTAP_PACKET_EXPERT_PROFILE=nettap-packet-expert" in env_example
+assert "RAG_EMBEDDING_MODEL_REVISION=1110a243fdf4706b3f48f1d95db1a4f5529b4d41" in env_example
 assert "WEBUI_ADMIN_PASSWORD=GENERATE_ON_FIRST_START" in env_example
 assert "WEBUI_ADMIN_PASSWORD=admin" not in env_example
 assert "BIND_ADDRESS=127.0.0.1" in env_example
@@ -96,10 +122,14 @@ for control in ("tls /etc/caddy/tls/tls.crt", "Strict-Transport-Security", "X-Fr
     assert control in caddy
 assert "/visibility" in caddy
 assert "/packet-expert" in caddy
+assert "NETTAP_VISIBILITY_PROFILE" in caddy
+assert "NETTAP_PACKET_EXPERT_PROFILE" in caddy
+assert "NETTAP_AI_MODEL" not in caddy
 
 launcher = (root / "config/Launcher.Caddyfile").read_text(encoding="utf-8")
-for control in (":3000", ":3001", "NETTAP_AI_MODEL", "Content-Security-Policy"):
+for control in (":3000", ":3001", "NETTAP_VISIBILITY_PROFILE", "NETTAP_PACKET_EXPERT_PROFILE", "Content-Security-Policy"):
     assert control in launcher
+assert "NETTAP_AI_MODEL" not in launcher
 
 workflow = (root / ".github/workflows/validate.yml").read_text(encoding="utf-8")
 for profile in ("compose.local.yaml", "compose.production.yaml", "compose.bootstrap.yaml"):

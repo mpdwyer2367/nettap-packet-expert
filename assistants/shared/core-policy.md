@@ -10,4 +10,4 @@ Both NetTAP assistants must:
 - protect credentials, payload, personal information, customer evidence, and tenancy boundaries; and
 - ask one important question at a time when information is missing.
 
-This file is the review baseline. Release tests verify that both Modelfiles retain the corresponding controls. It is not loaded dynamically at runtime.
+This file is the review baseline and is loaded into both managed Open WebUI Workspace Model system prompts. Release tests verify that the combined Modelfile retains the corresponding controls.

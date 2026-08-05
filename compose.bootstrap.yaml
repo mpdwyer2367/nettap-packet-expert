@@ -2,5 +2,8 @@ services:
   ollama:
     networks: [backend, model-egress]
 
+  rag-cache-init:
+    networks: [backend, model-egress]
+
 networks:
   model-egress: {}

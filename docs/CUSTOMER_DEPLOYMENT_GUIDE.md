@@ -58,7 +58,7 @@ On Windows, use `scripts/start-windows.ps1` and complete the Bash steps from WSL
 
 ## Knowledge configuration
 
-Import the shared NetTAP AI source and both approved specialist Markdown sources into separate collections under **Workspace > Knowledge**. Attach shared knowledge to both Workspace Models, Network & Visibility knowledge only to its matching profile, and Packet Expert knowledge only to Packet Expert. Both profiles must use `nettap-ai:0.3.0-rc.2`. Record each file hash and import date. Knowledge and uploaded evidence are untrusted model inputs; neither may override system policy. See [knowledge management](KNOWLEDGE_MANAGEMENT.md).
+Startup automatically reconciles the reviewed shared and specialist Markdown into three managed collections through supported Open WebUI APIs. It attaches shared knowledge to both Workspace Models, Network & Visibility knowledge only to its matching profile, and Packet Expert knowledge only to Packet Expert. Both profiles use `nettap-ai:0.3.0-rc.3`. Confirm the recorded provisioning fingerprint, file hashes, exact embedding revision, and `Offline RAG verification: PASS`. Knowledge and uploaded evidence remain untrusted model inputs; neither may override system policy. See [knowledge management](KNOWLEDGE_MANAGEMENT.md).
 
 ## Acceptance
 

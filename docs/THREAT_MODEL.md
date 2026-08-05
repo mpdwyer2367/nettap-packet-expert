@@ -13,7 +13,8 @@ Administrator credentials, application secrets, customer chats, uploaded evidenc
 | Direct model API exposure | No Ollama host port; internal network | Docker host hardening |
 | WebUI bypass | No production WebUI host port | Verify with runtime gate |
 | Prompt injection/RAG poisoning | System policy treats evidence as untrusted; guardrail test | Curated knowledge, provenance, human review |
-| Cross-assistant prompt or knowledge leakage | Separate Modelfiles, manifests, knowledge collections and launchers | Workspace Model binding and negative tests |
+| Cross-assistant prompt or knowledge leakage | One shared hard safety policy plus separate managed prompts, knowledge collections, profile IDs and launchers | Workspace Model binding and negative tests |
+| RAG dependency drift or poisoned cache | Exact repository revision, upstream file identity checks, revision-specific path, runtime SHA-256 manifest, remote code disabled | Approved hub access during bootstrap and release review |
 | Unauthorized tool execution | Tools disabled by default; user tool administration disabled | Connector allowlist, independent authorization and audit |
 | Sensitive packet disclosure | Data-minimization policy and explicit capability boundary | Approved normalization/redaction pipeline |
 | Malicious/vulnerable dependency | Digests, SBOM and HIGH/CRITICAL CVE gate | Continuous re-scan and exception governance |

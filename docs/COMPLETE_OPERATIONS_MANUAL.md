@@ -1,13 +1,13 @@
 # NetTAP AI Suite operations manual
 
-Release `0.3.0-rc.2` is an integration candidate for one single-node, single-customer Docker deployment. It is not a certified GA appliance until every commercial release gate passes.
+Release `0.3.0-rc.3` is an integration candidate for one single-node, single-customer Docker deployment. It is not a certified GA appliance until every commercial release gate passes.
 
 ## Components
 
 | Component | Identity |
 |---|---|
 | Shared base | `qwen2.5:7b-instruct-q4_K_M` |
-| Combined NetTAP AI model | `nettap-ai:0.3.0-rc.2` |
+| Combined NetTAP AI model | `nettap-ai:0.3.0-rc.3` |
 | Network profile | Workspace Model ID `nettap-network-visibility` over the combined model |
 | Packet profile | Workspace Model ID `nettap-packet-expert` over the combined model |
 | Local UI | `127.0.0.1:3100` |
@@ -29,6 +29,7 @@ The first start generates a unique local credential. Change it, prove the old va
 ./scripts/nettap-ai status
 ./scripts/nettap-ai health
 ./scripts/nettap-ai update-models --confirm
+./scripts/nettap-ai provision-assistants --confirm
 ./scripts/nettap-ai backup /secure/backup/path --confirm-stop
 ./scripts/nettap-ai stop
 ```
@@ -37,7 +38,7 @@ The compatibility command `./scripts/nettap-packet-expert` delegates to the unif
 
 ## Model and profile management
 
-The combined Ollama policy loads when `nettap-ai` is created. Supplemental Markdown knowledge requires a controlled Open WebUI import and matching Workspace Model attachment. Both profiles use the same Ollama model; Git changes do not update deployed knowledge.
+The combined Ollama policy loads when `nettap-ai` is created. Startup then reconciles supplemental Markdown and matching Workspace Model attachments through supported Open WebUI APIs and proves offline retrieval before enabling the launchers. Both profiles use the same Ollama model. After a reviewed Git change, run `./scripts/nettap-ai provision-assistants --confirm`; the fingerprint prevents unnecessary repeated ingestion.
 
 Follow [assistant customization](ASSISTANT_CUSTOMIZATION.md) and [knowledge management](KNOWLEDGE_MANAGEMENT.md). Keep the global application suggestions broad; the launchers and Workspace Models provide assistant-specific starting points.
 
@@ -78,11 +79,11 @@ Run `./scripts/inventory-macos.sh` on macOS. Identify the owning process before 
 
 ### Old suggestions remain
 
-Open WebUI can retain persisted Workspace Model or global configuration. Inspect the selected model and its prompt suggestions. Update or replace the reviewed preset; do not delete the Open WebUI volume to repair suggestions.
+Run `./scripts/nettap-ai provision-assistants --confirm`, then inspect the managed profile and provisioning state. The command reconciles reviewed suggestions and model defaults without deleting accounts or chats. Do not delete the Open WebUI volume to repair suggestions.
 
 ### One profile is missing
 
-Run `./scripts/nettap-ai update-models --confirm` and inspect `ollama list` for `nettap-ai:0.3.0-rc.2`. Then inspect the relevant Open WebUI Workspace Model preset and rerun the behavior tests. Do not create an unversioned substitute model from the UI.
+Run `./scripts/nettap-ai update-models --confirm` and inspect `ollama list` for `nettap-ai:0.3.0-rc.3`. The update also refreshes the pinned offline embedding cache and reconciles the managed profiles. Review the provisioning state and rerun the behavior tests. Do not create an unversioned substitute model from the UI.
 
 ### Existing login fails
 
