@@ -1,0 +1,17 @@
+{
+  "name": "NetTAP Packet Expert",
+  "description": "Versioned packet acquisition, protocol, performance, security, forensic, and evidence-quality knowledge.",
+  "files": [
+    "NetTAP_Packet_Expert_Knowledge.md",
+    "01_Capture_Acquisition_and_Integrity.md",
+    "02_Protocols_and_IANA_Decode.md",
+    "03_TCP_UDP_and_Application_Performance.md",
+    "04_Security_Forensics_and_Correlation.md"
+  ],
+  "retrieval_cases": [
+    {"query": "What capture integrity checks are required before analysis?", "markers": ["observation point", "snap length", "dropped-packet"]},
+    {"query": "Does an IANA port assignment prove the application protocol?", "markers": ["does not prove", "nonstandard ports", "iana"]},
+    {"query": "Does every TCP retransmission prove network packet loss?", "markers": ["not automatic proof", "capture loss", "reordering"]},
+    {"query": "How should packet evidence be correlated during a forensic investigation?", "markers": ["ipfix", "edr", "timestamps"]}
+  ]
+}

@@ -87,7 +87,7 @@ services:
       - ./workspace:/workspace:ro
       - ./knowledge:/knowledge:ro
     networks: [user-access]
-    entrypoint: ["python", "/workspace/install.py"]
+    entrypoint: ["python", "/workspace/provision.py"]
     security_opt:
       - no-new-privileges:true
 

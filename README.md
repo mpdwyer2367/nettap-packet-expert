@@ -166,17 +166,18 @@ The Windows harness automates source checks, model identity, inference, WebUI he
 ```bash
 ./scripts/status.sh
 ./scripts/stop.sh
-./scripts/update-model.sh --confirm
+./scripts/update-release.sh --confirm
+./scripts/backup-ollama-volume.sh artifacts/nettap-ollama-backup.tar.gz
 ```
 
-`stop.sh` preserves persistent data. `update-model.sh` pulls the declared base and rebuilds the custom model after a reviewed Modelfile change.
+`stop.sh` preserves persistent data. `update-release.sh` rebuilds the Ollama model, synchronizes manifest-managed knowledge and Skills, and validates retrieval. The older `update-model.sh` name remains as a compatibility wrapper.
 
 ### Windows
 
 ```powershell
 .\scripts\Status-Windows.ps1
 .\scripts\Stop-Windows.ps1
-.\scripts\Update-Model-Windows.ps1 -Confirm
+.\scripts\Update-Release-Windows.ps1 -Confirm
 ```
 
 `docker compose down` preserves named volumes. Never add `-v` unless permanent deletion of all local accounts, chats, configuration, knowledge, and downloaded models is intended. Back up the Open WebUI and Ollama named volumes before upgrades; RC7 does not include an automated backup/restore tool.
@@ -217,3 +218,5 @@ No license has yet been selected for NetTAP-authored source. Public repository v
 - [Ollama Modelfile reference](https://docs.ollama.com/modelfile)
 
 See [`docs/MACOS_DEPLOYMENT.md`](docs/MACOS_DEPLOYMENT.md) and [`docs/WINDOWS_DEPLOYMENT.md`](docs/WINDOWS_DEPLOYMENT.md) for platform-specific deployment and acceptance details.
+
+For maintaining the Ollama model, knowledge corpus, Skills, local model backups, validation, and GitHub releases, see [`docs/MODEL_LIFECYCLE.md`](docs/MODEL_LIFECYCLE.md).

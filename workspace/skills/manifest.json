@@ -1,0 +1,7 @@
+{
+  "skills": [
+    {"id": "nettap-packet-evidence-analysis", "name": "NetTAP Packet Evidence Analysis", "description": "Evidence-driven packet troubleshooting, security, and forensic workflow.", "file": "nettap-packet-evidence-analysis.md", "tags": ["nettap", "packet-analysis", "forensics"]},
+    {"id": "nettap-capture-assurance", "name": "NetTAP Capture Assurance", "description": "Capture planning, acquisition integrity, privacy, and evidence-quality validation.", "file": "nettap-capture-assurance.md", "tags": ["nettap", "capture", "evidence"]},
+    {"id": "nettap-tcp-performance", "name": "NetTAP TCP and Application Performance", "description": "TCP efficiency and network, client, server, and application delay isolation.", "file": "nettap-tcp-performance.md", "tags": ["nettap", "tcp", "performance"]}
+  ]
+}

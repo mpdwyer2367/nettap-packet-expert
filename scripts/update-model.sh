@@ -9,5 +9,5 @@ source "${script_dir}/common.sh"
 }
 require_runtime
 [[ -f "$env_file" ]] || { echo "ERROR: Run start-macos.sh first." >&2; exit 3; }
-"${compose[@]}" --profile initialize run --rm model-init
-echo "Model rebuilt. Run ./tests/macos-e2e.sh before publishing a release."
+echo "This compatibility command now updates the complete release: Ollama, knowledge, Skills, and retrieval validation."
+exec "${script_dir}/update-release.sh" --confirm

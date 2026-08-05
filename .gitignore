@@ -4,6 +4,8 @@ reports/*.log
 reports/*.txt
 captures/
 evidence/
+artifacts/
+*.tar.gz.sha256
 *.pcap
 *.pcapng
 .DS_Store

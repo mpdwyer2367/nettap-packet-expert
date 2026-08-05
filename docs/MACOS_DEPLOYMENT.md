@@ -42,7 +42,8 @@ Complete these manual checks before public release:
 
 - Stop services without deleting data: `./scripts/stop.sh`
 - Show status: `./scripts/status.sh`
-- Rebuild the custom model after reviewing `model/Modelfile`: `./scripts/update-model.sh --confirm`
+- Rebuild Ollama and synchronize knowledge and Skills: `./scripts/update-release.sh --confirm`
+- Create an optional local model-volume backup: `./scripts/backup-ollama-volume.sh artifacts/nettap-ollama-backup.tar.gz`
 
 Never run `docker compose down -v` unless permanent deletion of all local users, chats, configuration, and downloaded models is intended.
 

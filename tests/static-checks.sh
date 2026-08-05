@@ -13,8 +13,10 @@ grep -q '^BIND_ADDRESS=127.0.0.1$' "$project_dir/.env.example"
 grep -q 'ENABLE_CODE_EXECUTION: "False"' "$project_dir/compose.yaml"
 grep -q 'internal: true' "$project_dir/compose.yaml"
 grep -q 'workspace-init:' "$project_dir/compose.yaml"
-grep -q 'skillIds' "$project_dir/workspace/install.py"
-grep -q 'retrieval/query/collection' "$project_dir/workspace/install.py"
+grep -q 'skillIds' "$project_dir/workspace/provision.py"
+grep -q 'retrieval/query/collection' "$project_dir/workspace/provision.py"
+grep -q '03_TCP_UDP_and_Application_Performance.md' "$project_dir/knowledge/manifest.json"
+grep -q 'nettap-tcp-performance' "$project_dir/workspace/skills/manifest.json"
 grep -q '^# NetTAP Packet Evidence Analysis$' "$project_dir/workspace/skills/nettap-packet-evidence-analysis.md"
 grep -q 'Start-Windows.ps1' "$project_dir/README.md"
 grep -q 'Windows-E2E.ps1' "$project_dir/docs/WINDOWS_DEPLOYMENT.md"
@@ -24,6 +26,9 @@ for required_file in \
   "$project_dir/scripts/Status-Windows.ps1" \
   "$project_dir/scripts/Stop-Windows.ps1" \
   "$project_dir/scripts/Update-Model-Windows.ps1" \
+  "$project_dir/scripts/Update-Release-Windows.ps1" \
+  "$project_dir/scripts/update-release.sh" \
+  "$project_dir/scripts/backup-ollama-volume.sh" \
   "$project_dir/tests/Static-Checks.ps1" \
   "$project_dir/tests/Windows-E2E.ps1"; do
   [[ -f "$required_file" ]] || { echo "ERROR: Missing $required_file" >&2; exit 1; }

@@ -63,7 +63,7 @@ Complete these manual checks before publishing Windows support:
 ```powershell
 .\scripts\Status-Windows.ps1
 .\scripts\Stop-Windows.ps1
-.\scripts\Update-Model-Windows.ps1 -Confirm
+.\scripts\Update-Release-Windows.ps1 -Confirm
 ```
 
 Stopping services preserves users, chats, models, and configuration. Never run `docker compose down -v` unless permanent deletion of named-volume data is intended.
