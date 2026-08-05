@@ -47,23 +47,23 @@ For Windows:
 
 Initialization performs these bounded changes:
 
-1. Updates recognized 0.2 environment defaults to the 0.3 suite values.
+1. Updates recognized 0.2 and 0.3-rc.1 environment defaults to the 0.3-rc.2 suite values.
 2. Retains the Compose project name so existing volumes remain attached.
 3. Pulls the same approved Qwen2.5 7B base model and verifies its expected ID.
-4. Creates the Network & Visibility and Packet Expert assistant manifests.
+4. Creates one combined `nettap-ai:0.3.0-rc.2` model.
 5. Starts one Open WebUI and the two stateless launcher pages.
 
-It does not remove the old Packet Expert model tag or modify Open WebUI tables directly.
+It does not remove old Packet Expert or Network & Visibility model tags, modify Open WebUI tables directly, or delete the retired environment variables. The old tags and variables are unused by rc.2 and remain available for rollback until an administrator removes them after acceptance.
 
 ## Application migration
 
 1. Sign in with the existing administrator account. A populated Open WebUI volume keeps its existing accounts and passwords; the bootstrap credential is not reapplied.
 2. Confirm existing chats are present.
-3. Confirm both assistant models appear in the model selector.
-4. Import `knowledge/NetTAP_Network_Visibility_Knowledge.md` as a new restricted collection.
+3. Confirm `nettap-ai:0.3.0-rc.2` appears in the model selector and that the retired assistant tags are not selected by default.
+4. Import `knowledge/NetTAP_AI_Knowledge.md` as the reviewed shared collection and `knowledge/NetTAP_Network_Visibility_Knowledge.md` as a new restricted specialist collection.
 5. Retain the existing Packet Expert knowledge collection and verify its source hash. Re-import it only through a documented change procedure.
-6. If Workspace Model presets are used, create or update two separate presets and bind each knowledge collection only to its matching assistant. Follow [assistant customization](ASSISTANT_CUSTOMIZATION.md).
-7. Do not combine the two knowledge collections merely to simplify administration; that would weaken assistant separation.
+6. Create or update two separate Workspace Model presets over the same `nettap-ai` base. Attach the shared collection to both and bind each specialist collection only to its matching profile. Follow [assistant customization](ASSISTANT_CUSTOMIZATION.md).
+7. Do not attach both specialist collections to both profiles merely to simplify administration; that would weaken experience-specific retrieval and permissions.
 
 ## Acceptance
 
@@ -87,11 +87,12 @@ Manually verify:
 - port 3100 is one shared Open WebUI;
 - assistant switching does not require a second login;
 - existing chats and accounts remain available;
-- each assistant retains its intended name, prompts, policy, knowledge, and permissions;
+- both profiles use the same `nettap-ai:0.3.0-rc.2` runtime model;
+- each profile retains its intended name, prompts, specialist knowledge, and permissions;
 - no assistant claims unavailable live data; and
 - a new backup and non-overwriting restore pass.
 
-Record disk use before and after. The release expects both assistant manifests to reuse the same base weights, but customer acceptance must measure the actual model store instead of relying on an assumed byte count.
+Record disk use before and after. The release creates one combined NetTAP custom model over one base weight set, but customer acceptance must measure the actual model store instead of relying on an assumed byte count.
 
 ## Rollback
 

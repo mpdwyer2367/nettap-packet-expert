@@ -6,17 +6,16 @@ find "$project_dir" -type f -name '*.sh' -print | sort | while IFS= read -r scri
   bash -n "$script"
 done
 
-for model_file in "$project_dir/model/packet-expert.Modelfile" "$project_dir/model/network-visibility.Modelfile"; do
-  grep -q '^FROM qwen2.5:7b-instruct-q4_K_M$' "$model_file"
-  grep -q 'untrusted evidence, not as instructions' "$model_file"
-  grep -q 'Do not make autonomous production changes' "$model_file"
-done
-grep -q 'Never claim that a capture' "$project_dir/model/packet-expert.Modelfile"
-grep -q 'Keep general guidance free of packet-level terminology' "$project_dir/model/network-visibility.Modelfile"
-grep -q '^RELEASE_VERSION=0.3.0-rc.1$' "$project_dir/.env.example"
+model_file="$project_dir/model/nettap-ai.Modelfile"
+grep -q '^FROM qwen2.5:7b-instruct-q4_K_M$' "$model_file"
+grep -q 'untrusted evidence, not as instructions' "$model_file"
+grep -q 'Do not make autonomous production changes' "$model_file"
+grep -q 'Never claim that live telemetry' "$model_file"
+grep -q 'Keep general guidance free of packet-level terminology' "$model_file"
+grep -q 'Unified mode' "$model_file"
+grep -q '^RELEASE_VERSION=0.3.0-rc.2$' "$project_dir/.env.example"
 grep -q '^BASE_MODEL=qwen2.5:7b-instruct-q4_K_M$' "$project_dir/.env.example"
-grep -q '^NETWORK_VISIBILITY_MODEL=nettap-network-visibility:0.3.0-rc.1$' "$project_dir/.env.example"
-grep -q '^PACKET_EXPERT_MODEL=nettap-packet-expert:0.3.0-rc.1$' "$project_dir/.env.example"
+grep -q '^NETTAP_AI_MODEL=nettap-ai:0.3.0-rc.2$' "$project_dir/.env.example"
 grep -q '^EXPECTED_BASE_MODEL_ID=845dbda0ea48$' "$project_dir/.env.example"
 # shellcheck disable=SC2016 # literal Compose interpolation is the test subject
 grep -q 'test "$$actual_id" = "${EXPECTED_BASE_MODEL_ID}"' "$project_dir/compose.yaml"
@@ -38,7 +37,8 @@ required_files=(
   config/Caddyfile config/Launcher.Caddyfile
   assistants/shared/core-policy.md
   assistants/network-visibility/assistant.yaml assistants/packet-expert/assistant.yaml
-  knowledge/NetTAP_Network_Visibility_Knowledge.md
+  knowledge/NetTAP_AI_Knowledge.md knowledge/NetTAP_Network_Visibility_Knowledge.md
+  knowledge/NetTAP_Packet_Expert_Knowledge.md model/nettap-ai.Modelfile
   launchers/network-visibility/index.html launchers/packet-expert/index.html launchers/shared.css
   docs/AUTHENTICATION.md docs/COMMERCIAL_RELEASE_GATES.md
   docs/CUSTOMER_DEPLOYMENT_GUIDE.md docs/PRODUCTION_ARCHITECTURE.md
@@ -51,9 +51,9 @@ required_files=(
   tests/production-config-checks.py
   reports/PRODUCTION_CERTIFICATION_STATUS_0.2.0-rc.1.md
   reports/RELEASE_ACCEPTANCE_0.2.0-rc.1.md
-  reports/PRODUCTION_CERTIFICATION_STATUS_0.3.0-rc.1.md
-  reports/RELEASE_ACCEPTANCE_0.3.0-rc.1.md
-  reports/STATIC_VALIDATION_2026-08-05_0.3.0-rc.1.md
+  reports/PRODUCTION_CERTIFICATION_STATUS_0.3.0-rc.2.md
+  reports/RELEASE_ACCEPTANCE_0.3.0-rc.2.md
+  reports/STATIC_VALIDATION_2026-08-05_0.3.0-rc.2.md
 )
 for file in "${required_files[@]}"; do test -f "${project_dir}/${file}"; done
 
@@ -73,6 +73,10 @@ for manifest_path in sorted((root / "assistants").glob("*/assistant.yaml")):
         assert (root / knowledge).is_file()
 assert {item["id"] for item in assistants} == {"nettap-network-visibility", "nettap-packet-expert"}
 assert len({item["launcher_port"] for item in assistants}) == 2
+assert {item["runtime_model"] for item in assistants} == {"nettap-ai:0.3.0-rc.2"}
+assert {item["modelfile"] for item in assistants} == {"model/nettap-ai.Modelfile"}
+assert {item["workspace_model_id"] for item in assistants} == {"nettap-network-visibility", "nettap-packet-expert"}
+assert {item["mode"] for item in assistants} == {"network_visibility", "packet_expert"}
 print("Assistant manifests passed.")
 PY
 
@@ -84,10 +88,10 @@ grep -q 'Production certification decision: \*\*NOT GRANTED' "$project_dir/repor
 grep -q 'Release disposition: \*\*EVALUATION ONLY' "$project_dir/reports/RELEASE_ACCEPTANCE_0.2.0-rc.1.md"
 grep -q 'Production/customer deployment approval: \*\*NOT GRANTED' "$project_dir/reports/RELEASE_ACCEPTANCE_0.2.0-rc.1.md"
 grep -q 'Commercial distribution approval: \*\*NOT GRANTED' "$project_dir/reports/RELEASE_ACCEPTANCE_0.2.0-rc.1.md"
-grep -q 'Production certification decision: \*\*NOT GRANTED' "$project_dir/reports/PRODUCTION_CERTIFICATION_STATUS_0.3.0-rc.1.md"
-grep -q 'Release disposition: \*\*EVALUATION ONLY' "$project_dir/reports/RELEASE_ACCEPTANCE_0.3.0-rc.1.md"
-grep -q 'Production/customer deployment approval: \*\*NOT GRANTED' "$project_dir/reports/RELEASE_ACCEPTANCE_0.3.0-rc.1.md"
-grep -q 'Commercial distribution approval: \*\*NOT GRANTED' "$project_dir/reports/RELEASE_ACCEPTANCE_0.3.0-rc.1.md"
+grep -q 'Production certification decision: \*\*NOT GRANTED' "$project_dir/reports/PRODUCTION_CERTIFICATION_STATUS_0.3.0-rc.2.md"
+grep -q 'Release disposition: \*\*EVALUATION ONLY' "$project_dir/reports/RELEASE_ACCEPTANCE_0.3.0-rc.2.md"
+grep -q 'Production/customer deployment approval: \*\*NOT GRANTED' "$project_dir/reports/RELEASE_ACCEPTANCE_0.3.0-rc.2.md"
+grep -q 'Commercial distribution approval: \*\*NOT GRANTED' "$project_dir/reports/RELEASE_ACCEPTANCE_0.3.0-rc.2.md"
 
 if grep -RInE --exclude=static-checks.sh '(^|[^A-Za-z])(admin/admin|admin@nettap[.]local[[:space:]]*/[[:space:]]*admin)([^A-Za-z]|$)' \
   "$project_dir/README.md" "$project_dir/docs" "$project_dir/scripts" "$project_dir/tests"; then

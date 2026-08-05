@@ -83,10 +83,9 @@ assert "./config/tls:/etc/caddy/tls:ro" in gateway["volumes"]
 assert gateway["security_opt"] == ["no-new-privileges:true"]
 
 env_example = (root / ".env.example").read_text(encoding="utf-8")
-assert "RELEASE_VERSION=0.3.0-rc.1" in env_example
+assert "RELEASE_VERSION=0.3.0-rc.2" in env_example
 assert "BASE_MODEL=qwen2.5:7b-instruct-q4_K_M" in env_example
-assert "NETWORK_VISIBILITY_MODEL=nettap-network-visibility:0.3.0-rc.1" in env_example
-assert "PACKET_EXPERT_MODEL=nettap-packet-expert:0.3.0-rc.1" in env_example
+assert "NETTAP_AI_MODEL=nettap-ai:0.3.0-rc.2" in env_example
 assert "EXPECTED_BASE_MODEL_ID=845dbda0ea48" in env_example
 assert "WEBUI_ADMIN_PASSWORD=GENERATE_ON_FIRST_START" in env_example
 assert "WEBUI_ADMIN_PASSWORD=admin" not in env_example
@@ -99,7 +98,7 @@ assert "/visibility" in caddy
 assert "/packet-expert" in caddy
 
 launcher = (root / "config/Launcher.Caddyfile").read_text(encoding="utf-8")
-for control in (":3000", ":3001", "NETWORK_VISIBILITY_MODEL", "PACKET_EXPERT_MODEL", "Content-Security-Policy"):
+for control in (":3000", ":3001", "NETTAP_AI_MODEL", "Content-Security-Policy"):
     assert control in launcher
 
 workflow = (root / ".github/workflows/validate.yml").read_text(encoding="utf-8")
@@ -108,7 +107,7 @@ for profile in ("compose.local.yaml", "compose.production.yaml", "compose.bootst
 assert "shellcheck scripts/*.sh scripts/nettap-ai scripts/nettap-packet-expert tests/*.sh" in workflow
 
 runtime_verifier = (root / "scripts/verify-production-deployment.sh").read_text(encoding="utf-8")
-for control in (".Config.Image", "no-new-privileges:true", "EXPECTED_BASE_MODEL_ID", "Network Visibility model ID", "Packet Expert model ID", "strict-transport-security"):
+for control in (".Config.Image", "no-new-privileges:true", "EXPECTED_BASE_MODEL_ID", "NetTAP AI model ID", "strict-transport-security"):
     assert control in runtime_verifier
 
 restore = (root / "scripts/restore.sh").read_text(encoding="utf-8")

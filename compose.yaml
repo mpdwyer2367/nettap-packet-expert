@@ -45,10 +45,8 @@ services:
         ollama pull ${BASE_MODEL} &&
         actual_id="$$(ollama list | awk '$$1 == "${BASE_MODEL}" {print $$2}')" &&
         test "$$actual_id" = "${EXPECTED_BASE_MODEL_ID}" &&
-        ollama create ${NETWORK_VISIBILITY_MODEL} -f /model/network-visibility.Modelfile &&
-        ollama create ${PACKET_EXPERT_MODEL} -f /model/packet-expert.Modelfile &&
-        ollama show ${NETWORK_VISIBILITY_MODEL} &&
-        ollama show ${PACKET_EXPERT_MODEL}
+        ollama create ${NETTAP_AI_MODEL} -f /model/nettap-ai.Modelfile &&
+        ollama show ${NETTAP_AI_MODEL}
     restart: "no"
     security_opt:
       - no-new-privileges:true
@@ -125,9 +123,9 @@ services:
       ENABLE_USER_STATUS: "False"
       RESPONSE_WATERMARK: "AI-generated engineering guidance; verify before use."
       IFRAME_CSP: "default-src 'none'; style-src 'unsafe-inline'; img-src data: blob:; font-src data:; connect-src 'none'; script-src 'none'; frame-src 'none'"
-      DEFAULT_MODELS: ${NETWORK_VISIBILITY_MODEL},${PACKET_EXPERT_MODEL}
-      DEFAULT_PINNED_MODELS: ${NETWORK_VISIBILITY_MODEL},${PACKET_EXPERT_MODEL}
-      MODEL_ORDER_LIST: "[\"${NETWORK_VISIBILITY_MODEL}\",\"${PACKET_EXPERT_MODEL}\"]"
+      DEFAULT_MODELS: ${NETTAP_AI_MODEL}
+      DEFAULT_PINNED_MODELS: ${NETTAP_AI_MODEL}
+      MODEL_ORDER_LIST: "[\"${NETTAP_AI_MODEL}\"]"
       WEBUI_BANNERS: >-
         [{"id":"nettap-bootstrap-password-rc9","type":"warning","title":"Complete administrator activation","content":"This installation generated a unique bootstrap credential. Change it in Settings > Account, verify the old credential fails, then run the administrator finalization command before enabling production access.","dismissible":false,"timestamp":1785864000}]
       DEFAULT_PROMPT_SUGGESTIONS: >-

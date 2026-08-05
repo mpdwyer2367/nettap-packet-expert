@@ -18,14 +18,12 @@ echo "Host: $(uname -a)"
 
 # shellcheck source=scripts/common.sh
 source "${project_dir}/scripts/common.sh"
-packet_model="$(load_env_value PACKET_EXPERT_MODEL)"
-visibility_model="$(load_env_value NETWORK_VISIBILITY_MODEL)"
+nettap_model="$(load_env_value NETTAP_AI_MODEL)"
 web_port="$(load_env_value WEB_PORT)"
 visibility_port="$(load_env_value VISIBILITY_LAUNCHER_PORT)"
 packet_port="$(load_env_value PACKET_EXPERT_LAUNCHER_PORT)"
 
-"${compose[@]}" exec -T ollama ollama show "$packet_model" | grep -q 'NetTAP Packet Expert'
-"${compose[@]}" exec -T ollama ollama show "$visibility_model" | grep -q 'NetTAP Network & Visibility'
+"${compose[@]}" exec -T ollama ollama show "$nettap_model" | grep -q 'You are NetTAP AI'
 
 admin_count="$("${compose[@]}" exec -T open-webui python - <<'PY'
 import sqlite3
@@ -36,7 +34,7 @@ PY
 )"
 [[ "$admin_count" -ge 1 ]] || { echo "FAIL: Open WebUI has no administrator account."; exit 6; }
 
-response="$("${compose[@]}" exec -T ollama ollama run "$packet_model" \
+response="$("${compose[@]}" exec -T ollama ollama run "$nettap_model" \
   'No capture or telemetry is connected. State whether live network evidence is available, then ask one important question to start a suspected network investigation.')"
 printf '%s\n' "$response"
 [[ -n "$response" ]] || { echo "FAIL: Empty model response."; exit 6; }
@@ -61,13 +59,12 @@ done
 curl --fail --silent --show-error "http://127.0.0.1:${visibility_port}/" | grep -q 'Network &amp; Visibility'
 curl --fail --silent --show-error "http://127.0.0.1:${packet_port}/" | grep -q 'Packet Expert'
 curl --fail --silent --show-error --output /dev/null \
-  --write-out '%{redirect_url}' "http://127.0.0.1:${visibility_port}/open" | grep -Fq "model=${visibility_model}"
+  --write-out '%{redirect_url}' "http://127.0.0.1:${visibility_port}/open" | grep -Fq "model=${nettap_model}"
 curl --fail --silent --show-error --output /dev/null \
-  --write-out '%{redirect_url}' "http://127.0.0.1:${packet_port}/open" | grep -Fq "model=${packet_model}"
+  --write-out '%{redirect_url}' "http://127.0.0.1:${packet_port}/open" | grep -Fq "model=${nettap_model}"
 
 "${compose[@]}" restart ollama open-webui assistant-launcher
-"${compose[@]}" exec -T ollama ollama show "$packet_model" >/dev/null
-"${compose[@]}" exec -T ollama ollama show "$visibility_model" >/dev/null
+"${compose[@]}" exec -T ollama ollama show "$nettap_model" >/dev/null
 ui_ready=false
 for _ in $(seq 1 60); do
   if curl --fail --silent --show-error "http://127.0.0.1:${web_port}/health" >/dev/null; then
@@ -78,6 +75,6 @@ for _ in $(seq 1 60); do
 done
 [[ "$ui_ready" == true ]] || { echo "FAIL: Open WebUI did not recover after restart."; exit 8; }
 
-echo "PASS: administrator presence, shared runtime, both assistant identities, inference, launchers, UI health, and restart persistence checks completed."
-echo "Manual acceptance is still required on a fresh data volume: use the generated credential, change it, confirm it fails, finalize activation, confirm the new password survives restart, switch between both assistants, and validate each assistant's knowledge and starter experience."
+echo "PASS: administrator presence, one combined model identity, inference, both launchers, UI health, and restart persistence checks completed."
+echo "Manual acceptance is still required on a fresh data volume: use the generated credential, change it, confirm it fails, finalize activation, confirm the new password survives restart, verify both profiles use the same combined model, and validate each profile's specialist knowledge and starter experience."
 echo "Report: $report_file"

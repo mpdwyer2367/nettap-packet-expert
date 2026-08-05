@@ -37,4 +37,4 @@ These limitations prevent an unconditional certification claim. They must be ref
 
 ## Security test requirements
 
-Before commercial approval, test authentication and authorization, session expiry, cookie attributes, TLS configuration, rate and resource exhaustion, upload handling, prompt injection, malicious documents, cross-assistant knowledge and tool isolation, launcher selection, direct-model policy, backup confidentiality, restore integrity, logging leakage, dependency vulnerabilities, Docker isolation, upgrade/rollback, and loss of upstream registry access.
+Before commercial approval, test authentication and authorization, session expiry, cookie attributes, TLS configuration, rate and resource exhaustion, upload handling, prompt injection, malicious documents, cross-profile specialist knowledge and tool isolation, launcher selection, combined direct-model policy, backup confidentiality, restore integrity, logging leakage, dependency vulnerabilities, Docker isolation, upgrade/rollback, and loss of upstream registry access.

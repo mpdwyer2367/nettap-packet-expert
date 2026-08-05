@@ -8,7 +8,7 @@ Do not enter passwords, secrets, private keys, customer evidence, packet payload
 - Git commit/tag:
 - Signed package, checksum and signed provenance:
 - Signature verification:
-- Image, base-model and both assistant-model names and immutable identities:
+- Image, base-model and combined NetTAP AI model names and immutable identities:
 - Network & Visibility manifest and knowledge hashes:
 - Packet Expert manifest and knowledge hashes:
 - SBOM identifiers:
@@ -32,10 +32,10 @@ Do not enter passwords, secrets, private keys, customer evidence, packet payload
 - No direct Open WebUI/Ollama host ports:
 - Running containers match approved image digests and least-privilege policy:
 - Temporary model egress absent at runtime:
-- Exact shared base and both assistant identities:
+- Exact shared base and combined model identities:
 - Before/after model-store measurement:
-- Ten behavioral and assistant-routing smoke cases:
-- Cross-assistant prompt, knowledge, RBAC and tool negative tests:
+- Eleven behavioral and combined-capability smoke cases:
+- Cross-profile knowledge, RBAC and tool negative tests:
 - Port 3000, port 3001 and shared WebUI launcher selection:
 - SBOM and vulnerability policy:
 - Backup release/model/image provenance, checksum and same-release restore into new volumes:
@@ -48,8 +48,8 @@ Do not enter passwords, secrets, private keys, customer evidence, packet payload
 - Password replaced; generated password rejected:
 - New password persists:
 - Signup and disabled features verified:
-- Both assistants and model switching:
-- Assistant-specific starting prompts:
+- Both experience profiles use the same combined model:
+- Profile-specific starting prompts:
 - Approved knowledge hashes, access, isolated attachment and retrieval:
 - Prompt-injection and evidence-boundary behavior:
 - Browser and customer DNS/TLS:

@@ -71,8 +71,7 @@ backup_volume "${project_name}_packet-expert-open-webui-data" open-webui-data.tg
   printf 'Backup format: NetTAP AI Suite volume backup v2\n'
   printf 'Created UTC: %s\n' "$(date -u +%FT%TZ)"
   printf 'Release: %s\n' "$(load_env_value RELEASE_VERSION)"
-  printf 'Network Visibility model: %s\n' "$(load_env_value NETWORK_VISIBILITY_MODEL)"
-  printf 'Packet Expert model: %s\n' "$(load_env_value PACKET_EXPERT_MODEL)"
+  printf 'NetTAP AI model: %s\n' "$(load_env_value NETTAP_AI_MODEL)"
   printf 'Source project: %s\n' "$project_name"
   printf 'Deployment mode: %s\n' "$mode"
   for key in OLLAMA_IMAGE OPEN_WEBUI_IMAGE CADDY_IMAGE BACKUP_IMAGE; do
@@ -84,11 +83,10 @@ backup_volume "${project_name}_packet-expert-open-webui-data" open-webui-data.tg
     printf 'Source commit: packaged-release-no-git-metadata\n'
   fi
   if [[ -s "$model_lock" ]]; then
-    sed -n '/^Base model ID: /p;/^Network Visibility model ID: /p;/^Packet Expert model ID: /p' "$model_lock"
+    sed -n '/^Base model ID: /p;/^NetTAP AI model ID: /p' "$model_lock"
   else
     printf 'Base model ID: unavailable-local-evaluation\n'
-    printf 'Network Visibility model ID: unavailable-local-evaluation\n'
-    printf 'Packet Expert model ID: unavailable-local-evaluation\n'
+    printf 'NetTAP AI model ID: unavailable-local-evaluation\n'
   fi
 } > "${output_dir}/manifest.txt"
 (cd "$output_dir" && {

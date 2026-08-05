@@ -1,17 +1,17 @@
 # NetTAP AI Suite
 
-NetTAP AI Suite is a customer-isolated network engineering and security operations assistant package. It runs two specialized experiences on one local AI runtime:
+NetTAP AI Suite is a customer-isolated network engineering and security operations assistant package. It runs one combined NetTAP AI model with two specialized user experiences:
 
 - **NetTAP Network & Visibility** for architecture, device planning, TAP/SPAN/NPB deployment, telemetry acquisition, and visibility operations.
 - **NetTAP Packet Expert** for authorized packet evidence, capture planning, performance investigation, cyber visibility, and forensic analysis.
 
-Both assistants reuse one `qwen2.5:7b-instruct-q4_K_M` base in one Ollama model store. They retain separate system policies, knowledge sources, suggested starting points, and future tool allowlists. One Open WebUI instance provides one account, chat history, administration, audit, backup, and update surface.
+The two experiences select the same `nettap-ai:0.3.0-rc.2` Ollama model, which is built once from `qwen2.5:7b-instruct-q4_K_M`. Thin Open WebUI Workspace Model profiles retain separate names, specialist knowledge, suggested starting points, and future tool allowlists without duplicating model weights. The raw NetTAP AI model also supports unified cross-domain workflows. One Open WebUI instance provides one account, chat history, administration, audit, backup, and update surface.
 
 The repository contains model definitions and deployment source. It does **not** contain separately fine-tuned weights, customer telemetry, packet captures, credentials, or a live NetTAP connector.
 
 ## Release status
 
-`0.3.0-rc.1` is a migration and integration release candidate. Its source must pass static validation before publication, but it is not production-certified or approved for commercial appliance distribution until the exact commit has passing macOS and Windows runtime evidence, assistant-isolation tests, storage measurement, SBOM/CVE acceptance, independent penetration testing, legal/licensing approval, support readiness, signature verification, and authorized release acceptance.
+`0.3.0-rc.2` is a migration and integration release candidate. Its source must pass static validation before publication, but it is not production-certified or approved for commercial appliance distribution until the exact commit has passing macOS and Windows runtime evidence, profile-isolation tests, storage measurement, SBOM/CVE acceptance, independent penetration testing, legal/licensing approval, support readiness, signature verification, and authorized release acceptance.
 
 The completed `0.2.0-rc.1` Packet Expert evidence record remains historical evidence for that earlier single-assistant candidate. It does not certify the new suite candidate. See [validation status](docs/VALIDATION_STATUS.md).
 
@@ -21,14 +21,14 @@ The completed `0.2.0-rc.1` Packet Expert evidence record remains historical evid
 flowchart TB
     U["Authorized user"] --> L["Assistant launchers"]
     L --> W["One Open WebUI"]
-    W --> V["Network & Visibility"]
-    W --> P["Packet Expert"]
-    V --> O["One Ollama service"]
-    P --> O
-    O --> Q["One Qwen2.5 7B base"]
+    W --> V["Network & Visibility profile"]
+    W --> P["Packet Expert profile"]
+    V --> N["One nettap-ai model"]
+    P --> N
+    N --> Q["One Qwen2.5 7B base"]
 ```
 
-The local launchers are stateless pages. They select the correct model and starting prompt through documented Open WebUI URL parameters; accounts, chats, knowledge, models, and tools remain in the shared application.
+The local launchers are stateless pages. Both select the same combined model and supply a profile-specific starting prompt through documented Open WebUI URL parameters. Persistent profile names, knowledge bindings, suggestions, tools, and access controls are optional Open WebUI Workspace Model presets over that same Ollama model; accounts, chats, models, and administration remain shared.
 
 Read [the architecture](docs/ARCHITECTURE.md), [migration procedure](docs/MIGRATION.md), and [assistant customization guide](docs/ASSISTANT_CUSTOMIZATION.md) before upgrading an existing deployment.
 
@@ -84,10 +84,10 @@ Do not begin by deleting containers or volumes. Follow [MIGRATION.md](docs/MIGRA
 1. Inventory and back up the old deployment while using the old release.
 2. Protect the old `.env` and record its source commit.
 3. Apply the reviewed suite candidate.
-4. Build both assistant manifests from the verified shared base.
+4. Build one combined NetTAP AI model from the verified base.
 5. Preserve existing Open WebUI accounts, chats, and Packet Expert knowledge.
 6. Add the isolated Network & Visibility knowledge collection.
-7. Validate both assistants, launchers, storage, backup, restore, and rollback.
+7. Validate both experience profiles, the combined model, launchers, storage, backup, restore, and rollback.
 
 Never merge Open WebUI SQLite files or mount one SQLite volume into multiple running Open WebUI containers.
 
@@ -106,12 +106,13 @@ The old `scripts/nettap-packet-expert` entry point remains as a compatibility wr
 
 ## Knowledge and customizations
 
-| Assistant | Model policy | Knowledge source |
+| Experience | Runtime model policy | Knowledge source |
 |---|---|---|
-| Network & Visibility | [network-visibility.Modelfile](model/network-visibility.Modelfile) | [NetTAP Network & Visibility knowledge](knowledge/NetTAP_Network_Visibility_Knowledge.md) |
-| Packet Expert | [packet-expert.Modelfile](model/packet-expert.Modelfile) | [NetTAP Packet Expert knowledge](knowledge/NetTAP_Packet_Expert_Knowledge.md) |
+| Unified NetTAP AI | [nettap-ai.Modelfile](model/nettap-ai.Modelfile) | [Shared NetTAP AI knowledge](knowledge/NetTAP_AI_Knowledge.md) |
+| Network & Visibility profile | Same `nettap-ai` model | [NetTAP Network & Visibility knowledge](knowledge/NetTAP_Network_Visibility_Knowledge.md) |
+| Packet Expert profile | Same `nettap-ai` model | [NetTAP Packet Expert knowledge](knowledge/NetTAP_Packet_Expert_Knowledge.md) |
 
-Critical evidence and safety rules are built into each Ollama model definition. Supplemental knowledge must be imported into a restricted Open WebUI collection and attached only to its corresponding Workspace Model. Updating a Git file does not update an already imported collection.
+Critical evidence and safety rules are built into the combined Ollama model definition. Import shared and specialist knowledge into restricted Open WebUI collections, then attach only the appropriate collections to each Workspace Model profile. Updating a Git file does not update an already imported collection.
 
 See [assistant customization](docs/ASSISTANT_CUSTOMIZATION.md), [knowledge management](docs/KNOWLEDGE_MANAGEMENT.md), and [tool security](docs/TOOL_SECURITY.md).
 
@@ -137,7 +138,7 @@ On a supported macOS host:
 ./tests/macos-e2e.sh
 ```
 
-The tests verify model identity, evidence boundaries, assistant routing, launcher selection, shared runtime, recovery controls, and selected isolation properties. They do not prove factual accuracy for every prompt or replace independent security and customer acceptance.
+The tests verify model identity, combined capabilities, evidence boundaries, launcher selection, shared runtime, recovery controls, and selected profile-isolation properties. They do not prove factual accuracy for every prompt or replace independent security and customer acceptance.
 
 ## Production profile
 
@@ -177,7 +178,7 @@ The certification command is fail-closed and cannot manufacture external evidenc
 ```bash
 ./scripts/certify-production.sh
 COSIGN_KEY=/secure/release.key ./scripts/package-release.sh
-./scripts/verify-release.sh dist/nettap-ai-suite-0.3.0-rc.1-source.tar.gz /path/to/cosign.pub
+./scripts/verify-release.sh dist/nettap-ai-suite-0.3.0-rc.2-source.tar.gz /path/to/cosign.pub
 ```
 
 NetTAP-authored source, configuration, and documentation are licensed under the [Apache License 2.0](LICENSE), copyright 2026 NetTAP Technology Limited. The license does not relicense container images, base-model artifacts, or other dependencies and does not grant trademark rights. Review [third-party notices](THIRD_PARTY_NOTICES.md) before distribution.

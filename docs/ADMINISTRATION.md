@@ -16,7 +16,7 @@ The legacy `scripts/nettap-packet-expert` command remains as a compatibility wra
 ## Daily checks
 
 - Confirm the expected services are healthy.
-- Confirm both assistant models appear in `ollama list`.
+- Confirm `nettap-ai:0.3.0-rc.2` appears in `ollama list` and is the only NetTAP model selected by the current release.
 - Confirm Ollama is not published on a host port.
 - Confirm the Open WebUI audit log is writable and rotating.
 - Confirm the latest backup completed and is protected.
@@ -27,7 +27,7 @@ The legacy `scripts/nettap-packet-expert` command remains as a compatibility wra
 1. Back up data and `.env` using [the migration procedure](MIGRATION.md).
 2. Review release notes, image digests, model ID, security scan, and rollback requirements.
 3. Apply the approved source release.
-4. Rebuild both assistant models with `./scripts/nettap-ai update-models --confirm`.
+4. Rebuild the combined model with `./scripts/nettap-ai update-models --confirm`.
 5. Run static, behavioral, runtime, launcher, backup, and restore acceptance.
 6. Update Workspace Model presets and knowledge only through a separately recorded change.
 
@@ -36,7 +36,7 @@ The legacy `scripts/nettap-packet-expert` command remains as a compatibility wra
 The Compose project retains two persistent volumes:
 
 - `nettap-packet-expert_packet-expert-open-webui-data`: accounts, chats, application settings, imported knowledge, and audit log.
-- `nettap-packet-expert_packet-expert-ollama-data`: base model and assistant manifests.
+- `nettap-packet-expert_packet-expert-ollama-data`: base model, combined NetTAP AI manifest, and any retained rollback tags.
 
 The launchers are stateless. Removing or recreating the launcher container does not remove chats or models.
 

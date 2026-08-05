@@ -12,7 +12,7 @@ chmod +x scripts/* tests/*.sh
 ./scripts/start-macos.sh
 ```
 
-The first start downloads the approved Qwen2.5 7B base once, verifies its expected ID, builds both assistant manifests, and starts one Open WebUI.
+The first start downloads the approved Qwen2.5 7B base once, verifies its expected ID, builds one combined `nettap-ai:0.3.0-rc.2` model, and starts one Open WebUI with two stateless experience launchers.
 
 Open:
 
@@ -35,7 +35,7 @@ There is no shared default password. Existing volumes retain existing accounts a
 ./tests/macos-e2e.sh
 ```
 
-Complete the manual checks printed by the test, including both assistants, assistant-specific launchers, knowledge isolation, model switching, restart persistence, backup, and rollback.
+Complete the manual checks printed by the test, including both profiles, profile-specific launchers, shared model identity, specialist knowledge isolation, restart persistence, backup, and rollback.
 
 ## Apple Silicon boundary
 

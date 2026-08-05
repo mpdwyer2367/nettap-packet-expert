@@ -1,8 +1,8 @@
-# Release acceptance record — NetTAP AI Suite 0.3.0-rc.1
+# Release acceptance record — NetTAP AI Suite 0.3.0-rc.2
 
 Recorded date: 2026-08-05
 
-Record type: integration-candidate baseline
+Record type: combined-model integration-candidate baseline
 
 Release disposition: **EVALUATION ONLY**
 
@@ -14,11 +14,12 @@ Commercial distribution approval: **NOT GRANTED**
 
 | Field | Recorded value |
 |---|---|
-| Version | `0.3.0-rc.1` |
+| Version | `0.3.0-rc.2` |
 | Shared base | `qwen2.5:7b-instruct-q4_K_M` |
 | Expected base ID | `845dbda0ea48` |
-| Network & Visibility | `nettap-network-visibility:0.3.0-rc.1` |
-| Packet Expert | `nettap-packet-expert:0.3.0-rc.1` |
+| Combined model | `nettap-ai:0.3.0-rc.2` |
+| Network & Visibility profile | `nettap-network-visibility` |
+| Packet Expert profile | `nettap-packet-expert` |
 | Source commit | Pending final PR commit |
 | Signed artifact | Pending |
 
@@ -27,14 +28,14 @@ Commercial distribution approval: **NOT GRANTED**
 | Gate | Status |
 |---|---|
 | Architecture and migration design | Implemented in source; review pending |
-| Static source validation | PASS for available source-only checks; see `STATIC_VALIDATION_2026-08-05_0.3.0-rc.1.md` |
-| Compose rendering | Pending final recorded run |
+| Static source validation | PASS for available source-only checks; see `STATIC_VALIDATION_2026-08-05_0.3.0-rc.2.md` |
+| Compose rendering | GitHub Actions required for final commit |
 | macOS fresh install | Pending target host |
 | Windows fresh install | Pending target host |
-| 0.2 migration | Pending protected test deployment |
-| Shared storage measurement | Pending target host |
-| Assistant behavior and routing | Test implemented; runtime result pending |
-| Knowledge and RBAC isolation | Pending configured Open WebUI test |
+| 0.2/0.3-rc.1 migration | Pending protected test deployment |
+| Combined model storage measurement | Pending target host |
+| Model behavior and combined capabilities | Test implemented; runtime result pending |
+| Profile knowledge, RBAC and tool isolation | Pending configured Open WebUI test |
 | Backup, restore and rollback | Tooling implemented; exact-candidate runtime result pending |
 | SBOM and vulnerability acceptance | Pending exact image digests |
 | Penetration test | Pending independent test |

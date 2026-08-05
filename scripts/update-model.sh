@@ -16,4 +16,4 @@ if [[ "$mode" == "production" ]]; then
 else
   initialize_model_with_temporary_egress local
 fi
-echo "Both assistant models were rebuilt from the shared base. Run ./tests/macos-e2e.sh before publishing a release."
+echo "The combined NetTAP AI model was rebuilt from the shared base. Run ./tests/macos-e2e.sh before publishing a release."

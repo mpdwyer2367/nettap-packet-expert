@@ -26,8 +26,7 @@ require_runtime
 [[ -f "$env_file" ]] || fail "Missing .env. Run ./scripts/start-macos.sh first."
 docker info >/dev/null 2>&1 || fail "Docker Desktop engine is not running."
 
-visibility_model="$(load_env_value NETWORK_VISIBILITY_MODEL)"
-packet_model="$(load_env_value PACKET_EXPERT_MODEL)"
+nettap_model="$(load_env_value NETTAP_AI_MODEL)"
 web_port="$(load_env_value WEB_PORT)"
 visibility_port="$(load_env_value VISIBILITY_LAUNCHER_PORT)"
 packet_port="$(load_env_value PACKET_EXPERT_LAUNCHER_PORT)"
@@ -35,8 +34,7 @@ bind_address="$(load_env_value BIND_ADDRESS)"
 ollama_image="$(load_env_value OLLAMA_IMAGE)"
 webui_image="$(load_env_value OPEN_WEBUI_IMAGE)"
 
-[[ "$visibility_model" == "nettap-network-visibility:0.3.0-rc.1" ]] || fail "Unexpected Network & Visibility identity: $visibility_model"
-[[ "$packet_model" == "nettap-packet-expert:0.3.0-rc.1" ]] || fail "Unexpected Packet Expert identity: $packet_model"
+[[ "$nettap_model" == "nettap-ai:0.3.0-rc.2" ]] || fail "Unexpected NetTAP AI identity: $nettap_model"
 [[ "$bind_address" == "127.0.0.1" ]] || fail "BIND_ADDRESS must remain 127.0.0.1 for the local profile."
 "${compose[@]}" config >/dev/null || fail "Compose configuration is invalid."
 
@@ -77,9 +75,8 @@ webui_binding="$(docker port "$webui_id" 8080/tcp 2>/dev/null || true)"
 [[ "$webui_binding" == "${bind_address}:${web_port}" ]] || fail "Open WebUI binding is $webui_binding; expected ${bind_address}:${web_port}."
 echo "PASS: Open WebUI is bound to ${bind_address}:${web_port}"
 
-"${compose[@]}" exec -T ollama ollama show "$visibility_model" | grep -q 'NetTAP Network & Visibility' || fail "Network & Visibility identity check failed."
-"${compose[@]}" exec -T ollama ollama show "$packet_model" | grep -q 'NetTAP Packet Expert' || fail "Packet Expert identity check failed."
-echo "PASS: both assistant models are installed"
+"${compose[@]}" exec -T ollama ollama show "$nettap_model" | grep -q 'You are NetTAP AI' || fail "Combined NetTAP AI identity check failed."
+echo "PASS: combined NetTAP AI model is installed"
 
 admin_count="$("${compose[@]}" exec -T open-webui python - <<'PY'
 import sqlite3
@@ -96,7 +93,7 @@ curl --fail --silent --show-error "http://${bind_address}:${visibility_port}/" |
 curl --fail --silent --show-error "http://${bind_address}:${packet_port}/" | grep -q 'Packet Expert' || fail "Packet Expert launcher failed."
 echo "PASS: both assistant launchers"
 
-response="$("${compose[@]}" exec -T ollama ollama run "$packet_model" \
+response="$("${compose[@]}" exec -T ollama ollama run "$nettap_model" \
   'No capture or telemetry is connected. State whether live network evidence is available, then ask one important question.')"
 [[ -n "$response" ]] || fail "Controlled inference returned no output."
 printf '%s\n' "$response" | grep -Eiq \
@@ -105,5 +102,5 @@ printf '%s\n' "$response" | grep -Eiq \
 echo "PASS: controlled model inference returned output"
 
 echo "PASS: automated canonical runtime checks completed."
-echo "Manual acceptance remains required: generated-password replacement and rejection, finalization, new-password persistence, switching between both assistants, assistant-specific suggestions, knowledge isolation, and browser chat behavior."
+echo "Manual acceptance remains required: generated-password replacement and rejection, finalization, new-password persistence, both UI profiles over the same model, assistant-specific suggestions, knowledge isolation, and browser chat behavior."
 echo "Report: $report_file"

@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.3.0-rc.2 combined NetTAP AI model candidate — 2026-08-05
+
+- Replaced two NetTAP Ollama model tags with one combined `nettap-ai:0.3.0-rc.2` model containing Network & Visibility, Packet Expert, and unified cross-domain capabilities.
+- Retained two thin experience profiles with separate names, specialist knowledge, suggestions, launcher ports, permissions, and future tool allowlists over the same model.
+- Updated deployment, migration, backup, storage, behavioral, runtime, documentation, and release controls for the one-model architecture.
+- Kept retired 0.2 and 0.3-rc.1 model tags non-destructively for rollback; they are no longer selected by rc.2.
+- Kept production and commercial approval fail-closed pending exact-build target-host, security, legal, support, signing, and acceptance evidence.
+
 ## 0.3.0-rc.1 unified NetTAP AI Suite candidate — 2026-08-05
 
 - Added Network & Visibility and retained Packet Expert as separate assistant policies over one Qwen2.5 7B base.

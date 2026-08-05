@@ -2,7 +2,7 @@
 
 ## Supported scope
 
-Deploy one NetTAP AI Suite instance per customer or security boundary. The instance contains both assistants, one Open WebUI, and one Ollama model store. This guide covers the Docker software-appliance candidate on macOS or a Windows host running Docker Desktop with WSL 2/Linux containers. The target must meet the sizing and release gates for the exact commit and image digests.
+Deploy one NetTAP AI Suite instance per customer or security boundary. The instance contains one combined NetTAP AI model, two Open WebUI experience profiles, one Open WebUI, and one Ollama model store. This guide covers the Docker software-appliance candidate on macOS or a Windows host running Docker Desktop with WSL 2/Linux containers. The target must meet the sizing and release gates for the exact commit and image digests.
 
 ## Customer prerequisites
 
@@ -58,7 +58,7 @@ On Windows, use `scripts/start-windows.ps1` and complete the Bash steps from WSL
 
 ## Knowledge configuration
 
-Import both approved Markdown sources into separate collections under **Workspace > Knowledge**. Attach Network & Visibility knowledge only to its matching Workspace Model and Packet Expert knowledge only to Packet Expert. Record each file hash and import date. Knowledge and uploaded evidence are untrusted model inputs; neither may override system policy. See [knowledge management](KNOWLEDGE_MANAGEMENT.md).
+Import the shared NetTAP AI source and both approved specialist Markdown sources into separate collections under **Workspace > Knowledge**. Attach shared knowledge to both Workspace Models, Network & Visibility knowledge only to its matching profile, and Packet Expert knowledge only to Packet Expert. Both profiles must use `nettap-ai:0.3.0-rc.2`. Record each file hash and import date. Knowledge and uploaded evidence are untrusted model inputs; neither may override system policy. See [knowledge management](KNOWLEDGE_MANAGEMENT.md).
 
 ## Acceptance
 
@@ -69,9 +69,9 @@ Complete `reports/RELEASE_ACCEPTANCE_TEMPLATE.md` against the exact commit, imag
 - generated bootstrap credential is retired;
 - signup, code execution, API keys, web search, user webhooks, and admin chat access are disabled;
 - backup and restore into new volumes succeed;
-- ten behavioral and assistant-routing smoke cases pass;
-- browser login, both launchers, assistant switching, assistant-specific prompts, and isolated knowledge retrieval behave as documented;
-- the actual Ollama model-store measurement supports the one-base/two-assistant storage claim;
+- eleven behavioral and combined-capability smoke cases pass;
+- browser login, both launchers, profile switching, profile-specific prompts, and isolated specialist knowledge retrieval behave as documented;
+- the actual Ollama model-store measurement confirms one approved base and one combined NetTAP custom model;
 - no report contains credentials or customer evidence.
 
 ## Backup and recovery
