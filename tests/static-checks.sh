@@ -81,6 +81,7 @@ required_files=(
   tests/model-behavior-eval.sh tests/model-storage-sharing.sh tests/backup-restore-e2e.sh
   tests/normalized-ingestion-eval.sh tests/failed-update-rollback-e2e.sh
   tests/clean-package-acceptance.sh tests/compare-platform-acceptance.sh
+  tests/native-model-installer-mock.sh
   tests/fixtures/normalized-pcap.json tests/fixtures/normalized-logs.jsonl
   tests/fixtures/normalized-ipfix.jsonl
   tests/production-config-checks.py
@@ -94,6 +95,7 @@ required_files=(
   reports/RELEASE_ACCEPTANCE_0.3.0-rc.3.md
   reports/STATIC_VALIDATION_2026-08-05_0.3.0-rc.3.md
   reports/RC3_ACCEPTANCE_AUTOMATION_STATUS.md
+  reports/NATIVE_MODEL_CREATION_2026-08-05_0.3.0-rc.3.md
 )
 for file in "${required_files[@]}"; do test -f "${project_dir}/${file}"; done
 

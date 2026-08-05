@@ -2,7 +2,7 @@
 
 Date: 2026-08-05
 
-Result: **PASS for available source-only checks**
+Result: **PASS for available engineering checks**
 
 ## Passed
 
@@ -20,11 +20,16 @@ Result: **PASS for available source-only checks**
 - Required documentation and relative links
 - Default-password, secret, private-key, stale-license, and macOS Bash compatibility checks
 - Git whitespace validation
+- Native Ollama `0.32.5` base-model download and combined-model creation in an isolated Linux x86_64 store
+- Exact base and combined Ollama manifest identity verification
+- Full 7.6B/Q4_K_M CPU model load and prompt-evaluation start
+- Native installer large-Modelfile regression test, preventing a false SIGPIPE failure under `pipefail`
 
 Commands:
 
 ```bash
 ./tests/static-checks.sh
+./tests/native-model-installer-mock.sh
 python3 -m unittest -v tests/test_provision_open_webui.py
 python3 -m py_compile provisioning/*.py
 ```
@@ -37,8 +42,14 @@ python3 -m py_compile provisioning/*.py
 - Caddy runtime configuration validation
 - ShellCheck
 - PowerShell parser
-- Native and containerized Ollama model pull, creation, inference, and model-store measurement
+- Completed native token generation and model-store sharing measurement on supported target hosts
 - Browser, authentication, RBAC, backup, restore, update, and rollback acceptance
 - macOS and Windows target-host evidence
 
-The mock API test validates the provisioner's control flow and idempotence; it is not a substitute for the actual pinned Open WebUI container, embedding model, or target-host runtime test. These unavailable checks remain release gates. This source-only PASS is not production certification or customer deployment approval.
+The native model was created and fully loaded in the restricted Linux workspace;
+the runner was terminated during the 4.7 GB token-generation workload, so no
+inference PASS is claimed. See `NATIVE_MODEL_CREATION_2026-08-05_0.3.0-rc.3.md`.
+The mock API test validates the provisioner's control flow and idempotence; it is
+not a substitute for the actual pinned Open WebUI container, embedding model, or
+target-host runtime test. These unavailable checks remain release gates. This
+PASS is not production certification or customer deployment approval.

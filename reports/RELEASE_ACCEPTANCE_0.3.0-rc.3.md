@@ -37,6 +37,8 @@ Commercial distribution approval: **NOT GRANTED**
 | Architecture and migration design | Implemented in source; review pending |
 | Static source validation | PASS for available checks; see `STATIC_VALIDATION_2026-08-05_0.3.0-rc.3.md` |
 | Provisioning API contract/idempotence | PASS against deterministic mock server |
+| Native combined-model creation | PASS in isolated Linux x86_64 Ollama `0.32.5`; see `NATIVE_MODEL_CREATION_2026-08-05_0.3.0-rc.3.md` |
+| Native CPU model load | PASS; token generation remained environment-limited and is not accepted as target-host inference evidence |
 | Managed Skills and exact profile attachment | PASS against deterministic mock server; actual Open WebUI runtime pending |
 | Combined model source bundle | Build and verification implemented; GitHub CI and signed release artifact pending |
 | Actual pinned Open WebUI and embedding runtime | Pending target host |

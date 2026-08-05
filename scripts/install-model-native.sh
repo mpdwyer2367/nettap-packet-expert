@@ -37,15 +37,15 @@ actual_base_id="$(ollama list | awk -v name="$base_model" '$1 == name { print $2
 echo "Creating combined NetTAP AI model: ${model_name}"
 ollama create "$model_name" -f "$modelfile"
 rendered="$(ollama show --modelfile "$model_name")"
-printf '%s\n' "$rendered" | grep -Fq 'You are NetTAP AI' || {
+[[ "$rendered" == *"You are NetTAP AI"* ]] || {
   echo "ERROR: Combined model identity verification failed." >&2
   exit 6
 }
-printf '%s\n' "$rendered" | grep -Fq 'Network & Visibility mode' || {
+[[ "$rendered" == *"Network & Visibility mode"* ]] || {
   echo "ERROR: Network & Visibility capability is missing." >&2
   exit 6
 }
-printf '%s\n' "$rendered" | grep -Fq 'Packet Expert mode' || {
+[[ "$rendered" == *"Packet Expert mode"* ]] || {
   echo "ERROR: Packet Expert capability is missing." >&2
   exit 6
 }
