@@ -9,6 +9,7 @@
 | Manifest | `assistants/network-visibility/assistant.yaml` | `assistants/packet-expert/assistant.yaml` | Reviewed source change |
 | Shared knowledge | `knowledge/NetTAP_AI_Knowledge.md` | Same reviewed shared collection | Version, review, hash, automatic reconciliation |
 | Specialist knowledge | Network and visibility Markdown | Packet evidence Markdown | Version, review, hash, automatic reconciliation |
+| Managed Skill | `skills/nettap-network-visibility/SKILL.md` | `skills/nettap-packet-expert/SKILL.md` | Version, review, hash, automatic reconciliation |
 | Starting experience | Port 3000 launcher | Port 3001 launcher | Reviewed HTML and Caddy route change |
 | Open WebUI preset | Managed Workspace Model | Managed Workspace Model | Supported Open WebUI API reconciliation |
 | Tools and skills | Separate allowlist | Separate allowlist | Security review and negative permission tests |
@@ -23,7 +24,7 @@
 
 ## Automatic Workspace Model setup
 
-The `assistant-provisioner` creates or updates both profiles through the pinned Open WebUI HTTP APIs. It preserves existing access grants when adopting a recognized NetTAP RC1/RC2 profile, attaches only the manifest-approved collections, disables optional tools, selects legacy function calling for deterministic attached-knowledge injection in Open WebUI v0.11.0, pins both profiles, and makes Network & Visibility the default. A Workspace Model is a lightweight application preset; it does not duplicate model weights.
+The `assistant-provisioner` creates or updates both Skills and both profiles through the pinned Open WebUI HTTP APIs. It preserves existing access grants, refuses unmanaged Skill identity collisions, verifies installed Skill content, attaches only the matching Skill and manifest-approved collections, disables optional tools, selects legacy function calling for deterministic attached-knowledge injection in Open WebUI v0.11.0, pins both profiles, and makes Network & Visibility the default. A Workspace Model and Skill are lightweight application configuration; neither duplicates model weights.
 
 ### Network & Visibility
 
@@ -32,6 +33,7 @@ The `assistant-provisioner` creates or updates both profiles through the pinned 
 - Base: `nettap-ai:0.3.0-rc.3`
 - System prompt addition: begin in Network & Visibility mode and keep initial guidance broad
 - Knowledge: approved shared NetTAP AI collection plus Network & Visibility collection
+- Skill: `nettap-network-visibility`
 - Tools: none by default
 - Suggestions: Start here; Design or configure; Connect visibility and data
 
@@ -42,12 +44,13 @@ The `assistant-provisioner` creates or updates both profiles through the pinned 
 - Base: `nettap-ai:0.3.0-rc.3`
 - System prompt addition: begin in Packet Expert mode and use evidence-first analysis
 - Knowledge: approved shared NetTAP AI collection plus Packet Expert collection
+- Skill: `nettap-packet-expert`
 - Tools: none by default
 - Suggestions: Start an investigation; Understand my evidence; Plan data collection
 
 The unwrapped `nettap-ai:0.3.0-rc.3` entry may be used for authorized unified workflows spanning architecture, acquisition, packet evidence, and remediation planning.
 
-The source of truth is `provisioning/open-webui.json` plus its referenced prompt and knowledge files. Installation calculates a fingerprint, synchronously uploads and embeds each managed file, performs a retrieval proof, reconciles both Workspace Models, and records `/app/backend/data/nettap-provisioning-state.json`. The provisioner refuses to overwrite an unmanaged collection with a managed name, an unrecognized Workspace Model, or unmanaged files inside a managed collection.
+The source of truth is `provisioning/open-webui.json` plus its referenced prompt, Skill and knowledge files. Installation validates every source against `provisioning/knowledge-sources.sha256`, calculates a fingerprint, synchronously uploads and embeds each managed file, performs a retrieval proof, reconciles both Skills and Workspace Models, and records `/app/backend/data/nettap-provisioning-state.json`. The provisioner refuses to overwrite an unmanaged collection or Skill with a managed identity, an unrecognized Workspace Model, or unmanaged files inside a managed collection.
 
 After changing a reviewed source, run `./scripts/nettap-ai provision-assistants --confirm`. If the bootstrap credential has been retired, the command requests the current administrator password without storing it. Back up Open WebUI before a production change. Customer-created collections remain outside this managed lifecycle.
 

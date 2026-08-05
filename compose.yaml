@@ -195,6 +195,7 @@ services:
     volumes:
       - ./provisioning:/provision:ro
       - ./assistants:/source/assistants:ro
+      - ./skills:/source/skills:ro
       - ./knowledge:/source/knowledge:ro
       - packet-expert-open-webui-data:/app/backend/data
     networks: [backend]

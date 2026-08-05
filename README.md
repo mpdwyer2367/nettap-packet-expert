@@ -7,7 +7,7 @@ NetTAP AI Suite is a customer-isolated network engineering and security operatio
 
 The two experiences select the same `nettap-ai:0.3.0-rc.3` Ollama model, which is built once from `qwen2.5:7b-instruct-q4_K_M`. Thin Open WebUI Workspace Model profiles retain separate names, specialist knowledge, suggested starting points, and future tool allowlists without duplicating model weights. The raw NetTAP AI model also supports unified cross-domain workflows. One Open WebUI instance provides one account, chat history, administration, audit, backup, and update surface.
 
-The repository contains model definitions and deployment source. It does **not** contain separately fine-tuned weights, customer telemetry, packet captures, credentials, or a live NetTAP connector.
+The repository contains the combined model definition, both product Skills, reviewed RAG knowledge, automatic provisioning and deployment source. It does **not** contain separately fine-tuned weights, customer telemetry, packet captures, credentials, or a live NetTAP connector. See the [combined model card](model/MODEL_CARD.md).
 
 ## Release status
 
@@ -23,12 +23,44 @@ flowchart TB
     L --> W["One Open WebUI"]
     W --> V["Network & Visibility profile"]
     W --> P["Packet Expert profile"]
+    V --> VS["Visibility Skill + RAG"]
+    P --> PS["Packet Skill + RAG"]
     V --> N["One nettap-ai model"]
     P --> N
     N --> Q["One Qwen2.5 7B base"]
 ```
 
 The local launchers are stateless pages. Each selects its automatically managed Open WebUI Workspace Model through documented `model` and `q` URL parameters. Both Workspace Models use the same combined Ollama model, while retaining separate prompts, suggestions, and specialist knowledge bindings. Accounts, chats, model weights, and administration remain shared.
+
+## Download or create the combined model
+
+The repository is the downloadable source of truth for `nettap-ai:0.3.0-rc.3`. It includes both products in one Ollama policy:
+
+- Network & Visibility: architecture, TAP/SPAN/NPB design, routing and switching context, telemetry acquisition, deployment and troubleshooting.
+- Packet Expert: authorized capture planning, evidence quality, PCAP-derived analysis, performance, cyber visibility and forensics.
+- Unified mode: moves safely from visibility design to evidence collection and investigation.
+
+For an existing native Ollama installation on macOS, Linux or WSL/Git Bash:
+
+```bash
+git clone https://github.com/mpdwyer2367/nettap-packet-expert.git
+cd nettap-packet-expert
+./scripts/install-model-native.sh --confirm-download
+ollama run nettap-ai:0.3.0-rc.3
+```
+
+For native Windows PowerShell:
+
+```powershell
+git clone https://github.com/mpdwyer2367/nettap-packet-expert.git
+Set-Location .\nettap-packet-expert
+.\scripts\install-model-native.ps1 -ConfirmDownload
+ollama run nettap-ai:0.3.0-rc.3
+```
+
+This saves the combined model in that machine's active Ollama store. The native-only path does not install Open WebUI, assistant profiles, RAG or launchers; use the full deployment below for both finished product experiences.
+
+The GitHub repository deliberately does not duplicate the multi-gigabyte Qwen base weights. A release manager can produce a checksum-verifiable bundle of the model definition, both Skills, knowledge and installers with `./scripts/package-model-bundle.sh`. The bundle recreates the model through Ollama after checking the pinned base ID. See the [model card](model/MODEL_CARD.md) for the exact inclusions and limits.
 
 Read [the architecture](docs/ARCHITECTURE.md), [migration procedure](docs/MIGRATION.md), and [assistant customization guide](docs/ASSISTANT_CUSTOMIZATION.md) before upgrading an existing deployment.
 
@@ -73,7 +105,7 @@ Set-Location .\nettap-packet-expert
 .\scripts\start-windows.ps1
 ```
 
-Startup uses temporary registry egress to retrieve the verified base model, pinned Open WebUI image, and the exact offline embedding-model revision. It then removes registry egress, starts Open WebUI in offline mode, creates three managed knowledge collections, proves retrieval using a deterministic marker, creates both managed Workspace Models, and only then starts the launcher pages. Any failed identity, cache, ingestion, retrieval, or profile check stops installation.
+Startup uses temporary registry egress to retrieve the verified base model, pinned Open WebUI image, and the exact offline embedding-model revision. It then removes registry egress, starts Open WebUI in offline mode, creates three managed knowledge collections, installs two managed Skills, proves retrieval using a deterministic marker, creates both managed Workspace Models, attaches the matching Skill to each, and only then starts the launcher pages. Any failed identity, cache, ingestion, retrieval, Skill, or profile check stops installation.
 
 The startup script also generates a unique bootstrap password and prints the protected local file containing it. Sign in as `admin@nettap.local`, change the password immediately, verify the generated password no longer works, and complete administrator finalization. There is no shared or committed default password.
 
@@ -109,11 +141,11 @@ The old `scripts/nettap-packet-expert` entry point remains as a compatibility wr
 
 ## Knowledge and customizations
 
-| Experience | Runtime model policy | Knowledge source |
-|---|---|---|
-| Unified NetTAP AI | [nettap-ai.Modelfile](model/nettap-ai.Modelfile) | [Shared NetTAP AI knowledge](knowledge/NetTAP_AI_Knowledge.md) |
-| Network & Visibility profile | Same `nettap-ai` model | [NetTAP Network & Visibility knowledge](knowledge/NetTAP_Network_Visibility_Knowledge.md) |
-| Packet Expert profile | Same `nettap-ai` model | [NetTAP Packet Expert knowledge](knowledge/NetTAP_Packet_Expert_Knowledge.md) |
+| Experience | Runtime model policy | Managed Skill | Knowledge source |
+|---|---|---|---|
+| Unified NetTAP AI | [nettap-ai.Modelfile](model/nettap-ai.Modelfile) | Combined policy in model | [Shared NetTAP AI knowledge](knowledge/NetTAP_AI_Knowledge.md) |
+| Network & Visibility profile | Same `nettap-ai` model | [Network & Visibility Skill](skills/nettap-network-visibility/SKILL.md) | [NetTAP Network & Visibility knowledge](knowledge/NetTAP_Network_Visibility_Knowledge.md) |
+| Packet Expert profile | Same `nettap-ai` model | [Packet Expert Skill](skills/nettap-packet-expert/SKILL.md) | [NetTAP Packet Expert knowledge](knowledge/NetTAP_Packet_Expert_Knowledge.md) |
 
 The [ingestion and analysis guidance](knowledge/NetTAP_Ingestion_Analysis_Guidance.md) is shared by both profiles. It defines accurate handling for PCAP-derived evidence, logs, flow telemetry, cloud flow records, decryption, provenance, correlation, and evidence-bounded security conclusions.
 

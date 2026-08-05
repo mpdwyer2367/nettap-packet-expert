@@ -57,12 +57,14 @@ required_files=(
   assistants/shared/core-policy.md
   assistants/network-visibility/assistant.yaml assistants/packet-expert/assistant.yaml
   assistants/network-visibility/system-prompt.md assistants/packet-expert/system-prompt.md
+  skills/nettap-network-visibility/SKILL.md skills/nettap-packet-expert/SKILL.md
   knowledge/NetTAP_AI_Knowledge.md knowledge/NetTAP_Ingestion_Analysis_Guidance.md
   knowledge/NetTAP_Provisioning_Probe.md provisioning/open-webui.json
   provisioning/cache_embedding_model.py provisioning/provision_open_webui.py
   provisioning/knowledge-sources.sha256
   knowledge/NetTAP_Network_Visibility_Knowledge.md
   knowledge/NetTAP_Packet_Expert_Knowledge.md model/nettap-ai.Modelfile
+  model/MODEL_CARD.md
   launchers/network-visibility/index.html launchers/packet-expert/index.html launchers/shared.css
   docs/AUTHENTICATION.md docs/COMMERCIAL_RELEASE_GATES.md
   docs/CUSTOMER_DEPLOYMENT_GUIDE.md docs/PRODUCTION_ARCHITECTURE.md
@@ -72,6 +74,8 @@ required_files=(
   scripts/provision-assistants.sh
   scripts/security-scan.sh scripts/production-preflight.sh
   scripts/verify-production-deployment.sh scripts/package-release.sh
+  scripts/install-model-native.sh scripts/install-model-native.ps1
+  scripts/package-model-bundle.sh scripts/verify-model-bundle.sh
   scripts/verify-release.sh scripts/verify-archive-tree.py scripts/certify-production.sh
   scripts/start-wsl2.sh
   tests/model-behavior-eval.sh tests/model-storage-sharing.sh tests/backup-restore-e2e.sh
@@ -144,10 +148,20 @@ for manifest_path in sorted((root / "assistants").glob("*/assistant.yaml")):
     assert (root / manifest["modelfile"]).is_file()
     for knowledge in manifest["knowledge"]:
         assert (root / knowledge).is_file()
+    for skill in manifest["skills"]:
+        skill_path = root / skill
+        assert skill_path.is_file()
+        content = skill_path.read_text(encoding="utf-8")
+        assert content.startswith("---\nname: ")
+        assert "\ndescription: " in content
 assert {item["id"] for item in assistants} == {"nettap-network-visibility", "nettap-packet-expert"}
 assert len({item["launcher_port"] for item in assistants}) == 2
 assert {item["runtime_model"] for item in assistants} == {"nettap-ai:0.3.0-rc.3"}
 assert {item["modelfile"] for item in assistants} == {"model/nettap-ai.Modelfile"}
+assert {tuple(item["skills"]) for item in assistants} == {
+    ("skills/nettap-network-visibility/SKILL.md",),
+    ("skills/nettap-packet-expert/SKILL.md",),
+}
 assert {item["workspace_model_id"] for item in assistants} == {"nettap-network-visibility", "nettap-packet-expert"}
 assert {item["mode"] for item in assistants} == {"network_visibility", "packet_expert"}
 expected_sources = {
@@ -157,6 +171,7 @@ expected_sources = {
 }
 for assistant in assistants:
     expected_sources.update(assistant["knowledge"])
+    expected_sources.update(assistant["skills"])
 assert set(checksums) == expected_sources
 print("Assistant manifests passed.")
 PY

@@ -36,12 +36,31 @@
       ]
     }
   ],
+  "skills": [
+    {
+      "key": "network_visibility",
+      "id": "nettap-network-visibility",
+      "name": "NetTAP Network & Visibility",
+      "description": "Design, deploy, validate, and troubleshoot network visibility, acquisition, telemetry, and monitoring-tool delivery.",
+      "file": "skills/nettap-network-visibility/SKILL.md",
+      "tags": ["NetTAP", "Network Visibility", "Managed"]
+    },
+    {
+      "key": "packet_expert",
+      "id": "nettap-packet-expert",
+      "name": "NetTAP Packet Expert",
+      "description": "Plan authorized evidence collection and analyze normalized packet-derived, log, flow, performance, security, and forensic evidence.",
+      "file": "skills/nettap-packet-expert/SKILL.md",
+      "tags": ["NetTAP", "Packet Expert", "Managed"]
+    }
+  ],
   "assistants": [
     {
       "id": "nettap-network-visibility",
       "name": "NetTAP Network & Visibility",
       "description": "Network architecture, device planning, NetTAP visibility, traffic acquisition, and telemetry guidance.",
       "knowledge_keys": ["shared", "network_visibility"],
+      "skill_keys": ["network_visibility"],
       "system_prompt_files": [
         "assistants/shared/core-policy.md",
         "assistants/network-visibility/system-prompt.md"
@@ -58,6 +77,7 @@
       "name": "NetTAP Packet Expert",
       "description": "Authorized packet evidence, performance investigation, cyber visibility, and forensic analysis guidance.",
       "knowledge_keys": ["shared", "packet_expert"],
+      "skill_keys": ["packet_expert"],
       "system_prompt_files": [
         "assistants/shared/core-policy.md",
         "assistants/packet-expert/system-prompt.md"

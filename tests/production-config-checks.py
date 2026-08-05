@@ -45,6 +45,7 @@ assert provisioner["read_only"] is True
 assert provisioner["cap_drop"] == ["ALL"]
 assert "ports" not in provisioner
 assert provisioner["environment"]["NETTAP_PROVISIONING_CHECKSUMS"] == "/provision/knowledge-sources.sha256"
+assert "./skills:/source/skills:ro" in provisioner["volumes"]
 
 for service_name in ("ollama", "open-webui"):
     service = base["services"][service_name]
@@ -136,6 +137,8 @@ workflow = (root / ".github/workflows/validate.yml").read_text(encoding="utf-8")
 for profile in ("compose.local.yaml", "compose.production.yaml", "compose.bootstrap.yaml"):
     assert profile in workflow
 assert "shellcheck scripts/*.sh scripts/nettap-ai scripts/nettap-packet-expert tests/*.sh" in workflow
+assert "package-model-bundle.sh" in workflow
+assert "verify-model-bundle.sh" in workflow
 
 runtime_verifier = (root / "scripts/verify-production-deployment.sh").read_text(encoding="utf-8")
 for control in (".Config.Image", "no-new-privileges:true", "EXPECTED_BASE_MODEL_ID", "NetTAP AI model ID", "strict-transport-security"):

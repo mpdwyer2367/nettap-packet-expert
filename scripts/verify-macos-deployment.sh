@@ -125,10 +125,16 @@ assert {item['id'] for item in provisioning['assistants']} == {
     'nettap-network-visibility', 'nettap-packet-expert'
 }
 assert set(provisioning['knowledge']) == {'shared', 'network_visibility', 'packet_expert'}
+assert set(provisioning['skills']) == {'network_visibility', 'packet_expert'}
+assistant_skills = {item['id']: item['skill_ids'] for item in provisioning['assistants']}
+assert assistant_skills == {
+    'nettap-network-visibility': ['nettap-network-visibility'],
+    'nettap-packet-expert': ['nettap-packet-expert'],
+}
 PY
 [[ "$(installed_provisioning_fingerprint local)" == "$(provisioning_fingerprint local)" ]] || \
   fail "Installed provisioning fingerprint differs from the RC3 source."
-echo "PASS: pinned embedding cache, managed assistants, and offline RAG proof"
+echo "PASS: pinned embedding cache, managed skills, managed assistants, and offline RAG proof"
 
 admin_count="$("${compose[@]}" exec -T open-webui python - <<'PY'
 import sqlite3

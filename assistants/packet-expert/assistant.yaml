@@ -12,6 +12,8 @@ knowledge:
   - knowledge/NetTAP_Ingestion_Analysis_Guidance.md
   - knowledge/NetTAP_Provisioning_Probe.md
   - knowledge/NetTAP_Packet_Expert_Knowledge.md
+skills:
+  - skills/nettap-packet-expert/SKILL.md
 launcher_port: 3001
 starter_prompts:
   - Start an investigation

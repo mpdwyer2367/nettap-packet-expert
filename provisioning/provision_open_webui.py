@@ -74,6 +74,8 @@ def verify_source_checksums(manifest: dict) -> dict[str, str]:
         referenced.update(collection["files"])
     for assistant in manifest["assistants"]:
         referenced.update(assistant["system_prompt_files"])
+    for skill in manifest.get("skills", []):
+        referenced.add(skill["file"])
     if set(pinned) != referenced:
         raise ProvisioningError(
             f"pinned source set differs from manifest; missing={sorted(referenced - set(pinned))}, "
@@ -102,6 +104,8 @@ def provisioning_fingerprint(manifest: dict) -> str:
         referenced.update(collection["files"])
     for assistant in manifest["assistants"]:
         referenced.update(assistant["system_prompt_files"])
+    for skill in manifest.get("skills", []):
+        referenced.add(skill["file"])
     for relative in sorted(referenced):
         digest.update(relative.encode("utf-8"))
         digest.update(b"\0")
@@ -234,6 +238,85 @@ def managed_description(collection: dict, release: str, fingerprint: str) -> str
     )
 
 
+def all_skills(client: ApiClient) -> list[dict]:
+    _, response = client.request("GET", "/api/v1/skills/")
+    if not isinstance(response, list):
+        raise ProvisioningError("Open WebUI returned an invalid skill list")
+    return response
+
+
+def skill_content(skill: dict) -> str:
+    """Return the Markdown body while retaining frontmatter in the reviewed source artifact."""
+    raw = source_path(skill["file"]).read_text(encoding="utf-8")
+    if not raw.startswith("---\n"):
+        raise ProvisioningError(f"managed Skill source lacks YAML frontmatter: {skill['file']}")
+    parts = raw.split("---\n", 2)
+    if len(parts) != 3 or not parts[2].strip():
+        raise ProvisioningError(f"managed Skill source has invalid YAML frontmatter: {skill['file']}")
+    return parts[2].strip() + "\n"
+
+
+def skill_payload(skill: dict, fingerprint: str, existing=None) -> dict:
+    existing = existing or {}
+    tags = list(dict.fromkeys([
+        *(skill.get("tags") or []),
+        "nettap-managed",
+        f"nettap-key:{skill['key']}",
+        f"nettap-release:{required_env('RELEASE_VERSION')}",
+        f"nettap-fingerprint:{fingerprint}",
+    ]))
+    return {
+        "id": skill["id"],
+        "name": skill["name"],
+        "description": skill["description"],
+        "content": skill_content(skill),
+        "meta": {"tags": tags},
+        "is_active": True,
+        "access_grants": existing.get("access_grants") or [],
+    }
+
+
+def reconcile_skill(client: ApiClient, skill: dict, fingerprint: str) -> dict:
+    skill_id = urllib.parse.quote(skill["id"], safe="")
+    status, existing = client.request("GET", f"/api/v1/skills/id/{skill_id}", allow=(404,))
+    if status == 404:
+        existing = None
+
+    name_matches = [item for item in all_skills(client) if item.get("name") == skill["name"]]
+    if any(item.get("id") != skill["id"] for item in name_matches):
+        raise ProvisioningError(f"refusing managed skill name collision for {skill['name']}")
+    if existing:
+        tags = ((existing.get("meta") or {}).get("tags") or [])
+        if "nettap-managed" not in tags:
+            raise ProvisioningError(f"refusing to overwrite unmanaged Open WebUI Skill {skill['id']}")
+
+    payload = skill_payload(skill, fingerprint, existing)
+    if existing:
+        client.request("POST", f"/api/v1/skills/id/{skill_id}/update", payload)
+        action = "updated"
+    else:
+        client.request("POST", "/api/v1/skills/create", payload)
+        action = "created"
+
+    _, result = client.request("GET", f"/api/v1/skills/id/{skill_id}")
+    if (
+        result.get("name") != payload["name"]
+        or result.get("description") != payload["description"]
+        or result.get("content") != payload["content"]
+        or result.get("is_active") is not True
+        or "nettap-managed" not in ((result.get("meta") or {}).get("tags") or [])
+    ):
+        raise ProvisioningError(f"Open WebUI Skill {skill['id']} did not retain its managed identity")
+    return {
+        "key": skill["key"],
+        "id": skill["id"],
+        "name": skill["name"],
+        "source": skill["file"],
+        "sha256": hashlib.sha256(source_path(skill["file"]).read_bytes()).hexdigest(),
+        "action": action,
+    }
+
+
 def reconcile_collection(client: ApiClient, manifest: dict, collection: dict, fingerprint: str) -> dict:
     release = manifest["release_version"]
     marker = f"[nettap-managed:{collection['key']}]"
@@ -305,7 +388,7 @@ def reconcile_collection(client: ApiClient, manifest: dict, collection: dict, fi
     }
 
 
-def assistant_payload(assistant: dict, knowledge: dict, fingerprint: str, existing=None) -> dict:
+def assistant_payload(assistant: dict, knowledge: dict, skills: dict, fingerprint: str, existing=None) -> dict:
     runtime_model = required_env("NETTAP_AI_MODEL")
     prompt = "\n\n".join(source_path(path).read_text(encoding="utf-8").strip() for path in assistant["system_prompt_files"])
     existing = existing or {}
@@ -320,6 +403,7 @@ def assistant_payload(assistant: dict, knowledge: dict, fingerprint: str, existi
             {"id": knowledge[key]["id"], "name": knowledge[key]["name"]}
             for key in assistant["knowledge_keys"]
         ],
+        "skillIds": [skills[key]["id"] for key in assistant.get("skill_keys", [])],
         "capabilities": {
             "file_context": True,
             "vision": False,
@@ -352,7 +436,7 @@ def assistant_payload(assistant: dict, knowledge: dict, fingerprint: str, existi
     }
 
 
-def reconcile_assistant(client: ApiClient, assistant: dict, knowledge: dict, fingerprint: str) -> dict:
+def reconcile_assistant(client: ApiClient, assistant: dict, knowledge: dict, skills: dict, fingerprint: str) -> dict:
     query = urllib.parse.urlencode({"id": assistant["id"]})
     status, existing = client.request("GET", f"/api/v1/models/model?{query}", allow=(404,))
     if status == 404:
@@ -369,7 +453,7 @@ def reconcile_assistant(client: ApiClient, assistant: dict, knowledge: dict, fin
             or existing.get("base_model_id") not in adoptable_bases
         ):
             raise ProvisioningError(f"refusing to overwrite unmanaged Workspace Model {assistant['id']}")
-    payload = assistant_payload(assistant, knowledge, fingerprint, existing)
+    payload = assistant_payload(assistant, knowledge, skills, fingerprint, existing)
     if existing:
         _, result = client.request("POST", "/api/v1/models/model/update", payload)
         action = "updated"
@@ -378,7 +462,13 @@ def reconcile_assistant(client: ApiClient, assistant: dict, knowledge: dict, fin
         action = "created"
     if result.get("base_model_id") != required_env("NETTAP_AI_MODEL"):
         raise ProvisioningError(f"Workspace Model {assistant['id']} did not retain the required base model")
-    return {"id": assistant["id"], "name": assistant["name"], "action": action}
+    return {
+        "id": assistant["id"],
+        "name": assistant["name"],
+        "action": action,
+        "knowledge_ids": [item["id"] for item in payload["meta"]["knowledge"]],
+        "skill_ids": payload["meta"]["skillIds"],
+    }
 
 
 def configure_model_defaults(client: ApiClient, manifest: dict) -> dict:
@@ -463,9 +553,15 @@ def main() -> int:
     rag = verify_embedding_and_rag(client, manifest, knowledge)
     print("Offline RAG verification: PASS")
 
+    skills = {}
+    for skill in manifest.get("skills", []):
+        result = reconcile_skill(client, skill, fingerprint)
+        skills[result["key"]] = result
+        print(f"Open WebUI Skill {result['action']}: {result['name']} ({result['id']})")
+
     assistants = []
     for assistant in manifest["assistants"]:
-        result = reconcile_assistant(client, assistant, knowledge, fingerprint)
+        result = reconcile_assistant(client, assistant, knowledge, skills, fingerprint)
         assistants.append(result)
         print(f"Workspace Model {result['action']}: {result['name']} ({result['id']})")
 
@@ -479,6 +575,7 @@ def main() -> int:
         "fingerprint": fingerprint,
         "completed_utc": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
         "knowledge": knowledge,
+        "skills": skills,
         "assistants": assistants,
         "model_defaults": model_defaults,
         "offline_rag": rag,

@@ -8,10 +8,12 @@ Result: **PASS for available source-only checks**
 
 - Bash syntax for shell entry points
 - Python compilation for both provisioning programs
-- Mock Open WebUI v0.11.0 API-contract test covering authentication, managed knowledge, synchronous file ingestion, retrieval proof, Workspace Model creation/update, default selection, preserved configuration, repeat execution, and no duplicate objects
+- Mock Open WebUI v0.11.0 API-contract test covering authentication, managed knowledge, managed Skill creation/update and exact attachment, synchronous file ingestion, retrieval proof, Workspace Model creation/update, default selection, preserved access grants and configuration, repeat execution, and no duplicate objects
 - Deterministic provisioning fingerprint test
 - Profile manifest parsing and referenced-file checks
 - Both profiles resolve to one `nettap-ai:0.3.0-rc.3` runtime model and one combined Modelfile
+- Both specialist Skills are source-controlled, checksum-pinned, and attached only to their matching profile
+- Combined-model bundle build and verification paths, including archive path safety, maximum member size, source hashes, model identity and explicit exclusion of weights
 - Exact offline embedding repository/revision configuration and local-only runtime controls
 - Production configuration structural assertions
 - Launcher definitions select distinct managed Workspace Model IDs
@@ -30,12 +32,12 @@ python3 -m py_compile provisioning/*.py
 ## Unavailable in this workspace
 
 - Docker and Docker Compose rendering
-- Actual Open WebUI container start and exact-revision embedding download
+- Actual Open WebUI container start, managed Skill rendering/behavior, and exact-revision embedding download
 - Actual local embedding computation and Open WebUI vector indexing
 - Caddy runtime configuration validation
 - ShellCheck
 - PowerShell parser
-- Ollama model pull, creation, inference, and model-store measurement
+- Native and containerized Ollama model pull, creation, inference, and model-store measurement
 - Browser, authentication, RBAC, backup, restore, update, and rollback acceptance
 - macOS and Windows target-host evidence
 

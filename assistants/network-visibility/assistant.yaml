@@ -12,6 +12,8 @@ knowledge:
   - knowledge/NetTAP_Ingestion_Analysis_Guidance.md
   - knowledge/NetTAP_Provisioning_Probe.md
   - knowledge/NetTAP_Network_Visibility_Knowledge.md
+skills:
+  - skills/nettap-network-visibility/SKILL.md
 launcher_port: 3000
 starter_prompts:
   - Start here
