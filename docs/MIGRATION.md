@@ -55,7 +55,15 @@ Initialization performs these bounded changes:
 6. Starts Open WebUI in offline mode, reconciles three managed knowledge collections and two Workspace Models through supported APIs, and proves local retrieval.
 7. Starts the two stateless launcher pages only after provisioning succeeds.
 
-It does not remove old Packet Expert or Network & Visibility model tags, modify Open WebUI tables directly, or delete retired environment variables. Old tags remain available for rollback until an administrator removes them after acceptance. The provisioner adopts only recognized NetTAP RC1/RC2 profiles, preserves their access grants, and refuses unmanaged naming or file conflicts.
+It does not automatically remove old Packet Expert or Network & Visibility model tags, modify Open WebUI tables directly, or delete retired environment variables. Old tags remain available for rollback until an administrator removes them after acceptance. The provisioner adopts only recognized NetTAP RC1/RC2 profiles, preserves their access grants, and refuses unmanaged naming or file conflicts.
+
+After backup, restart, both-experience and rollback acceptance, run
+`./scripts/nettap-ai retire-old-models` to preview the exact appliance tags that
+would be removed. Rerun with `--confirm` to retain only the current NetTAP model
+tag in the containerized Ollama store. Add `--include-native` only after
+reviewing a separate host-native Ollama store. This retirement does not delete
+the shared base model, non-NetTAP models, accounts, chats, knowledge, evidence
+or Docker volumes.
 
 ## Application migration
 

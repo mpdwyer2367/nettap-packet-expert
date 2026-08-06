@@ -57,12 +57,20 @@ the installed RC3 model; UI and documentation display the canonical model name.
 The retained release and backup record keys allow comparison with existing
 acceptance evidence and restorable backups; they are not display names.
 
+Historical release and validation records preserve the name used by the
+candidate they assessed. They must carry a historical-naming note that points
+readers to **NetTAP Network Intelligence** as the current product name. Do not
+silently rewrite a historical candidate identity as though it had shipped under
+the new name.
+
 ## Writing rules
 
 - Write **NetTAP** with this capitalization.
 - Write **Network Intelligence** with both words capitalized when naming the product.
 - Write **Network & Visibility**, **Packet Expert** and **Evidence Workspace** exactly as shown.
 - Use **AI** only when describing the model or AI-assisted behavior, not as the product name.
+- Describe Network & Visibility and Packet Expert as experiences or Open WebUI profiles, not as separate LLMs or model downloads.
+- Use **NetTAP Network Intelligence Model** as the display name; use `nettap-ai:<version>` only for the technical Ollama tag.
 - Describe the product as a platform or appliance only when the relevant deployment is included.
 - Do not imply live telemetry, packet capture, autonomous control, confirmed compromise or production certification without supporting evidence.
 - Keep NetTAP Technology Limited as the copyright holder and legal entity; it is not the product name.

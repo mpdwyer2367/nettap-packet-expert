@@ -1,5 +1,8 @@
 # Production certification status — NetTAP AI Suite 0.3.0-rc.2
 
+> Historical naming: this record preserves the candidate name assessed at the
+> time. The current product name is **NetTAP Network Intelligence**.
+
 Assessment date: 2026-08-05
 
 Assessment scope: combined-model integration source candidate

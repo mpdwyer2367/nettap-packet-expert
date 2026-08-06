@@ -316,7 +316,7 @@ record_model_identity() {
     echo "ERROR: Base-model identity is $base_id; expected $expected_id. Release review is required." >&2
     exit 9
   }
-  [[ -n "$nettap_id" ]] || { echo "ERROR: NetTAP AI model identity is unavailable." >&2; exit 9; }
+  [[ -n "$nettap_id" ]] || { echo "ERROR: NetTAP Network Intelligence Model identity is unavailable." >&2; exit 9; }
   mkdir -p "${project_dir}/reports/generated"
   {
     printf 'Recorded UTC: %s\n' "$(date -u +%FT%TZ)"

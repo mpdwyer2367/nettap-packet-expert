@@ -158,6 +158,8 @@ for profile in ("compose.local.yaml", "compose.production.yaml", "compose.bootst
 assert "shellcheck scripts/*.sh scripts/nettap-ai scripts/nettap-packet-expert tests/*.sh" in workflow
 assert "tests/test_case_service.py" in workflow
 assert "case_service/*.py" in workflow
+assert "retire-legacy-models-mock.sh" in workflow
+assert "retire-legacy-models.ps1" in workflow
 assert "package-model-bundle.sh" in workflow
 assert "verify-model-bundle.sh" in workflow
 

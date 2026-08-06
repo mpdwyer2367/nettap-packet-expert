@@ -41,6 +41,11 @@ grep -Fq 'NetTAP Network Intelligence — Packet Expert' "$project_dir/README.md
 grep -Fq 'NetTAP Network Intelligence — Evidence Workspace' "$project_dir/README.md"
 grep -Fq "Ollama model tag | \`nettap-ai:0.3.0-rc.3\`" "$project_dir/docs/NAMING_CONVENTIONS.md"
 grep -Fq "Backup format identifiers | \`NetTAP AI Suite volume backup v2\` and \`v3\`" "$project_dir/docs/NAMING_CONVENTIONS.md"
+grep -Fq 'experiences or Open WebUI profiles, not as separate LLMs or model downloads' "$project_dir/docs/NAMING_CONVENTIONS.md"
+grep -Fq 'Historical naming:' "$project_dir/reports/PRODUCTION_CERTIFICATION_STATUS_0.3.0-rc.2.md"
+grep -Fq 'Historical naming:' "$project_dir/reports/RELEASE_ACCEPTANCE_0.2.0-rc.1.md"
+grep -q 'retire-old-models)' "$project_dir/scripts/nettap-ai"
+grep -q 'nettap-ai-backup-\*' "$project_dir/scripts/retire-legacy-models.sh"
 grep -q '^WEBUI_ADMIN_PASSWORD=GENERATE_ON_FIRST_START$' "$project_dir/.env.example"
 grep -q 'ENABLE_SIGNUP: "False"' "$project_dir/compose.yaml"
 grep -q 'nettap-bootstrap-password-rc9' "$project_dir/compose.yaml"
@@ -89,6 +94,7 @@ required_files=(
   scripts/security-scan.sh scripts/production-preflight.sh
   scripts/verify-production-deployment.sh scripts/package-release.sh
   scripts/install-model-native.sh scripts/install-model-native.ps1
+  scripts/retire-legacy-models.sh scripts/retire-legacy-models.ps1
   scripts/package-model-bundle.sh scripts/verify-model-bundle.sh
   scripts/verify-release.sh scripts/verify-archive-tree.py scripts/certify-production.sh
   scripts/start-wsl2.sh
@@ -97,6 +103,7 @@ required_files=(
   tests/evidence-runtime-e2e.sh
   tests/clean-package-acceptance.sh tests/compare-platform-acceptance.sh
   tests/native-model-installer-mock.sh
+  tests/retire-legacy-models-mock.sh
   tests/fixtures/normalized-pcap.json tests/fixtures/normalized-logs.jsonl
   tests/fixtures/normalized-ipfix.jsonl
   tests/production-config-checks.py
