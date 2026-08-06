@@ -1,13 +1,13 @@
 # NetTAP Network Intelligence operations manual
 
-Release `0.3.0-rc.4` is an integration candidate for one single-node, single-customer Docker deployment. It is not a certified GA appliance until every commercial release gate passes.
+Release `0.3.0-rc.6` is an integration candidate for one single-node, single-customer Docker deployment. It is not a certified GA appliance until every commercial release gate passes.
 
 ## Components
 
 | Component | Identity |
 |---|---|
 | Shared base | `qwen2.5:7b-instruct-q4_K_M` |
-| Shared NetTAP Network Intelligence Model | `nettap-ai:0.3.0-rc.4` |
+| Shared NetTAP Network Intelligence Model | `nettap-ai:0.3.0-rc.6` |
 | Network profile | Workspace Model ID `nettap-network-visibility` over the combined model |
 | Packet profile | Workspace Model ID `nettap-packet-expert` over the combined model |
 | Local UI | `127.0.0.1:3100` |
@@ -84,11 +84,34 @@ Run `./scripts/nettap-ai provision-assistants --confirm`, then inspect the manag
 
 ### One profile is missing
 
-Run `./scripts/nettap-ai update-models --confirm` and inspect `ollama list` for `nettap-ai:0.3.0-rc.4`. The update also refreshes the pinned offline embedding cache, reconciles the managed profiles, and—after those checks pass—retires older NetTAP container tags. Review the provisioning state and rerun the behavior tests. Do not create an unversioned substitute model from the UI.
+Run `./scripts/nettap-ai update-models --confirm` and inspect `ollama list` for `nettap-ai:0.3.0-rc.6`. The update also refreshes the pinned offline embedding cache, reconciles the managed profiles and evidence tool, and—after those checks pass—retires older NetTAP container tags. Review the provisioning state and rerun the behavior tests. Do not create an unversioned substitute model from the UI.
 
 ### Existing login fails
 
-Do not expect the generated bootstrap credential to reset a populated volume. Follow [authentication](AUTHENTICATION.md) and preserve the database before any approved recovery action.
+Do not expect the generated bootstrap credential to reset a populated volume.
+Run `./scripts/recover-admin.sh --confirm`; it preserves a database backup,
+recovers the single administrator under the canonical non-personal identity,
+rotates sessions, and produces a new one-time credential. Then rerun the
+platform start command and complete normal password replacement and
+finalization. Follow [authentication](AUTHENTICATION.md) for the full boundary.
+
+### Assistant launcher repeatedly restarts
+
+Inspect the launcher logs before changing persistent state:
+
+```bash
+docker compose --env-file .env -f compose.yaml -f compose.local.yaml logs --tail=100 assistant-launcher
+```
+
+The local profile intentionally drops all Linux capabilities and adds back only
+`NET_BIND_SERVICE`. The official Caddy executable carries that file capability;
+without it in the bounding set, Linux rejects `exec caddy` with `Operation not
+permitted` before the Caddyfile is loaded. Do not remove
+`no-new-privileges:true`, grant broader capabilities, or delete application
+volumes. After installing the corrected Compose profile, run
+`./scripts/nettap-ai repair-local`. It recreates the browser-facing services,
+checks all four loopback bindings and endpoints, prints bounded diagnostics on
+failure, and runs canonical macOS verification without redownloading the model.
 
 ### Live telemetry appears unavailable
 

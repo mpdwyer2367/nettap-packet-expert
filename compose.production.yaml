@@ -8,6 +8,10 @@ services:
       WEBUI_AUTH_COOKIE_SAME_SITE: strict
       WEBUI_BANNERS: "[]"
 
+  evidence-service:
+    environment:
+      NETTAP_OPEN_WEBUI_PUBLIC_URL: https://${APPLIANCE_HOSTNAME}:${HTTPS_PORT}
+
   gateway:
     image: ${CADDY_IMAGE}
     init: true
@@ -29,6 +33,7 @@ services:
     volumes:
       - ./config/Caddyfile:/etc/caddy/Caddyfile:ro
       - ./config/tls:/etc/caddy/tls:ro
+      - ./launchers:/srv:ro
       - packet-expert-gateway-data:/data
       - packet-expert-gateway-config:/config
     networks: [user-access]

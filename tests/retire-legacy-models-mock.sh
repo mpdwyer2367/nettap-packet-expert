@@ -11,11 +11,11 @@ cp "$project_dir/scripts/retire-legacy-models.sh" "$test_root/project/scripts/re
 
 cat > "$test_root/project/.env" <<'EOF'
 DEPLOYMENT_MODE=local
-NETTAP_AI_MODEL=nettap-ai:0.3.0-rc.4
+NETTAP_AI_MODEL=nettap-ai:0.3.0-rc.6
 BASE_MODEL=qwen2.5:7b-instruct-q4_K_M
 EOF
 cat > "$test_root/project/.env.example" <<'EOF'
-NETTAP_AI_MODEL=nettap-ai:0.3.0-rc.4
+NETTAP_AI_MODEL=nettap-ai:0.3.0-rc.6
 EOF
 
 cat > "$test_root/bin/docker" <<'EOF'
@@ -27,7 +27,7 @@ elif [[ "$*" == *" ps -q ollama" ]]; then
   echo "ollama-container"
 elif [[ "$*" == *" exec -T ollama ollama list" ]]; then
   echo 'NAME                                ID              SIZE'
-  echo 'nettap-ai:0.3.0-rc.4                current         4.7 GB'
+  echo 'nettap-ai:0.3.0-rc.6                current         4.7 GB'
   if ! grep -Fqx 'container:nettap-ai:latest' "$NETTAP_RETIRE_TEST_LOG" 2>/dev/null; then
     echo 'nettap-ai:latest                    legacy-one      4.7 GB'
   fi
@@ -81,7 +81,7 @@ if "${test_root}/project/scripts/retire-legacy-models.sh" --confirm >/dev/null 2
   exit 1
 fi
 [[ ! -e "$NETTAP_RETIRE_TEST_LOG" ]]
-printf '%s\n' 'NETTAP_AI_MODEL=nettap-ai:0.3.0-rc.4' > "$test_root/project/.env.example"
+printf '%s\n' 'NETTAP_AI_MODEL=nettap-ai:0.3.0-rc.6' > "$test_root/project/.env.example"
 
 "${test_root}/project/scripts/retire-legacy-models.sh" --confirm --include-native >/dev/null
 

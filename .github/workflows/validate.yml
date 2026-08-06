@@ -23,10 +23,18 @@ jobs:
         run: ./tests/native-model-installer-mock.sh
       - name: Test legacy model retirement safeguards
         run: ./tests/retire-legacy-models-mock.sh
+      - name: Test Compose fingerprint output handling
+        run: ./tests/provisioning-fingerprint-output-mock.sh
+      - name: Test authentication bootstrap and project isolation
+        run: ./tests/auth-bootstrap-mock.sh
+      - name: Test administrator recovery safeguards
+        run: ./tests/admin-recovery-mock.sh
+      - name: Test local runtime recreation and port verification
+        run: ./tests/local-runtime-repair-mock.sh
       - name: Test Open WebUI provisioning contract
-        run: python3 -m unittest -v tests/test_provision_open_webui.py tests/test_verify_archive_tree.py tests/test_case_service.py
+        run: python3 -m unittest -v tests/test_provision_open_webui.py tests/test_verify_archive_tree.py tests/test_case_service.py tests/test_recover_open_webui_admin.py
       - name: Compile provisioning code
-        run: python3 -m py_compile provisioning/*.py case_service/*.py scripts/verify-archive-tree.py
+        run: python3 -m py_compile provisioning/*.py case_service/*.py scripts/verify-archive-tree.py scripts/recover_open_webui_admin.py
       - name: Render supported Compose profiles
         run: |
           docker compose --env-file .env.example \
@@ -66,8 +74,8 @@ jobs:
       - name: Build and verify unsigned source candidate
         run: |
           ./scripts/package-release.sh --unsigned-candidate
-          ./scripts/verify-release.sh dist/nettap-ai-suite-0.3.0-rc.4-source.tar.gz
+          ./scripts/verify-release.sh dist/nettap-ai-suite-0.3.0-rc.5-source.tar.gz
       - name: Build and verify combined model bundle
         run: |
           ./scripts/package-model-bundle.sh
-          ./scripts/verify-model-bundle.sh dist/nettap-ai-model-0.3.0-rc.4.tar.gz
+          ./scripts/verify-model-bundle.sh dist/nettap-ai-model-0.3.0-rc.5.tar.gz

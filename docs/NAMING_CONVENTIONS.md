@@ -41,20 +41,21 @@ model tag advances with each model-policy release:
 | Identifier | Retained value |
 |---|---|
 | GitHub repository | `mpdwyer2367/nettap-packet-expert` |
-| Ollama model tag | `nettap-ai:0.3.0-rc.4` |
+| Ollama model tag | `nettap-ai:0.3.0-rc.6` |
 | Current Modelfile identity marker | `You are the NetTAP Network Intelligence Model` |
 | Administration command | `nettap-ai` |
-| Compose project and volume prefix | `nettap-packet-expert` |
+| Compose project and volume prefix | `nettap-network-intelligence` |
 | Default appliance hostname | `nettap-ai.local` |
 | Workspace Model IDs | `nettap-network-visibility`, `nettap-packet-expert` |
 | Source archive compatibility basename | `nettap-ai-suite-<version>-source.tar.gz` |
 | Backup format identifiers | `NetTAP AI Suite volume backup v2` and `v3` |
 | Release/backup record keys | `NetTAP AI model` and `NetTAP AI model ID` |
 
-Do not rename these identifiers inside an existing release. A future identifier
-migration requires a new release, explicit data migration, rollback procedure and
-acceptance evidence. Documentation may call them “legacy compatibility
-identifiers” when their relationship to the product name needs explanation.
+Do not rename these identifiers inside a published release. The canonical
+Compose identity intentionally differs from the legacy `nettap-packet-expert`
+project so a new product install cannot inherit experimental accounts or
+configuration. Legacy data requires explicit migration, rollback procedure,
+and acceptance evidence.
 The current Modelfile marker, Open WebUI profile names, launcher labels, and
 documentation use the canonical product hierarchy. The technical Ollama tag
 remains `nettap-ai:<version>` for upgrade compatibility.
@@ -86,7 +87,7 @@ Preferred:
 - “Deploy NetTAP Network Intelligence for private network visibility and forensic operations.”
 - “Open NetTAP Network Intelligence — Packet Expert.”
 - “Both experiences use the shared NetTAP Network Intelligence Model.”
-- “The technical Ollama tag remains `nettap-ai:0.3.0-rc.4`.”
+- “The technical Ollama tag is `nettap-ai:0.3.0-rc.6`.”
 
 Avoid:
 

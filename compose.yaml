@@ -1,6 +1,7 @@
-# The project name remains stable for the 0.3 migration so an approved in-place
-# upgrade can retain the existing Open WebUI and Ollama volumes.
-name: nettap-packet-expert
+# The canonical product uses its own Compose identity. Legacy Packet Expert
+# volumes remain offline and are migrated only through an explicit backup and
+# restore procedure; they are never attached to a fresh production install.
+name: nettap-network-intelligence
 
 services:
   ollama:
@@ -95,6 +96,7 @@ services:
       DEFAULT_USER_ROLE: pending
       ENABLE_PASSWORD_VALIDATION: "True"
       ENABLE_PASSWORD_CHANGE_FORM: "True"
+      PASSWORD_HASH_ALGORITHM: bcrypt
       JWT_EXPIRES_IN: ${JWT_EXPIRES_IN}
       PASSWORD_VALIDATION_REGEX_PATTERN: '^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^\w\s]).{12,72}$$'
       PASSWORD_VALIDATION_HINT: "Use 12-72 characters with upper, lower, number, and symbol."
@@ -156,7 +158,7 @@ services:
       DEFAULT_PINNED_MODELS: ${NETTAP_VISIBILITY_PROFILE},${NETTAP_PACKET_EXPERT_PROFILE}
       MODEL_ORDER_LIST: "[\"${NETTAP_VISIBILITY_PROFILE}\",\"${NETTAP_PACKET_EXPERT_PROFILE}\",\"${NETTAP_AI_MODEL}\"]"
       WEBUI_BANNERS: >-
-        [{"id":"nettap-network-intelligence-admin-activation-rc4","type":"warning","title":"Complete administrator activation","content":"This installation generated a unique bootstrap credential. Change it in Settings > Account, verify the old credential fails, then run the administrator finalization command before enabling production access.","dismissible":false,"timestamp":1785864000}]
+        [{"id":"nettap-network-intelligence-admin-activation-rc6","type":"warning","title":"Complete administrator activation","content":"This installation generated a unique bootstrap credential. Change it in Settings > Account, verify the old credential fails, then run the administrator finalization command before enabling production access.","dismissible":false,"timestamp":1785864000}]
       DEFAULT_PROMPT_SUGGESTIONS: >-
         [{"title":["Start with","my goal"],"content":"Ask me one simple question to understand what I want to accomplish."},{"title":["Explain this","assistant"],"content":"Briefly explain what this selected NetTAP assistant can help me do."},{"title":["Help me","decide"],"content":"I am not sure where to start. Ask me one important question at a time."}]
     expose: ["8080"]
@@ -184,6 +186,8 @@ services:
     depends_on:
       open-webui:
         condition: service_healthy
+      evidence-service:
+        condition: service_healthy
     environment:
       OPEN_WEBUI_URL: http://open-webui:8080
       WEBUI_ADMIN_EMAIL: ${WEBUI_ADMIN_EMAIL}
@@ -193,6 +197,8 @@ services:
       NETTAP_PROVISIONING_CHECKSUMS: /provision/knowledge-sources.sha256
       NETTAP_PROVISIONING_SOURCE_ROOT: /source
       NETTAP_PROVISIONING_STATE: /app/backend/data/nettap-provisioning-state.json
+      NETTAP_EVIDENCE_TOOL_URL: http://evidence-service:8081
+      EVIDENCE_API_TOKEN: ${EVIDENCE_API_TOKEN}
     volumes:
       - ./provisioning:/provision:ro
       - ./assistants:/source/assistants:ro
@@ -227,6 +233,8 @@ services:
       NETTAP_EVIDENCE_DATA_DIR: /data/files
       NETTAP_EVIDENCE_MAX_UPLOAD_BYTES: ${EVIDENCE_MAX_UPLOAD_BYTES}
       NETTAP_EVIDENCE_MAX_RECORDS: ${EVIDENCE_MAX_RECORDS}
+      NETTAP_VISIBILITY_PROFILE: ${NETTAP_VISIBILITY_PROFILE}
+      NETTAP_PACKET_EXPERT_PROFILE: ${NETTAP_PACKET_EXPERT_PROFILE}
     entrypoint: ["python", "-m", "case_service"]
     volumes:
       - ./case_service:/service/case_service:ro

@@ -23,6 +23,8 @@ if ! docker info >/dev/null 2>&1; then
   echo "ERROR: Docker Desktop is installed but its engine is not running." >&2
   exit 3
 fi
+stop_legacy_runtime_preserving_data
+prepare_canonical_admin_bootstrap
 
 available_kib="$(df -Pk "$project_dir" | awk 'NR==2 {print $4}')"
 if [[ -n "$available_kib" && "$available_kib" -lt 15728640 ]]; then

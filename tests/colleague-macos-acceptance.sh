@@ -39,7 +39,8 @@ echo "Commit: $commit"
 for port in 3000 3001 3100 3200; do
   if command -v lsof >/dev/null 2>&1 && lsof -nP -iTCP:"$port" -sTCP:LISTEN >/dev/null 2>&1; then
     existing_project="$(docker ps --filter "publish=$port" --format '{{.Label "com.docker.compose.project"}}' | head -n 1)"
-    [[ "$existing_project" == "nettap-packet-expert" ]] || \
+    [[ "$existing_project" == "nettap-network-intelligence" || \
+      "$existing_project" == "nettap-packet-expert" ]] || \
       fail "Port $port is already used by another process. Run ./scripts/inventory-macos.sh before testing."
   fi
 done
@@ -52,7 +53,7 @@ echo "Manual browser acceptance is still required at http://127.0.0.1:3000 and h
 "${project_dir}/tests/evidence-runtime-e2e.sh"
 echo "1. On a fresh volume, sign in as admin@nettap.local with the generated local credential."
 echo "2. Change it, verify the generated password fails, finalize activation, and verify the new password survives restart."
-echo "3. Confirm signup is disabled and nettap-ai:0.3.0-rc.4 is the single NetTAP runtime model."
+echo "3. Confirm signup is disabled and nettap-ai:0.3.0-rc.6 is the single NetTAP runtime model."
 echo "4. Confirm port 3000 opens Network & Visibility and port 3001 opens Packet Expert."
 echo "5. Confirm port 3200 opens Evidence Workspace and requires the generated bearer token."
 echo "6. Confirm each launcher shows only its three intended starting points."

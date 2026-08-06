@@ -16,6 +16,8 @@ docker info >/dev/null 2>&1 || {
   echo "ERROR: Docker Desktop integration is installed but its engine is not running." >&2
   exit 3
 }
+stop_legacy_runtime_preserving_data
+prepare_canonical_admin_bootstrap
 
 architecture="$(uname -m)"
 case "$architecture" in

@@ -24,8 +24,9 @@ class OpenWebUIState:
         self.files = {}
         self.models = {}
         self.skills = {}
+        self.tool_connections = []
         self.uploads = 0
-        self.rag_marker = "NETTAP-RAG-OFFLINE-PROBE-RC4"
+        self.rag_marker = "NETTAP-RAG-OFFLINE-PROBE-RC6"
         self.config = {
             "DEFAULT_MODELS": "",
             "DEFAULT_PINNED_MODELS": "",
@@ -86,6 +87,20 @@ class Handler(BaseHTTPRequestHandler):
             })
         if path == "/api/v1/configs/models":
             return self.send_json(200, self.state.config)
+        if path == "/api/v1/configs/tool_servers":
+            return self.send_json(200, {"TOOL_SERVER_CONNECTIONS": self.state.tool_connections})
+        if path == "/api/v1/tools/":
+            return self.send_json(
+                200,
+                [
+                    {
+                        "id": f"server:{(item.get('info') or {}).get('id')}",
+                        "name": (item.get("info") or {}).get("name"),
+                    }
+                    for item in self.state.tool_connections
+                    if (item.get("config") or {}).get("enable")
+                ],
+            )
         return self.send_json(404, {"detail": path})
 
     def do_POST(self):
@@ -95,7 +110,10 @@ class Handler(BaseHTTPRequestHandler):
             payload = self.read_json()
             if payload != {"email": "admin@nettap.local", "password": "Test-password-123!"}:
                 return self.send_json(401, {"detail": "bad credentials"})
-            return self.send_json(200, {"token": "test-token", "role": "admin"})
+            return self.send_json(
+                200,
+                {"id": "admin-user-id", "token": "test-token", "role": "admin"},
+            )
         if path == "/api/v1/knowledge/create":
             payload = self.read_json()
             knowledge_id = f"knowledge-{len(self.state.knowledge) + 1}"
@@ -160,6 +178,10 @@ class Handler(BaseHTTPRequestHandler):
             payload = self.read_json()
             self.state.config = payload
             return self.send_json(200, payload)
+        if path == "/api/v1/configs/tool_servers":
+            payload = self.read_json()
+            self.state.tool_connections = payload["TOOL_SERVER_CONNECTIONS"]
+            return self.send_json(200, payload)
         return self.send_json(404, {"detail": path})
 
 
@@ -175,12 +197,14 @@ class ProvisioningTest(unittest.TestCase):
         self.env.update({
             "OPEN_WEBUI_URL": f"http://127.0.0.1:{self.server.server_port}",
             "WEBUI_ADMIN_EMAIL": "admin@nettap.local",
-            "RELEASE_VERSION": "0.3.0-rc.4",
-            "NETTAP_AI_MODEL": "nettap-ai:0.3.0-rc.4",
+            "RELEASE_VERSION": "0.3.0-rc.6",
+            "NETTAP_AI_MODEL": "nettap-ai:0.3.0-rc.6",
             "NETTAP_PROVISIONING_MANIFEST": str(ROOT / "provisioning/open-webui.json"),
             "NETTAP_PROVISIONING_CHECKSUMS": str(ROOT / "provisioning/knowledge-sources.sha256"),
             "NETTAP_PROVISIONING_SOURCE_ROOT": str(ROOT),
             "NETTAP_PROVISIONING_STATE": str(self.state_path),
+            "NETTAP_EVIDENCE_TOOL_URL": "http://evidence-service:8081",
+            "EVIDENCE_API_TOKEN": "test-evidence-token-0000000000000000000000000000",
         })
 
     def tearDown(self):
@@ -189,10 +213,10 @@ class ProvisioningTest(unittest.TestCase):
         self.server.server_close()
         self.tempdir.cleanup()
 
-    def run_provisioner(self, *args, check=True):
+    def run_provisioner(self, *args, check=True, password="Test-password-123!"):
         return subprocess.run(
             ["python3", str(PROVISIONER), *args],
-            input="Test-password-123!\n",
+            input=f"{password}\n",
             text=True,
             capture_output=True,
             check=check,
@@ -211,11 +235,25 @@ class ProvisioningTest(unittest.TestCase):
         self.assertEqual(set(Handler.state.skills), {
             "nettap-network-visibility", "nettap-packet-expert"
         })
+        self.assertEqual(len(Handler.state.tool_connections), 1)
+        self.assertEqual(
+            (Handler.state.tool_connections[0]["info"])["id"], "nettap_evidence"
+        )
+        self.assertEqual(
+            Handler.state.tool_connections[0]["config"]["access_grants"],
+            [
+                {
+                    "principal_type": "user",
+                    "principal_id": "admin-user-id",
+                    "permission": "read",
+                }
+            ],
+        )
         for skill in Handler.state.skills.values():
             self.assertTrue(skill["content"].startswith("# NetTAP "))
             self.assertNotIn("\nname: nettap-", skill["content"])
         for model in Handler.state.models.values():
-            self.assertEqual(model["base_model_id"], "nettap-ai:0.3.0-rc.4")
+            self.assertEqual(model["base_model_id"], "nettap-ai:0.3.0-rc.6")
             self.assertEqual(model["params"]["function_calling"], "legacy")
             self.assertEqual(len(model["meta"]["knowledge"]), 2)
             self.assertEqual(len(model["meta"]["skillIds"]), 1)
@@ -226,6 +264,13 @@ class ProvisioningTest(unittest.TestCase):
         self.assertEqual(
             Handler.state.models["nettap-packet-expert"]["meta"]["skillIds"],
             ["nettap-packet-expert"],
+        )
+        self.assertEqual(
+            Handler.state.models["nettap-network-visibility"]["meta"]["toolIds"], []
+        )
+        self.assertEqual(
+            Handler.state.models["nettap-packet-expert"]["meta"]["toolIds"],
+            ["server:nettap_evidence"],
         )
         self.assertEqual(
             Handler.state.config["DEFAULT_PINNED_MODELS"],
@@ -261,9 +306,11 @@ class ProvisioningTest(unittest.TestCase):
             [{"group_id": "network-team", "permission": "read"}],
         )
         state = json.loads(self.state_path.read_text(encoding="utf-8"))
-        self.assertEqual(state["release_version"], "0.3.0-rc.4")
+        self.assertEqual(state["release_version"], "0.3.0-rc.6")
         self.assertEqual(state["offline_rag"]["result"], "PASS")
         self.assertEqual(set(state["skills"]), {"network_visibility", "packet_expert"})
+        self.assertNotIn("test-evidence-token", json.dumps(state))
+        self.assertEqual(state["tool_servers"]["evidence"]["binding"], "server:nettap_evidence")
         self.assertEqual(
             {item["id"]: item["skill_ids"] for item in state["assistants"]},
             {
@@ -277,6 +324,13 @@ class ProvisioningTest(unittest.TestCase):
         two = self.run_provisioner("--fingerprint").stdout.strip()
         self.assertEqual(one, two)
         self.assertRegex(one, r"^[0-9a-f]{64}$")
+
+    def test_rejected_admin_credential_has_distinct_exit_code(self):
+        result = self.run_provisioner(check=False, password="Wrong-password-123!")
+        self.assertEqual(result.returncode, 11)
+        self.assertIn("existing data volume keeps its existing password", result.stderr)
+        self.assertFalse(self.state_path.exists())
+        self.assertEqual(Handler.state.uploads, 0)
 
     def test_refuses_unmanaged_collection_name_collision(self):
         Handler.state.knowledge["operator-1"] = {
@@ -303,6 +357,27 @@ class ProvisioningTest(unittest.TestCase):
         result = self.run_provisioner(check=False)
         self.assertEqual(result.returncode, 1)
         self.assertIn("refusing to overwrite unmanaged Open WebUI Skill", result.stderr)
+        self.assertFalse(self.state_path.exists())
+        self.assertEqual(Handler.state.models, {})
+
+    def test_refuses_unmanaged_tool_server_identity_collision(self):
+        Handler.state.tool_connections = [
+            {
+                "url": "http://operator-tool:8080",
+                "path": "/openapi.json",
+                "type": "openapi",
+                "auth_type": "none",
+                "config": {"enable": True},
+                "info": {
+                    "id": "nettap_evidence",
+                    "name": "Operator-owned tool",
+                    "description": "not managed by NetTAP",
+                },
+            }
+        ]
+        result = self.run_provisioner(check=False)
+        self.assertEqual(result.returncode, 1)
+        self.assertIn("refusing to overwrite unmanaged tool server", result.stderr)
         self.assertFalse(self.state_path.exists())
         self.assertEqual(Handler.state.models, {})
 

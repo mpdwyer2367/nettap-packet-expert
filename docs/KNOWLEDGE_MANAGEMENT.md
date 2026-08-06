@@ -2,7 +2,7 @@
 
 ## Source of truth
 
-The Markdown files under `knowledge/` are the reviewable source. `provisioning/open-webui.json` defines the managed collection and profile bindings. An Open WebUI collection is a deployed copy; RC4 reconciles it automatically only when the provisioning fingerprint changes or an administrator explicitly runs the provisioning command.
+The Markdown files under `knowledge/` are the reviewable source. `provisioning/open-webui.json` defines the managed collection and profile bindings. An Open WebUI collection is a deployed copy; RC6 reconciles it automatically only when the provisioning fingerprint changes or an administrator explicitly runs the provisioning command.
 
 ## Required workflow
 

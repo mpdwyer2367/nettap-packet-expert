@@ -19,7 +19,7 @@ The legacy `scripts/nettap-packet-expert` command remains as a compatibility wra
 ## Daily checks
 
 - Confirm the expected services are healthy.
-- Confirm `nettap-ai:0.3.0-rc.4` appears in `ollama list` and is the only NetTAP model selected by the current release.
+- Confirm `nettap-ai:0.3.0-rc.6` appears in `ollama list` and is the only NetTAP model selected by the current release.
 - Confirm Ollama is not published on a host port.
 - Confirm the Open WebUI audit log is writable and rotating.
 - Confirm the embedding and provisioning state files match the current release and show an offline RAG PASS.
@@ -37,10 +37,14 @@ The legacy `scripts/nettap-packet-expert` command remains as a compatibility wra
 
 ## Data locations
 
-The Compose project retains two persistent volumes:
+The canonical `nettap-network-intelligence` Compose project retains these persistent volumes:
 
-- `nettap-packet-expert_packet-expert-open-webui-data`: accounts, chats, application settings, managed/customer knowledge, exact-revision embedding cache, provisioning state, and audit log.
-- `nettap-packet-expert_packet-expert-ollama-data`: base model, shared Network Intelligence model manifest, and any retained rollback tags.
+- `nettap-network-intelligence_packet-expert-open-webui-data`: accounts, chats, application settings, managed/customer knowledge, exact-revision embedding cache, provisioning state, and audit log.
+- `nettap-network-intelligence_packet-expert-ollama-data`: base model, shared Network Intelligence model manifest, and any retained rollback tags.
+
+Legacy `nettap-packet-expert_*` volumes are never attached automatically. The
+startup workflow stops legacy containers without deleting their volumes. Move
+legacy data only through a reviewed backup, restore, and migration procedure.
 
 The launchers are stateless. Removing or recreating the launcher container does not remove chats or models.
 

@@ -39,6 +39,10 @@ fi
 require_runtime
 [[ -f "$env_file" ]] || fail "Missing .env. Run ./scripts/start-macos.sh first."
 docker info >/dev/null 2>&1 || fail "Docker Desktop engine is not running."
+effective_project="$(deployment_project_name)"
+legacy_running="$(docker ps -q --filter "label=com.docker.compose.project=${legacy_project_name}")"
+[[ -z "$legacy_running" || "$effective_project" != "$canonical_project_name" ]] || \
+  fail "Legacy ${legacy_project_name} containers are still running beside the canonical product."
 
 nettap_model="$(load_env_value NETTAP_AI_MODEL)"
 web_port="$(load_env_value WEB_PORT)"
@@ -49,7 +53,7 @@ bind_address="$(load_env_value BIND_ADDRESS)"
 ollama_image="$(load_env_value OLLAMA_IMAGE)"
 webui_image="$(load_env_value OPEN_WEBUI_IMAGE)"
 
-[[ "$nettap_model" == "nettap-ai:0.3.0-rc.4" ]] || fail "Unexpected Network Intelligence model identity: $nettap_model"
+[[ "$nettap_model" == "nettap-ai:0.3.0-rc.6" ]] || fail "Unexpected Network Intelligence model identity: $nettap_model"
 model_rows="$("${compose[@]}" exec -T ollama ollama list)"
 legacy_models="$(printf '%s\n' "$model_rows" | awk -v current="$nettap_model" 'NR > 1 && $1 != current && ($1 ~ /^nettap-ai:/ || $1 ~ /^nettap-ai-backup-/ || $1 ~ /^nettap-packet-expert:/ || $1 ~ /^nettap-network-visibility:/) {print $1}')"
 [[ -z "$legacy_models" ]] || fail "Superseded NetTAP model tags remain in the appliance store: $legacy_models"
@@ -68,16 +72,18 @@ evidence_id="$("${compose[@]}" ps -q evidence-service)"
 
 verify_provenance() {
   local container_id="$1" service="$2" expected_image="$3"
-  local working_dir config_files actual_image state
+  local project_label working_dir config_files actual_image state
+  project_label="$(docker inspect --format '{{index .Config.Labels "com.docker.compose.project"}}' "$container_id")"
   working_dir="$(docker inspect --format '{{index .Config.Labels "com.docker.compose.project.working_dir"}}' "$container_id")"
   config_files="$(docker inspect --format '{{index .Config.Labels "com.docker.compose.project.config_files"}}' "$container_id")"
   actual_image="$(docker inspect --format '{{.Config.Image}}' "$container_id")"
   state="$(docker inspect --format '{{.State.Status}}' "$container_id")"
+  [[ "$project_label" == "$effective_project" ]] || fail "$service belongs to Compose project $project_label; expected $effective_project."
   [[ "$working_dir" == "$project_dir" ]] || fail "$service was created from $working_dir, not $project_dir. Recreate the project from the canonical directory."
   [[ "$config_files" == *"${project_dir}/compose.yaml"* && "$config_files" == *"${project_dir}/compose.local.yaml"* ]] || fail "$service uses unexpected Compose files: $config_files"
   [[ "$actual_image" == "$expected_image" ]] || fail "$service image is $actual_image; expected $expected_image."
   [[ "$state" == "running" ]] || fail "$service state is $state, not running."
-  echo "PASS: $service provenance, image, and running state"
+  echo "PASS: $service project, provenance, image, and running state"
 }
 
 verify_provenance "$ollama_id" ollama "$ollama_image"
@@ -130,7 +136,7 @@ actual_files = {
 }
 assert actual_files == expected_files
 assert aggregate.hexdigest() == embedding['aggregate_sha256']
-assert provisioning['release_version'] == '0.3.0-rc.4'
+assert provisioning['release_version'] == '0.3.0-rc.6'
 assert provisioning['offline_rag']['result'] == 'PASS'
 assert {item['id'] for item in provisioning['assistants']} == {
     'nettap-network-visibility', 'nettap-packet-expert'
@@ -144,7 +150,7 @@ assert assistant_skills == {
 }
 PY
 [[ "$(installed_provisioning_fingerprint local)" == "$(provisioning_fingerprint local)" ]] || \
-  fail "Installed provisioning fingerprint differs from the RC4 source."
+  fail "Installed provisioning fingerprint differs from the RC6 source."
 echo "PASS: pinned embedding cache, managed skills, managed assistants, and offline RAG proof"
 
 admin_count="$("${compose[@]}" exec -T open-webui python - <<'PY'

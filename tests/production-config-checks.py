@@ -14,6 +14,8 @@ local = load("compose.local.yaml")
 bootstrap = load("compose.bootstrap.yaml")
 production = load("compose.production.yaml")
 
+assert base["name"] == "nettap-network-intelligence"
+
 assert set(base["services"]) == {
     "ollama", "model-init", "rag-cache-init", "open-webui", "assistant-provisioner",
     "evidence-service"
@@ -31,6 +33,8 @@ assert local["services"]["assistant-launcher"]["ports"] == [
 assert local["services"]["assistant-launcher"]["networks"] == ["user-access"]
 assert local["services"]["assistant-launcher"]["security_opt"] == ["no-new-privileges:true"]
 assert local["services"]["assistant-launcher"]["cap_drop"] == ["ALL"]
+assert local["services"]["assistant-launcher"]["cap_add"] == ["NET_BIND_SERVICE"]
+assert local["services"]["evidence-service"]["environment"]["NETTAP_OPEN_WEBUI_PUBLIC_URL"] == "http://${BIND_ADDRESS}:${WEB_PORT}"
 assert bootstrap["services"]["ollama"]["networks"] == ["backend", "model-egress"]
 assert bootstrap["services"]["rag-cache-init"]["networks"] == ["backend", "model-egress"]
 
@@ -99,6 +103,7 @@ for key in (
     assert env[key] == "False", f"{key} must be False"
 assert env["WEBUI_AUTH"] == "True"
 assert env["WEBUI_NAME"] == "NetTAP Network Intelligence"
+assert env["PASSWORD_HASH_ALGORITHM"] == "bcrypt"
 assert env["JWT_EXPIRES_IN"] == "${JWT_EXPIRES_IN}"
 assert env["ENABLE_PERSISTENT_CONFIG"] == "False"
 assert env["OFFLINE_MODE"] == "True"
@@ -123,9 +128,9 @@ assert gateway["environment"]["NETTAP_PACKET_EXPERT_PROFILE"] == "${NETTAP_PACKE
 assert gateway["depends_on"]["evidence-service"]["condition"] == "service_healthy"
 
 env_example = (root / ".env.example").read_text(encoding="utf-8")
-assert "RELEASE_VERSION=0.3.0-rc.4" in env_example
+assert "RELEASE_VERSION=0.3.0-rc.6" in env_example
 assert "BASE_MODEL=qwen2.5:7b-instruct-q4_K_M" in env_example
-assert "NETTAP_AI_MODEL=nettap-ai:0.3.0-rc.4" in env_example
+assert "NETTAP_AI_MODEL=nettap-ai:0.3.0-rc.6" in env_example
 assert "RETIRE_LEGACY_NETTAP_MODELS=true" in env_example
 assert "EXPECTED_BASE_MODEL_ID=845dbda0ea48" in env_example
 assert "NETTAP_VISIBILITY_PROFILE=nettap-network-visibility" in env_example
@@ -133,6 +138,7 @@ assert "NETTAP_PACKET_EXPERT_PROFILE=nettap-packet-expert" in env_example
 assert "RAG_EMBEDDING_MODEL_REVISION=1110a243fdf4706b3f48f1d95db1a4f5529b4d41" in env_example
 assert "WEBUI_ADMIN_PASSWORD=GENERATE_ON_FIRST_START" in env_example
 assert "WEBUI_ADMIN_PASSWORD=admin" not in env_example
+assert "WEBUI_ADMIN_EMAIL=admin@nettap.local" in env_example
 assert "BIND_ADDRESS=127.0.0.1" in env_example
 assert "EVIDENCE_PORT=3200" in env_example
 assert "EVIDENCE_API_TOKEN=GENERATE_ON_FIRST_START" in env_example
@@ -143,6 +149,10 @@ for control in ("tls /etc/caddy/tls/tls.crt", "Strict-Transport-Security", "X-Fr
     assert control in caddy
 assert "/visibility" in caddy
 assert "/packet-expert" in caddy
+assert "/system/health" in caddy
+assert "./launchers:/srv:ro" in production["services"]["gateway"]["volumes"]
+assert "handle_path /visibility/*" in caddy
+assert "handle_path /packet-expert/*" in caddy
 assert "NETTAP_VISIBILITY_PROFILE" in caddy
 assert "NETTAP_PACKET_EXPERT_PROFILE" in caddy
 assert "NETTAP_AI_MODEL" not in caddy
@@ -153,14 +163,45 @@ launcher = (root / "config/Launcher.Caddyfile").read_text(encoding="utf-8")
 for control in (":3000", ":3001", "NETTAP_VISIBILITY_PROFILE", "NETTAP_PACKET_EXPERT_PROFILE", "Content-Security-Policy"):
     assert control in launcher
 assert "NETTAP_AI_MODEL" not in launcher
+assert "handle_path /ui/*" in launcher
+assert "reverse_proxy open-webui:8080" in launcher
+
+for page in ("network-visibility", "packet-expert"):
+    html = (root / "launchers" / page / "index.html").read_text(encoding="utf-8")
+    assert "Sign in and open this experience" in html
+    assert "admin@nettap.local" in html
+    assert "there is no shared default password" in html
+    assert "../ui/shared.css" in html
+    assert "../ui/launcher.js" in html
+    assert "<form" not in html
+    assert 'type="password"' not in html
+
+launcher_js = (root / "launchers/launcher.js").read_text(encoding="utf-8")
+for control in ("/system/health", "data-switch-experience", "data-shared-app", "data-evidence-app"):
+    assert control in launcher_js
+
+evidence_ui = (root / "case_service/web/index.html").read_text(encoding="utf-8")
+for control in ("Assistant setup", "Analyze in Packet Expert", "Validated sources", "Classic PCAP (.pcap)"):
+    assert control in evidence_ui
+evidence_js = (root / "case_service/web/app.js").read_text(encoding="utf-8")
+for control in ("/v1/configuration", "packetExpertUrl", "max_upload_bytes", "PCAPNG is not supported"):
+    assert control in evidence_js
+
+provisioner_environment = base["services"]["assistant-provisioner"]["environment"]
+assert provisioner_environment["NETTAP_EVIDENCE_TOOL_URL"] == "http://evidence-service:8081"
+assert provisioner_environment["EVIDENCE_API_TOKEN"] == "${EVIDENCE_API_TOKEN}"
+assert base["services"]["assistant-provisioner"]["depends_on"]["evidence-service"]["condition"] == "service_healthy"
 
 workflow = (root / ".github/workflows/validate.yml").read_text(encoding="utf-8")
 for profile in ("compose.local.yaml", "compose.production.yaml", "compose.bootstrap.yaml"):
     assert profile in workflow
 assert "shellcheck scripts/*.sh scripts/nettap-ai scripts/nettap-packet-expert tests/*.sh" in workflow
 assert "tests/test_case_service.py" in workflow
+assert "tests/test_recover_open_webui_admin.py" in workflow
 assert "case_service/*.py" in workflow
 assert "retire-legacy-models-mock.sh" in workflow
+assert "auth-bootstrap-mock.sh" in workflow
+assert "admin-recovery-mock.sh" in workflow
 assert "retire-legacy-models.ps1" in workflow
 assert "package-model-bundle.sh" in workflow
 assert "verify-model-bundle.sh" in workflow
@@ -168,9 +209,22 @@ assert "verify-model-bundle.sh" in workflow
 common = (root / "scripts/common.sh").read_text(encoding="utf-8")
 assert "retire_legacy_models_if_enabled" in common
 assert 'RETIRE_LEGACY_NETTAP_MODELS "true"' in common
+assert 'canonical_project_name="nettap-network-intelligence"' in common
+assert 'printf \'%s\\n\' "${COMPOSE_PROJECT_NAME:-$canonical_project_name}"' in common
+assert "stop_legacy_runtime_preserving_data" in common
+assert "prepare_canonical_admin_bootstrap" in common
+
+admin_recovery = (root / "scripts/recover_open_webui_admin.py").read_text(encoding="utf-8")
+for control in ("bcrypt.hashpw", "BEGIN IMMEDIATE"):
+    assert control in admin_recovery
+recovery_entrypoint = (root / "scripts/recover-admin.sh").read_text(encoding="utf-8")
+for control in ("source.backup", "WEBUI_SECRET_KEY", "--force-recreate open-webui"):
+    assert control in recovery_entrypoint
+assert "--password" not in recovery_entrypoint
+assert "--password" not in admin_recovery
 
 runtime_verifier = (root / "scripts/verify-production-deployment.sh").read_text(encoding="utf-8")
-for control in (".Config.Image", "no-new-privileges:true", "EXPECTED_BASE_MODEL_ID", "NetTAP AI model ID", "strict-transport-security"):
+for control in ("com.docker.compose.project", ".Config.Image", "no-new-privileges:true", "EXPECTED_BASE_MODEL_ID", "NetTAP AI model ID", "strict-transport-security"):
     assert control in runtime_verifier
 assert "evidence-runtime-e2e.sh" in runtime_verifier
 

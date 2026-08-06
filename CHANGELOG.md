@@ -1,11 +1,24 @@
 # Changelog
 
-## Unreleased — evidence citation integrity
+## 0.3.0-rc.6 validated evidence integration candidate — 2026-08-06
 
+- Added an Evidence Workspace configuration page with explicit parser capabilities, limits, assistant integration status, and source-specific upload guidance.
+- Added authenticated deterministic case inventory and minimized-context APIs plus a read-only OpenAPI tool binding for Packet Expert.
+- Provisioned the evidence tool automatically for the administrator while keeping Network & Visibility isolated from it.
+- Added professional evidence-report instructions, provenance fields, parser validation tests, and an RC6-specific provisioning fingerprint.
 - Added evidence database schema v2 with additive migration from schema v1.
 - Added typed citations for evidence manifests, exact normalized observations, and SHA-256-bound deterministic analysis artifacts.
 - Added an audited, case-scoped read-only citation resolver and one-click citation inspection in the Evidence Workspace.
 - Added negative cross-case citation tests and documented the citation trust boundary and remaining release gates.
+
+## 0.3.0-rc.5 unified product experience candidate — 2026-08-05
+
+- Added polished, responsive Network & Visibility and Packet Expert welcome pages with clear capability boundaries, guided starts, real application-readiness indication, and direct experience switching.
+- Made the same branded pages available through the production TLS gateway at `/visibility/` and `/packet-expert/`.
+- Clarified the one-account authentication workflow without adding a second credential store: the welcome pages never accept credentials, and Open WebUI remains authoritative for login, roles, sessions, password changes, and access control.
+- Kept one `nettap-ai:0.3.0-rc.5` Ollama model manifest over one Qwen2.5 7B weight set; both managed Workspace Models retain separate prompts, Skills, RAG knowledge, suggestions, and permissions.
+- Updated macOS, Windows/WSL2, migration, architecture, authentication, operations, validation, and release-candidate records for RC5.
+- Retained fail-closed production and commercial gates pending exact-build runtime, security, signing, legal, support, and commercial acceptance.
 
 ## 0.3.0-rc.4 one-model replacement and canonical naming candidate — 2026-08-05
 

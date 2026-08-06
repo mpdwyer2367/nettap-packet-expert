@@ -8,6 +8,8 @@ require_runtime
 initialize_env
 set_env_value DEPLOYMENT_MODE production
 docker info >/dev/null 2>&1 || { echo "ERROR: Docker engine is not running." >&2; exit 3; }
+stop_legacy_runtime_preserving_data
+prepare_canonical_admin_bootstrap
 
 [[ -f "${project_dir}/config/tls/tls.crt" && -f "${project_dir}/config/tls/tls.key" ]] || {
   echo "ERROR: Production TLS is not configured. Run ./scripts/configure-production.sh." >&2
@@ -15,7 +17,9 @@ docker info >/dev/null 2>&1 || { echo "ERROR: Docker engine is not running." >&2
 }
 require_digest_pins
 
-if [[ ! -f "$admin_finalized_file" ]]; then
+effective_project="$(deployment_project_name)"
+if [[ ! -f "$admin_finalized_file" ]] || \
+  ! grep -Fqx "Compose project: $effective_project" "$admin_finalized_file"; then
   echo "Production access is blocked until the generated administrator credential is changed and finalized."
   initialize_model_with_temporary_egress bootstrap-local
   web_port="$(load_env_value WEB_PORT)"
