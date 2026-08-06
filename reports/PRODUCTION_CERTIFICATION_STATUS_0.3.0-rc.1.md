@@ -14,10 +14,11 @@ evidence. Earlier 0.2.0-rc.1 reports do not attest this candidate.
 
 - Fresh macOS physical-host deployment and model-behavior report: pending.
 - Fresh Windows physical-host deployment and model-behavior report: pending.
-- Backup/restore rehearsal: **PASS** on a physical macOS host for source
-  revision `aff27eee758fc3cce8726005c2527dcca797e91d`; see the
-  [recovery report](BACKUP_RESTORE_VALIDATION_2026-08-05.md). Physical Windows
-  recovery evidence remains pending.
+- Backup/restore mechanism: **PASS with qualification** on a physical macOS
+  host for source revision `aff27eee758fc3cce8726005c2527dcca797e91d`; see the
+  [recovery report](BACKUP_RESTORE_VALIDATION_2026-08-05.md). The stable Compose
+  namespace was attached to a newer migration deployment, so clean isolated
+  candidate and physical Windows recovery evidence remain pending.
 - Immutable image locks and SBOM/CVE review: pending.
 - Independent penetration, legal, support, and release approvals: pending.
 

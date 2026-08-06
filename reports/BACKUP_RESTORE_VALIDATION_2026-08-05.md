@@ -16,6 +16,14 @@ The test ran on a physical Apple Silicon host with:
 The evidence-only documentation commit that adds this report does not change
 the deployment, backup, restore, or test implementation exercised above.
 
+Post-run container attribution showed that the source volumes were attached to
+the newer RC5 worktree, which intentionally retains the stable
+`nettap-packet-expert` Compose project name for in-place migration. The command
+therefore validates this revision's two-volume archive, checksum, and
+non-overwriting restore mechanism against the migration volumes. It is not a
+clean isolated `0.3.0-rc.1` deployment result and it does not exercise the
+newer RC5 evidence-service volume.
+
 ## Procedure and result
 
 Command:
@@ -24,7 +32,8 @@ Command:
 ./tests/backup-restore-e2e.sh
 ```
 
-Result: **PASS**.
+Result: **PASS for the two-volume recovery mechanism; isolated candidate
+acceptance remains pending**.
 
 The test:
 
@@ -43,6 +52,7 @@ were not included in this report.
 
 ## Limitations
 
-This is macOS recovery evidence only. It does not satisfy the required physical
-Windows 11, WSL2, and Docker Desktop runtime gate, and it does not grant
-production or commercial approval.
+This is qualified macOS recovery evidence only. A clean isolated candidate
+rehearsal is still required. It does not satisfy the required physical Windows
+11, WSL2, and Docker Desktop runtime gate, validate RC5's additional evidence
+volume, or grant production or commercial approval.

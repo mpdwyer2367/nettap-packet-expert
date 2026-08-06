@@ -18,7 +18,7 @@
 | Supported Compose profile rendering | Automated in GitHub Actions |
 | Immutable image locking | Implemented; release evidence pending |
 | SBOM and HIGH/CRITICAL CVE gate | Implemented; release scan pending |
-| Backup and non-overwriting restore | **PASS on physical macOS**; [recovery report](../reports/BACKUP_RESTORE_VALIDATION_2026-08-05.md); Windows recovery pending |
+| Backup and non-overwriting restore | **Mechanism PASS with shared migration-volume qualification**; [recovery report](../reports/BACKUP_RESTORE_VALIDATION_2026-08-05.md); clean isolated candidate and Windows recovery pending |
 | macOS production runtime | Pending physical-host report |
 | Windows production runtime | Pending physical-host report |
 | Browser/manual acceptance | Pending exact release build |

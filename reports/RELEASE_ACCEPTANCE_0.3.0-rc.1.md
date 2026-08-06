@@ -9,7 +9,7 @@
 | Source validation | PASS in GitHub Actions for source revision `aff27eee758fc3cce8726005c2527dcca797e91d` |
 | macOS runtime | Pending fresh-host evidence |
 | Windows runtime | Pending fresh-host evidence |
-| Backup/restore | PASS on physical macOS for source revision `aff27eee758fc3cce8726005c2527dcca797e91d`; Windows recovery pending |
+| Backup/restore | Mechanism PASS with shared migration-volume qualification for source revision `aff27eee758fc3cce8726005c2527dcca797e91d`; clean isolated candidate and Windows recovery pending |
 
 Release disposition: **EVALUATION ONLY**.
 
