@@ -146,6 +146,7 @@ Never merge Open WebUI SQLite files or mount one SQLite volume into multiple run
 ./scripts/nettap-ai help
 ./scripts/nettap-ai status
 ./scripts/nettap-ai health
+./scripts/nettap-ai recover-admin --confirm
 ./scripts/nettap-ai update-models --confirm
 ./scripts/nettap-ai retire-old-models
 ./scripts/nettap-ai retire-old-models --confirm

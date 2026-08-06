@@ -88,7 +88,12 @@ Run `./scripts/nettap-ai update-models --confirm` and inspect `ollama list` for 
 
 ### Existing login fails
 
-Do not expect the generated bootstrap credential to reset a populated volume. Follow [authentication](AUTHENTICATION.md) and preserve the database before any approved recovery action.
+Do not expect the generated bootstrap credential to reset a populated volume.
+Run `./scripts/recover-admin.sh --confirm`; it preserves a database backup,
+recovers the single administrator under the canonical non-personal identity,
+rotates sessions, and produces a new one-time credential. Then rerun the
+platform start command and complete normal password replacement and
+finalization. Follow [authentication](AUTHENTICATION.md) for the full boundary.
 
 ### Live telemetry appears unavailable
 

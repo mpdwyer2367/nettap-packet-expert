@@ -78,7 +78,26 @@ value is written back to `.env` or stored in the provisioning state. A rejected
 retry stops installation without resetting accounts, chats, settings, or
 knowledge.
 
-If access is lost, create a verified backup and follow the official Open WebUI password-reset procedure. Never delete `webui.db` as an access workaround; that can remove accounts, chats, settings, and knowledge.
+If the canonical volume rejects the expected credential, run the supported
+recovery workflow from the deployment directory:
+
+```bash
+./scripts/recover-admin.sh --confirm
+./scripts/start-macos.sh
+```
+
+Use `./scripts/start-wsl2.sh` for Windows/WSL2. Recovery requires exactly one
+administrator, creates a protected SQLite backup under `backups/`, changes that
+account to the canonical non-personal identity, generates a new one-time local
+credential, rotates the WebUI session secret, and invalidates existing
+sessions. It does not delete chats, knowledge, model data, cases, or volumes.
+After startup succeeds, sign in with the new local credential, change it,
+verify the generated value fails, and finalize normally.
+
+If the database contains zero or multiple administrators, recovery fails
+without changing the database. Escalate to the reviewed official Open WebUI
+password-reset procedure. Never delete `webui.db` as an access workaround;
+that can remove accounts, chats, settings, and knowledge.
 
 ## Production account policy
 

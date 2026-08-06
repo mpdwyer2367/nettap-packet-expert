@@ -55,6 +55,11 @@ grep -q 'canonical_project_name="nettap-network-intelligence"' "$project_dir/scr
 grep -q 'deployment_project_name()' "$project_dir/scripts/common.sh"
 grep -q 'stop_legacy_runtime_preserving_data' "$project_dir/scripts/start-macos.sh"
 grep -q 'prepare_canonical_admin_bootstrap' "$project_dir/scripts/start-macos.sh"
+grep -q 'PASSWORD_HASH_ALGORITHM: bcrypt' "$project_dir/compose.yaml"
+grep -q 'recover-admin)' "$project_dir/scripts/nettap-ai"
+grep -q 'source.backup' "$project_dir/scripts/recover-admin.sh"
+grep -q 'bcrypt.hashpw' "$project_dir/scripts/recover_open_webui_admin.py"
+grep -q 'set_env_value WEBUI_SECRET_KEY' "$project_dir/scripts/recover-admin.sh"
 grep -q 'ENABLE_SIGNUP: "False"' "$project_dir/compose.yaml"
 grep -q 'WEBUI_NAME: "NetTAP Network Intelligence"' "$project_dir/compose.yaml"
 grep -q 'nettap-network-intelligence-admin-activation-rc5' "$project_dir/compose.yaml"
@@ -99,7 +104,8 @@ required_files=(
   docs/RC3_ACCEPTANCE_PLAN.md docs/RC4_ACCEPTANCE_PLAN.md docs/RC5_ACCEPTANCE_PLAN.md
   docs/EVIDENCE_CASE_SERVICE.md
   docs/NAMING_CONVENTIONS.md
-  scripts/backup.sh scripts/restore.sh scripts/lock-images.sh
+  scripts/backup.sh scripts/restore.sh scripts/lock-images.sh scripts/recover-admin.sh
+  scripts/recover_open_webui_admin.py
   scripts/provision-assistants.sh
   scripts/security-scan.sh scripts/production-preflight.sh
   scripts/verify-production-deployment.sh scripts/package-release.sh
@@ -115,11 +121,13 @@ required_files=(
   tests/native-model-installer-mock.sh
   tests/retire-legacy-models-mock.sh
   tests/auth-bootstrap-mock.sh
+  tests/admin-recovery-mock.sh
   tests/provisioning-fingerprint-output-mock.sh
   tests/fixtures/normalized-pcap.json tests/fixtures/normalized-logs.jsonl
   tests/fixtures/normalized-ipfix.jsonl
   tests/production-config-checks.py
   tests/test_provision_open_webui.py tests/test_verify_archive_tree.py tests/test_case_service.py
+  tests/test_recover_open_webui_admin.py
   reports/PRODUCTION_CERTIFICATION_STATUS_0.2.0-rc.1.md
   reports/RELEASE_ACCEPTANCE_0.2.0-rc.1.md
   reports/PRODUCTION_CERTIFICATION_STATUS_0.3.0-rc.2.md

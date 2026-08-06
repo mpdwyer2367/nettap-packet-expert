@@ -101,6 +101,7 @@ for key in (
     assert env[key] == "False", f"{key} must be False"
 assert env["WEBUI_AUTH"] == "True"
 assert env["WEBUI_NAME"] == "NetTAP Network Intelligence"
+assert env["PASSWORD_HASH_ALGORITHM"] == "bcrypt"
 assert env["JWT_EXPIRES_IN"] == "${JWT_EXPIRES_IN}"
 assert env["ENABLE_PERSISTENT_CONFIG"] == "False"
 assert env["OFFLINE_MODE"] == "True"
@@ -182,9 +183,11 @@ for profile in ("compose.local.yaml", "compose.production.yaml", "compose.bootst
     assert profile in workflow
 assert "shellcheck scripts/*.sh scripts/nettap-ai scripts/nettap-packet-expert tests/*.sh" in workflow
 assert "tests/test_case_service.py" in workflow
+assert "tests/test_recover_open_webui_admin.py" in workflow
 assert "case_service/*.py" in workflow
 assert "retire-legacy-models-mock.sh" in workflow
 assert "auth-bootstrap-mock.sh" in workflow
+assert "admin-recovery-mock.sh" in workflow
 assert "retire-legacy-models.ps1" in workflow
 assert "package-model-bundle.sh" in workflow
 assert "verify-model-bundle.sh" in workflow
@@ -196,6 +199,15 @@ assert 'canonical_project_name="nettap-network-intelligence"' in common
 assert 'printf \'%s\\n\' "${COMPOSE_PROJECT_NAME:-$canonical_project_name}"' in common
 assert "stop_legacy_runtime_preserving_data" in common
 assert "prepare_canonical_admin_bootstrap" in common
+
+admin_recovery = (root / "scripts/recover_open_webui_admin.py").read_text(encoding="utf-8")
+for control in ("bcrypt.hashpw", "BEGIN IMMEDIATE"):
+    assert control in admin_recovery
+recovery_entrypoint = (root / "scripts/recover-admin.sh").read_text(encoding="utf-8")
+for control in ("source.backup", "WEBUI_SECRET_KEY", "--force-recreate open-webui"):
+    assert control in recovery_entrypoint
+assert "--password" not in recovery_entrypoint
+assert "--password" not in admin_recovery
 
 runtime_verifier = (root / "scripts/verify-production-deployment.sh").read_text(encoding="utf-8")
 for control in ("com.docker.compose.project", ".Config.Image", "no-new-privileges:true", "EXPECTED_BASE_MODEL_ID", "NetTAP AI model ID", "strict-transport-security"):

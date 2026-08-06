@@ -13,4 +13,10 @@ legacy NetTAP containers without deleting their volumes and never silently
 attaches an older account database to a fresh product installation. Existing
 customer data enters the product only through an explicit, reviewed migration.
 
+Administrator recovery requires explicit confirmation, a running local Open
+WebUI service, and exactly one administrator. It creates a protected database
+backup before changing identity or password, generates the recovery credential
+locally, invalidates existing sessions, and never accepts a password on the
+command line.
+
 Version `0.3.0-rc.5` has production-hardening and profile-isolation controls but has not completed production or commercial certification. See [the security boundary](docs/SECURITY.md), [threat model](docs/THREAT_MODEL.md), and [release gates](docs/COMMERCIAL_RELEASE_GATES.md).

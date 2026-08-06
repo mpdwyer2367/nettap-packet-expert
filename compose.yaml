@@ -96,6 +96,7 @@ services:
       DEFAULT_USER_ROLE: pending
       ENABLE_PASSWORD_VALIDATION: "True"
       ENABLE_PASSWORD_CHANGE_FORM: "True"
+      PASSWORD_HASH_ALGORITHM: bcrypt
       JWT_EXPIRES_IN: ${JWT_EXPIRES_IN}
       PASSWORD_VALIDATION_REGEX_PATTERN: '^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^\w\s]).{12,72}$$'
       PASSWORD_VALIDATION_HINT: "Use 12-72 characters with upper, lower, number, and symbol."
