@@ -289,7 +289,7 @@ PY
 }
 
 provision_assistants() {
-  local mode="$1" desired actual password provision_status
+  local mode="$1" desired actual password provision_status admin_email entered_email
   local -a selected=("${compose_local[@]}")
   if [[ "$mode" == production ]]; then selected=("${compose_production[@]}"); fi
   desired="$(provisioning_fingerprint "$mode")"
@@ -299,6 +299,7 @@ provision_assistants() {
     return 0
   fi
 
+  admin_email="$(load_env_value WEBUI_ADMIN_EMAIL)"
   password="$(load_env_value WEBUI_ADMIN_PASSWORD)"
   if [[ -z "$password" || "$password" == BOOTSTRAP_RETIRED || "$password" == GENERATE_ON_FIRST_START ]]; then
     [[ -t 0 ]] || {
@@ -306,12 +307,17 @@ provision_assistants() {
       echo "Run ./scripts/provision-assistants.sh --confirm from an interactive terminal." >&2
       return 7
     }
+    printf 'Current Open WebUI administrator email [%s]: ' "$admin_email" >&2
+    IFS= read -r entered_email
+    if [[ -n "$entered_email" ]]; then admin_email="$entered_email"; fi
     printf 'Current Open WebUI administrator password: ' >&2
     IFS= read -r -s password
     printf '\n' >&2
   fi
   [[ -n "$password" ]] || { echo "ERROR: Administrator password is empty." >&2; return 7; }
-  if printf '%s\n' "$password" | "${selected[@]}" --profile provision run --rm -T assistant-provisioner; then
+  [[ -n "$admin_email" ]] || { echo "ERROR: Administrator email is empty." >&2; return 7; }
+  if printf '%s\n' "$password" | "${selected[@]}" --profile provision run --rm -T \
+    -e "WEBUI_ADMIN_EMAIL=$admin_email" assistant-provisioner; then
     provision_status=0
   else
     provision_status=$?
@@ -319,16 +325,21 @@ provision_assistants() {
   if [[ $provision_status -eq 11 ]]; then
     unset password
     [[ -t 0 ]] || {
-      echo "ERROR: The stored bootstrap password does not match this existing Open WebUI volume." >&2
-      echo "Run ./scripts/provision-assistants.sh --confirm from an interactive terminal and enter the current administrator password." >&2
+      echo "ERROR: The stored bootstrap identity does not match this existing Open WebUI volume." >&2
+      echo "Run ./scripts/provision-assistants.sh --confirm from an interactive terminal and enter the current administrator email and password." >&2
       return 7
     }
-    echo "The existing Open WebUI volume retained a different administrator password." >&2
+    echo "The existing Open WebUI volume retained a different administrator identity." >&2
+    printf 'Current Open WebUI administrator email [%s]: ' "$admin_email" >&2
+    IFS= read -r entered_email
+    if [[ -n "$entered_email" ]]; then admin_email="$entered_email"; fi
+    [[ -n "$admin_email" ]] || { echo "ERROR: Administrator email is empty." >&2; return 7; }
     printf 'Current Open WebUI administrator password: ' >&2
     IFS= read -r -s password
     printf '\n' >&2
     [[ -n "$password" ]] || { echo "ERROR: Administrator password is empty." >&2; return 7; }
-    if printf '%s\n' "$password" | "${selected[@]}" --profile provision run --rm -T assistant-provisioner; then
+    if printf '%s\n' "$password" | "${selected[@]}" --profile provision run --rm -T \
+      -e "WEBUI_ADMIN_EMAIL=$admin_email" assistant-provisioner; then
       provision_status=0
     else
       provision_status=$?
@@ -337,7 +348,7 @@ provision_assistants() {
   unset password
   if [[ $provision_status -ne 0 ]]; then
     if [[ $provision_status -eq 11 ]]; then
-      echo "ERROR: Open WebUI rejected the current administrator password." >&2
+      echo "ERROR: Open WebUI rejected the current administrator email or password." >&2
     else
       echo "ERROR: Automatic assistant and offline RAG provisioning failed; review the provisioner error above." >&2
     fi

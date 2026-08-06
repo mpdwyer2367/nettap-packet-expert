@@ -220,10 +220,14 @@ $actualFingerprint = Select-ProvisioningFingerprint -OutputLines $actualFingerpr
 
 if ($actualFingerprint -ne $desiredFingerprint) {
     $adminPassword = ''
+    $adminEmail = 'admin@nettap.local'
     foreach ($line in [System.IO.File]::ReadAllLines($envPath)) {
         if ($line -match '^WEBUI_ADMIN_PASSWORD=(.+)$') { $adminPassword = $Matches[1] }
+        if ($line -match '^WEBUI_ADMIN_EMAIL=(.+)$') { $adminEmail = $Matches[1] }
     }
     if ([string]::IsNullOrWhiteSpace($adminPassword) -or $adminPassword -eq 'BOOTSTRAP_RETIRED' -or $adminPassword -eq 'GENERATE_ON_FIRST_START') {
+        $enteredEmail = Read-Host "Current Open WebUI administrator email [$adminEmail]"
+        if (-not [string]::IsNullOrWhiteSpace($enteredEmail)) { $adminEmail = $enteredEmail }
         $securePassword = Read-Host 'Current Open WebUI administrator password' -AsSecureString
         $passwordPointer = [Runtime.InteropServices.Marshal]::SecureStringToBSTR($securePassword)
         try {
@@ -233,11 +237,13 @@ if ($actualFingerprint -ne $desiredFingerprint) {
             [Runtime.InteropServices.Marshal]::ZeroFreeBSTR($passwordPointer)
         }
     }
-    $adminPassword | docker @compose --profile provision run --rm -T assistant-provisioner
+    $adminPassword | docker @compose --profile provision run --rm -T -e "WEBUI_ADMIN_EMAIL=$adminEmail" assistant-provisioner
     $provisionExitCode = $LASTEXITCODE
     if ($provisionExitCode -eq 11) {
         $adminPassword = $null
-        Write-Host 'The existing Open WebUI volume retained a different administrator password.'
+        Write-Host 'The existing Open WebUI volume retained a different administrator identity.'
+        $enteredEmail = Read-Host "Current Open WebUI administrator email [$adminEmail]"
+        if (-not [string]::IsNullOrWhiteSpace($enteredEmail)) { $adminEmail = $enteredEmail }
         $securePassword = Read-Host 'Current Open WebUI administrator password' -AsSecureString
         $passwordPointer = [Runtime.InteropServices.Marshal]::SecureStringToBSTR($securePassword)
         try {
@@ -246,12 +252,12 @@ if ($actualFingerprint -ne $desiredFingerprint) {
         finally {
             [Runtime.InteropServices.Marshal]::ZeroFreeBSTR($passwordPointer)
         }
-        $adminPassword | docker @compose --profile provision run --rm -T assistant-provisioner
+        $adminPassword | docker @compose --profile provision run --rm -T -e "WEBUI_ADMIN_EMAIL=$adminEmail" assistant-provisioner
         $provisionExitCode = $LASTEXITCODE
     }
     $adminPassword = $null
     if ($provisionExitCode -eq 11) {
-        throw 'Open WebUI rejected the current administrator password.'
+        throw 'Open WebUI rejected the current administrator email or password.'
     }
     if ($provisionExitCode -ne 0) {
         throw 'Automatic assistant and offline RAG provisioning failed.'

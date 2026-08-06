@@ -48,9 +48,10 @@ if provision_assistants local 2>"$failure_dir/stderr"; then
   echo 'ERROR: A rejected administrator credential was accepted.' >&2
   exit 1
 fi
-grep -Fq 'stored bootstrap password does not match this existing Open WebUI volume' "$failure_dir/stderr"
+grep -Fq 'stored bootstrap identity does not match this existing Open WebUI volume' "$failure_dir/stderr"
+grep -Fq 'administrator email and password' "$failure_dir/stderr"
 grep -Fq 'from an interactive terminal' "$failure_dir/stderr"
 
 echo 'PASS: provisioning fingerprint extraction ignores helper output and rejects ambiguous values.'
 echo 'PASS: assistant provisioner failures retain their actionable error instead of becoming fingerprint mismatches.'
-echo 'PASS: existing-volume credential rejection requests the current password without resetting account data.'
+echo 'PASS: existing-volume credential rejection requests the current administrator identity without resetting account data.'
