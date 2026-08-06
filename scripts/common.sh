@@ -206,19 +206,48 @@ recover_failed_model_initialization() {
     fi
   fi
   echo "ERROR: Model initialization failed. Temporary registry egress was removed; any prior runtime restart was attempted." >&2
+  echo "Recovery: correct the reported cause, then rerun the platform start command. Cached model downloads are reused." >&2
   exit 9
 }
 
+extract_provisioning_fingerprint() {
+  local line candidate=""
+  while IFS= read -r line || [[ -n "$line" ]]; do
+    line="${line%$'\r'}"
+    if [[ ${#line} -eq 64 && "$line" != *[!0-9a-f]* ]]; then
+      if [[ -n "$candidate" && "$candidate" != "$line" ]]; then
+        echo "ERROR: Conflicting provisioning fingerprints were returned by Docker Compose." >&2
+        return 7
+      fi
+      candidate="$line"
+    fi
+  done
+  [[ -n "$candidate" ]] || return 1
+  printf '%s\n' "$candidate"
+}
+
 provisioning_fingerprint() {
+  local raw fingerprint
   local -a selected=("${compose_local[@]}")
   if [[ "$1" == production ]]; then selected=("${compose_production[@]}"); fi
-  "${selected[@]}" --profile provision run --rm --no-deps assistant-provisioner --fingerprint
+  if ! raw="$("${selected[@]}" --profile provision run --rm --no-deps assistant-provisioner --fingerprint 2>&1)"; then
+    printf '%s\n' "$raw" >&2
+    echo "ERROR: Unable to calculate the assistant provisioning fingerprint." >&2
+    return 7
+  fi
+  if ! fingerprint="$(printf '%s\n' "$raw" | extract_provisioning_fingerprint)"; then
+    printf '%s\n' "$raw" >&2
+    echo "ERROR: Docker Compose did not return one valid assistant provisioning fingerprint." >&2
+    return 7
+  fi
+  printf '%s\n' "$fingerprint"
 }
 
 installed_provisioning_fingerprint() {
+  local raw fingerprint status
   local -a selected=("${compose_local[@]}")
   if [[ "$1" == production ]]; then selected=("${compose_production[@]}"); fi
-  "${selected[@]}" exec -T open-webui python - <<'PY'
+  if ! raw="$("${selected[@]}" exec -T open-webui python - 2>&1 <<'PY'
 import json
 from pathlib import Path
 path = Path('/app/backend/data/nettap-provisioning-state.json')
@@ -227,6 +256,21 @@ try:
 except (OSError, ValueError):
     print('')
 PY
+)"; then
+    printf '%s\n' "$raw" >&2
+    echo "ERROR: Unable to read the installed assistant provisioning fingerprint." >&2
+    return 7
+  fi
+  if fingerprint="$(printf '%s\n' "$raw" | extract_provisioning_fingerprint)"; then
+    printf '%s\n' "$fingerprint"
+  else
+    status=$?
+    if [[ $status -eq 1 ]]; then
+      printf '\n'
+    else
+      return "$status"
+    fi
+  fi
 }
 
 provision_assistants() {
@@ -257,6 +301,8 @@ provision_assistants() {
   actual="$(installed_provisioning_fingerprint "$mode")"
   [[ "$actual" == "$desired" ]] || {
     echo "ERROR: Assistant provisioning state does not match the release fingerprint." >&2
+    echo "Expected fingerprint: $desired" >&2
+    echo "Installed fingerprint: ${actual:-<unavailable>}" >&2
     return 7
   }
 }

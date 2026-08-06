@@ -23,6 +23,8 @@ jobs:
         run: ./tests/native-model-installer-mock.sh
       - name: Test legacy model retirement safeguards
         run: ./tests/retire-legacy-models-mock.sh
+      - name: Test Compose fingerprint output handling
+        run: ./tests/provisioning-fingerprint-output-mock.sh
       - name: Test Open WebUI provisioning contract
         run: python3 -m unittest -v tests/test_provision_open_webui.py tests/test_verify_archive_tree.py tests/test_case_service.py
       - name: Compile provisioning code
