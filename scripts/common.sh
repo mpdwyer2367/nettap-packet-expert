@@ -210,6 +210,21 @@ recover_failed_model_initialization() {
   exit 9
 }
 
+recover_failed_assistant_provisioning() {
+  local mode="$1"
+  if [[ "$mode" == production ]]; then
+    "${compose_production_bootstrap[@]}" down >/dev/null 2>&1 || true
+    "${compose_production[@]}" up -d ollama open-webui || true
+  else
+    "${compose_local_bootstrap[@]}" down >/dev/null 2>&1 || true
+    "${compose_local[@]}" up -d ollama open-webui || true
+  fi
+  echo "ERROR: Assistant provisioning failed. Temporary registry egress was removed." >&2
+  echo "Core Ollama and Open WebUI services were restarted for diagnosis; assistant launchers remain disabled." >&2
+  echo "Correct the provisioning error shown above, then rerun the platform start command. Cached model downloads are reused." >&2
+  exit 10
+}
+
 extract_provisioning_fingerprint() {
   local line candidate=""
   while IFS= read -r line || [[ -n "$line" ]]; do
@@ -296,7 +311,11 @@ provision_assistants() {
     printf '\n' >&2
   fi
   [[ -n "$password" ]] || { echo "ERROR: Administrator password is empty." >&2; return 7; }
-  printf '%s\n' "$password" | "${selected[@]}" --profile provision run --rm -T assistant-provisioner
+  if ! printf '%s\n' "$password" | "${selected[@]}" --profile provision run --rm -T assistant-provisioner; then
+    unset password
+    echo "ERROR: Automatic assistant and offline RAG provisioning failed; review the provisioner error above." >&2
+    return 7
+  fi
   unset password
   actual="$(installed_provisioning_fingerprint "$mode")"
   [[ "$actual" == "$desired" ]] || {
@@ -339,7 +358,7 @@ initialize_model_with_temporary_egress() {
       "${compose_local_bootstrap[@]}" down || recover_failed_model_initialization local "$was_running"
       "${compose_local[@]}" up -d ollama open-webui
       record_model_identity local
-      provision_assistants local || recover_failed_model_initialization local "$was_running"
+      provision_assistants local || recover_failed_assistant_provisioning local
       "${compose_local[@]}" up -d assistant-launcher evidence-service
       retire_legacy_models_if_enabled || recover_failed_model_initialization local "$was_running"
       ;;
@@ -355,7 +374,7 @@ initialize_model_with_temporary_egress() {
       "${compose_production_bootstrap[@]}" down || recover_failed_model_initialization production "$was_running"
       "${compose_production[@]}" up -d ollama open-webui
       record_model_identity production
-      provision_assistants production || recover_failed_model_initialization production "$was_running"
+      provision_assistants production || recover_failed_assistant_provisioning production
       retire_legacy_models_if_enabled || recover_failed_model_initialization production "$was_running"
       ;;
     *)
