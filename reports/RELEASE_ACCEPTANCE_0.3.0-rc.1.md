@@ -6,9 +6,10 @@
 | Base model | `qwen3:8b` |
 | Expected base-model ID | `500a1f067a9f` |
 | Custom model | `nettap-packet-expert:latest` |
-| Source validation | Pending until CI and local checks pass on the committed revision |
+| Source validation | PASS in GitHub Actions for source revision `aff27eee758fc3cce8726005c2527dcca797e91d` |
 | macOS runtime | Pending fresh-host evidence |
 | Windows runtime | Pending fresh-host evidence |
+| Backup/restore | PASS on physical macOS for source revision `aff27eee758fc3cce8726005c2527dcca797e91d`; Windows recovery pending |
 
 Release disposition: **EVALUATION ONLY**.
 
