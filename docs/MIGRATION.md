@@ -87,6 +87,7 @@ Manually verify:
 - port 3000 opens Network & Visibility;
 - port 3001 opens Packet Expert;
 - port 3100 is one shared Open WebUI;
+- port 3200 is the separate authenticated Evidence Workspace;
 - assistant switching does not require a second login;
 - existing chats and accounts remain available;
 - both profiles use the same `nettap-ai:0.3.0-rc.3` runtime model;

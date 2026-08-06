@@ -18,6 +18,8 @@ services:
     depends_on:
       open-webui:
         condition: service_healthy
+      evidence-service:
+        condition: service_healthy
     environment:
       APPLIANCE_HOSTNAME: ${APPLIANCE_HOSTNAME}
       NETTAP_VISIBILITY_PROFILE: ${NETTAP_VISIBILITY_PROFILE}

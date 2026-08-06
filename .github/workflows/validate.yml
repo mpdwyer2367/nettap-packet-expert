@@ -22,9 +22,9 @@ jobs:
       - name: Test native model installer verification
         run: ./tests/native-model-installer-mock.sh
       - name: Test Open WebUI provisioning contract
-        run: python3 -m unittest -v tests/test_provision_open_webui.py tests/test_verify_archive_tree.py
+        run: python3 -m unittest -v tests/test_provision_open_webui.py tests/test_verify_archive_tree.py tests/test_case_service.py
       - name: Compile provisioning code
-        run: python3 -m py_compile provisioning/*.py scripts/verify-archive-tree.py
+        run: python3 -m py_compile provisioning/*.py case_service/*.py scripts/verify-archive-tree.py
       - name: Render supported Compose profiles
         run: |
           docker compose --env-file .env.example \

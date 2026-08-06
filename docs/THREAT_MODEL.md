@@ -31,7 +31,7 @@ Administrator credentials, application secrets, customer chats, uploaded evidenc
 - Open WebUI administrator is highly privileged inside the instance.
 - Password activation includes a human confirmation because the upstream UI does not provide a complete forced-first-login state for this deployment.
 - A 7B model can produce incorrect or inconsistent answers; model output is advisory.
-- The repository does not provide native packet capture, telemetry collectors, evidence normalization, SSO/MFA, centralized audit export, licensing enforcement, or an OVA.
+- The repository does not provide native packet capture, live telemetry collectors, SSO/MFA, centralized audit export, licensing enforcement, or an OVA. The Evidence Workspace performs only its documented local parsing and normalization; it is not a general-purpose decoder or collector.
 - The loopback launcher pages select an assistant but are not authentication or authorization controls; Open WebUI and connector access control remain authoritative.
 
 These limitations prevent an unconditional certification claim. They must be reflected in contracts, deployment architecture, acceptance criteria, and the product roadmap.

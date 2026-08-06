@@ -40,9 +40,9 @@ fi
 restart_application() {
   if [[ "$restart_required" == true ]]; then
     if [[ "$mode" == production ]]; then
-      "${compose_production[@]}" up -d ollama open-webui gateway
+      "${compose_production[@]}" up -d ollama open-webui evidence-service gateway
     else
-      "${compose_local[@]}" up -d ollama open-webui assistant-launcher
+      "${compose_local[@]}" up -d ollama open-webui evidence-service assistant-launcher
     fi
     restart_required=false
   fi
@@ -71,8 +71,9 @@ backup_volume() {
 }
 backup_volume "${project_name}_packet-expert-ollama-data" ollama-data.tgz
 backup_volume "${project_name}_packet-expert-open-webui-data" open-webui-data.tgz
+backup_volume "${project_name}_packet-expert-evidence-data" evidence-data.tgz
 {
-  printf 'Backup format: NetTAP AI Suite volume backup v2\n'
+  printf 'Backup format: NetTAP AI Suite volume backup v3\n'
   printf 'Created UTC: %s\n' "$(date -u +%FT%TZ)"
   printf 'Release: %s\n' "$(load_env_value RELEASE_VERSION)"
   printf 'NetTAP AI model: %s\n' "$(load_env_value NETTAP_AI_MODEL)"
@@ -98,10 +99,11 @@ backup_volume "${project_name}_packet-expert-open-webui-data" open-webui-data.tg
 (cd "$output_dir" && {
   sha256_file ollama-data.tgz
   sha256_file open-webui-data.tgz
+  sha256_file evidence-data.tgz
   sha256_file manifest.txt
 }) > "${output_dir}/SHA256SUMS"
 chmod -R go-rwx "$output_dir"
 restart_application
 trap - EXIT
 echo "Backup completed: $output_dir"
-echo "Treat it as sensitive: it contains accounts, chats, knowledge, and model data."
+echo "Treat it as sensitive: it contains accounts, chats, knowledge, model data, cases, and raw evidence."

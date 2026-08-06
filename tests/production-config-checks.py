@@ -15,13 +15,15 @@ bootstrap = load("compose.bootstrap.yaml")
 production = load("compose.production.yaml")
 
 assert set(base["services"]) == {
-    "ollama", "model-init", "rag-cache-init", "open-webui", "assistant-provisioner"
+    "ollama", "model-init", "rag-cache-init", "open-webui", "assistant-provisioner",
+    "evidence-service"
 }
 assert base["networks"]["backend"]["internal"] is True
 assert base["networks"]["user-access"]["internal"] is True
 assert "ports" not in base["services"]["ollama"]
 assert "ports" not in base["services"]["open-webui"]
 assert local["services"]["open-webui"]["ports"] == ["${BIND_ADDRESS}:${WEB_PORT}:8080"]
+assert local["services"]["evidence-service"]["ports"] == ["${BIND_ADDRESS}:${EVIDENCE_PORT}:8081"]
 assert local["services"]["assistant-launcher"]["ports"] == [
     "${BIND_ADDRESS}:${VISIBILITY_LAUNCHER_PORT}:3000",
     "${BIND_ADDRESS}:${PACKET_EXPERT_LAUNCHER_PORT}:3001",
@@ -46,6 +48,17 @@ assert provisioner["cap_drop"] == ["ALL"]
 assert "ports" not in provisioner
 assert provisioner["environment"]["NETTAP_PROVISIONING_CHECKSUMS"] == "/provision/knowledge-sources.sha256"
 assert "./skills:/source/skills:ro" in provisioner["volumes"]
+
+evidence_service = base["services"]["evidence-service"]
+assert evidence_service["networks"] == ["backend", "user-access"]
+assert evidence_service["read_only"] is True
+assert evidence_service["cap_drop"] == ["ALL"]
+assert evidence_service["security_opt"] == ["no-new-privileges:true"]
+assert "ports" not in evidence_service
+assert "./case_service:/service/case_service:ro" in evidence_service["volumes"]
+assert "packet-expert-evidence-data:/data" in evidence_service["volumes"]
+assert evidence_service["environment"]["EVIDENCE_API_TOKEN"] == "${EVIDENCE_API_TOKEN}"
+assert evidence_service["environment"]["NETTAP_EVIDENCE_MAX_UPLOAD_BYTES"] == "${EVIDENCE_MAX_UPLOAD_BYTES}"
 
 for service_name in ("ollama", "open-webui"):
     service = base["services"][service_name]
@@ -106,6 +119,7 @@ assert "./config/tls:/etc/caddy/tls:ro" in gateway["volumes"]
 assert gateway["security_opt"] == ["no-new-privileges:true"]
 assert gateway["environment"]["NETTAP_VISIBILITY_PROFILE"] == "${NETTAP_VISIBILITY_PROFILE}"
 assert gateway["environment"]["NETTAP_PACKET_EXPERT_PROFILE"] == "${NETTAP_PACKET_EXPERT_PROFILE}"
+assert gateway["depends_on"]["evidence-service"]["condition"] == "service_healthy"
 
 env_example = (root / ".env.example").read_text(encoding="utf-8")
 assert "RELEASE_VERSION=0.3.0-rc.3" in env_example
@@ -118,6 +132,9 @@ assert "RAG_EMBEDDING_MODEL_REVISION=1110a243fdf4706b3f48f1d95db1a4f5529b4d41" i
 assert "WEBUI_ADMIN_PASSWORD=GENERATE_ON_FIRST_START" in env_example
 assert "WEBUI_ADMIN_PASSWORD=admin" not in env_example
 assert "BIND_ADDRESS=127.0.0.1" in env_example
+assert "EVIDENCE_PORT=3200" in env_example
+assert "EVIDENCE_API_TOKEN=GENERATE_ON_FIRST_START" in env_example
+assert "EVIDENCE_MAX_UPLOAD_BYTES=52428800" in env_example
 
 caddy = (root / "config/Caddyfile").read_text(encoding="utf-8")
 for control in ("tls /etc/caddy/tls/tls.crt", "Strict-Transport-Security", "X-Frame-Options", "-Server"):
@@ -127,6 +144,8 @@ assert "/packet-expert" in caddy
 assert "NETTAP_VISIBILITY_PROFILE" in caddy
 assert "NETTAP_PACKET_EXPERT_PROFILE" in caddy
 assert "NETTAP_AI_MODEL" not in caddy
+assert "handle_path /evidence/*" in caddy
+assert "reverse_proxy evidence-service:8081" in caddy
 
 launcher = (root / "config/Launcher.Caddyfile").read_text(encoding="utf-8")
 for control in (":3000", ":3001", "NETTAP_VISIBILITY_PROFILE", "NETTAP_PACKET_EXPERT_PROFILE", "Content-Security-Policy"):
@@ -137,15 +156,23 @@ workflow = (root / ".github/workflows/validate.yml").read_text(encoding="utf-8")
 for profile in ("compose.local.yaml", "compose.production.yaml", "compose.bootstrap.yaml"):
     assert profile in workflow
 assert "shellcheck scripts/*.sh scripts/nettap-ai scripts/nettap-packet-expert tests/*.sh" in workflow
+assert "tests/test_case_service.py" in workflow
+assert "case_service/*.py" in workflow
 assert "package-model-bundle.sh" in workflow
 assert "verify-model-bundle.sh" in workflow
 
 runtime_verifier = (root / "scripts/verify-production-deployment.sh").read_text(encoding="utf-8")
 for control in (".Config.Image", "no-new-privileges:true", "EXPECTED_BASE_MODEL_ID", "NetTAP AI model ID", "strict-transport-security"):
     assert control in runtime_verifier
+assert "evidence-runtime-e2e.sh" in runtime_verifier
 
 restore = (root / "scripts/restore.sh").read_text(encoding="utf-8")
 assert 'Release: $current_release' in restore
+assert "evidence-data.tgz" in restore
+
+backup = (root / "scripts/backup.sh").read_text(encoding="utf-8")
+assert "evidence-data.tgz" in backup
+assert "volume backup v3" in backup
 
 package = (root / "scripts/package-release.sh").read_text(encoding="utf-8")
 for field in ("provenance", "Commit:", "Tree:", "SHA256:"):

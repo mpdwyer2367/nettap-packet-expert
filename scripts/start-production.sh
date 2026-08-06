@@ -27,11 +27,13 @@ fi
 "${script_dir}/production-preflight.sh"
 "${compose_local[@]}" down >/dev/null 2>&1 || true
 initialize_model_with_temporary_egress production
-"${compose_production[@]}" up -d gateway
+"${compose_production[@]}" up -d evidence-service gateway
 "${compose_production[@]}" ps
 hostname="$(load_env_value APPLIANCE_HOSTNAME)"
 https_port="$(load_env_value HTTPS_PORT)"
 echo "NetTAP AI Suite production candidate: https://${hostname}:${https_port}"
 echo "Network & Visibility: https://${hostname}:${https_port}/visibility"
 echo "Packet Expert: https://${hostname}:${https_port}/packet-expert"
+echo "Evidence Workspace: https://${hostname}:${https_port}/evidence/"
+echo "Evidence API token file: $evidence_token_file"
 echo "Run ./scripts/verify-production-deployment.sh and complete the production acceptance record."

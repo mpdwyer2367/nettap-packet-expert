@@ -4,6 +4,7 @@ set -euo pipefail
 project_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 env_file="${project_dir}/.env"
 bootstrap_password_file="${project_dir}/.bootstrap-admin-password"
+evidence_token_file="${project_dir}/.evidence-api-token"
 # shellcheck disable=SC2034 # exported to scripts that source this library
 admin_finalized_file="${project_dir}/.admin-bootstrap-finalized"
 
@@ -47,6 +48,7 @@ initialize_env() {
   ensure_env_default WEB_PORT "3100"
   ensure_env_default VISIBILITY_LAUNCHER_PORT "3000"
   ensure_env_default PACKET_EXPERT_LAUNCHER_PORT "3001"
+  ensure_env_default EVIDENCE_PORT "3200"
   ensure_env_default HTTPS_BIND_ADDRESS "0.0.0.0"
   ensure_env_default HTTPS_PORT "8443"
   ensure_env_default APPLIANCE_HOSTNAME "nettap-ai.local"
@@ -56,6 +58,10 @@ initialize_env() {
   ensure_env_default OLLAMA_MEMORY "8g"
   ensure_env_default WEBUI_CPUS "2"
   ensure_env_default WEBUI_MEMORY "3g"
+  ensure_env_default EVIDENCE_CPUS "1"
+  ensure_env_default EVIDENCE_MEMORY "512m"
+  ensure_env_default EVIDENCE_MAX_UPLOAD_BYTES "52428800"
+  ensure_env_default EVIDENCE_MAX_RECORDS "100000"
   ensure_env_default GATEWAY_CPUS "1"
   ensure_env_default GATEWAY_MEMORY "512m"
   if grep -Eq '^RELEASE_VERSION=(0.2.0-rc.1|0.3.0-rc.[12])$' "$env_file"; then
@@ -90,6 +96,7 @@ initialize_env() {
   ensure_env_default WEBUI_ADMIN_NAME "NetTAP Administrator"
   ensure_env_default WEBUI_ADMIN_EMAIL "admin@nettap.local"
   ensure_env_default WEBUI_ADMIN_PASSWORD "GENERATE_ON_FIRST_START"
+  ensure_env_default EVIDENCE_API_TOKEN "GENERATE_ON_FIRST_START"
   if grep -q '^WEBUI_ADMIN_PASSWORD=GENERATE_ON_FIRST_START$' "$env_file"; then
     local admin_password
     admin_password="Ntp!9$(openssl rand -hex 12)"
@@ -102,6 +109,18 @@ initialize_env() {
     } > "$bootstrap_password_file"
     chmod 0600 "$bootstrap_password_file"
     unset admin_password
+  fi
+  if grep -q '^EVIDENCE_API_TOKEN=GENERATE_ON_FIRST_START$' "$env_file"; then
+    local evidence_token
+    evidence_token="$(openssl rand -hex 32)"
+    set_env_value EVIDENCE_API_TOKEN "$evidence_token"
+    umask 077
+    {
+      printf 'Bearer token: %s\n' "$evidence_token"
+      printf 'Generated UTC: %s\n' "$(date -u +%FT%TZ)"
+    } > "$evidence_token_file"
+    chmod 0600 "$evidence_token_file"
+    unset evidence_token
   fi
 }
 
@@ -177,12 +196,12 @@ recover_failed_model_initialization() {
   if [[ "$mode" == production ]]; then
     "${compose_production_bootstrap[@]}" down >/dev/null 2>&1 || true
     if [[ "$was_running" == true ]]; then
-      "${compose_production[@]}" up -d ollama open-webui gateway || true
+      "${compose_production[@]}" up -d ollama open-webui evidence-service gateway || true
     fi
   else
     "${compose_local_bootstrap[@]}" down >/dev/null 2>&1 || true
     if [[ "$was_running" == true ]]; then
-      "${compose_local[@]}" up -d ollama open-webui assistant-launcher || true
+      "${compose_local[@]}" up -d ollama open-webui evidence-service assistant-launcher || true
     fi
   fi
   echo "ERROR: Model initialization failed. Temporary registry egress was removed; any prior runtime restart was attempted." >&2
@@ -257,7 +276,7 @@ initialize_model_with_temporary_egress() {
       "${compose_local[@]}" up -d ollama open-webui
       record_model_identity local
       provision_assistants local || recover_failed_model_initialization local "$was_running"
-      "${compose_local[@]}" up -d assistant-launcher
+      "${compose_local[@]}" up -d assistant-launcher evidence-service
       ;;
     production)
       if [[ -n "$("${compose_production[@]}" ps -q open-webui 2>/dev/null)" ]]; then was_running=true; fi

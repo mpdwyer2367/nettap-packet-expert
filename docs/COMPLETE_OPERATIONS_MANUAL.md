@@ -11,6 +11,7 @@ Release `0.3.0-rc.3` is an integration candidate for one single-node, single-cus
 | Network profile | Workspace Model ID `nettap-network-visibility` over the combined model |
 | Packet profile | Workspace Model ID `nettap-packet-expert` over the combined model |
 | Local UI | `127.0.0.1:3100` |
+| Evidence Workspace | `127.0.0.1:3200` with generated bearer token |
 | Network launcher | `127.0.0.1:3000` |
 | Packet launcher | `127.0.0.1:3001` |
 | Production gateway | HTTPS port `8443` by default |
@@ -75,7 +76,7 @@ Changing the base model requires a separate model-evaluation release. Do not com
 
 ### Port already in use
 
-Run `./scripts/inventory-macos.sh` on macOS. Identify the owning process before stopping anything. The suite requires local ports 3000, 3001, and 3100 unless `.env` is deliberately changed.
+Run `./scripts/inventory-macos.sh` on macOS. Identify the owning process before stopping anything. The suite requires local ports 3000, 3001, 3100, and 3200 unless `.env` is deliberately changed.
 
 ### Old suggestions remain
 

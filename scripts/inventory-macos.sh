@@ -62,7 +62,7 @@ fi
 echo
 echo "[Listening application ports]"
 if command -v lsof >/dev/null 2>&1; then
-  for port in 3000 3001 11434; do
+  for port in 3000 3001 3100 3200 11434; do
     echo "Port $port"
     lsof -nP -iTCP:"$port" -sTCP:LISTEN 2>/dev/null || echo "not listening"
   done

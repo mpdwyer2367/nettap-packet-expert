@@ -1,5 +1,13 @@
 # Changelog
 
+## Unreleased — local evidence and case-analysis workspace
+
+- Added an authenticated, offline-first Evidence Workspace with persistent cases, source hashing, provenance, quality warnings and audit events.
+- Added deterministic classic-PCAP metadata parsing and normalized PCAP, syslog, IPFIX, NetFlow, sFlow, cloud-flow and JSON/JSONL ingestion without sending raw evidence to Ollama.
+- Added evidence-bound summaries, observations and explicitly qualified hypotheses, plus Markdown reports and minimized `nettap-evidence-context/v1` exports.
+- Added a dedicated evidence volume, generated API token, loopback local endpoint, TLS-gateway production-candidate route, backup-v3 coverage and non-overwriting restore support.
+- Added service-level functional/security tests and extended deployment validation. Existing `nettap-ai:0.3.0-rc.3` model weights and policy identity are unchanged; this is an evaluation feature for the next release and requires target-host acceptance before release promotion.
+
 ## 0.3.0-rc.3 automatic assistants and offline RAG candidate — 2026-08-05
 
 - Added fail-closed, idempotent provisioning of two Open WebUI Workspace Models and three managed knowledge collections through pinned Open WebUI v0.11.0 APIs.

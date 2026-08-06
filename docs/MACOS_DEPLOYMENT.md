@@ -19,6 +19,7 @@ Open:
 - <http://127.0.0.1:3000> — Network & Visibility
 - <http://127.0.0.1:3001> — Packet Expert
 - <http://127.0.0.1:3100> — shared Open WebUI
+- <http://127.0.0.1:3200> — authenticated local Evidence Workspace; token in `.evidence-api-token`
 
 Use `admin@nettap.local` with the password in the protected file printed by the script. Change it immediately, verify the generated password fails, and run:
 

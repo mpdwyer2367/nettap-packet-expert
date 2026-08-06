@@ -13,6 +13,7 @@
 | Offline embedding model | `sentence-transformers/all-MiniLM-L6-v2@1110a243fdf4706b3f48f1d95db1a4f5529b4d41` |
 | Local launchers | `127.0.0.1:3000`, `127.0.0.1:3001` |
 | Shared local UI | `127.0.0.1:3100` |
+| Evidence Workspace | `127.0.0.1:3200`; generated independent bearer token |
 
 ## Current disposition
 
