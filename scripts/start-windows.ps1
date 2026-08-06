@@ -10,6 +10,27 @@ $bootstrapComposeFile = Join-Path $projectDir 'compose.bootstrap.yaml'
 $bootstrapPasswordPath = Join-Path $projectDir '.bootstrap-admin-password'
 $evidenceTokenPath = Join-Path $projectDir '.evidence-api-token'
 
+function Select-ProvisioningFingerprint {
+    param(
+        [Parameter(Mandatory = $true)]
+        [AllowEmptyCollection()]
+        [object[]]$OutputLines,
+        [switch]$AllowEmpty
+    )
+
+    $candidates = @(
+        $OutputLines |
+            ForEach-Object { $_.ToString().Trim() } |
+            Where-Object { $_ -cmatch '^[0-9a-f]{64}$' } |
+            Select-Object -Unique
+    )
+    if ($candidates.Count -eq 0 -and $AllowEmpty) { return '' }
+    if ($candidates.Count -ne 1) {
+        throw "Docker Compose returned $($candidates.Count) distinct provisioning fingerprints; expected exactly one."
+    }
+    return [string]$candidates[0]
+}
+
 if (-not (Get-Command docker -ErrorAction SilentlyContinue)) {
     throw 'Docker Desktop is required and docker was not found in PATH.'
 }
@@ -186,11 +207,16 @@ if ($LASTEXITCODE -ne 0) {
     throw 'Open WebUI failed to start.'
 }
 
-$desiredFingerprint = (docker @compose --profile provision run --rm --no-deps assistant-provisioner --fingerprint | Out-String).Trim()
-if ($LASTEXITCODE -ne 0 -or [string]::IsNullOrWhiteSpace($desiredFingerprint)) {
+$desiredFingerprintOutput = @(docker @compose --profile provision run --rm --no-deps assistant-provisioner --fingerprint 2>&1)
+if ($LASTEXITCODE -ne 0) {
     throw 'Unable to calculate the assistant provisioning fingerprint.'
 }
-$actualFingerprint = (docker @compose exec -T open-webui python -c "import json; from pathlib import Path; p=Path('/app/backend/data/nettap-provisioning-state.json'); print(json.loads(p.read_text(encoding='utf-8')).get('fingerprint','') if p.is_file() else '')" | Out-String).Trim()
+$desiredFingerprint = Select-ProvisioningFingerprint -OutputLines $desiredFingerprintOutput
+$actualFingerprintOutput = @(docker @compose exec -T open-webui python -c "import json; from pathlib import Path; p=Path('/app/backend/data/nettap-provisioning-state.json'); print(json.loads(p.read_text(encoding='utf-8')).get('fingerprint','') if p.is_file() else '')" 2>&1)
+if ($LASTEXITCODE -ne 0) {
+    throw 'Unable to read the installed assistant provisioning fingerprint.'
+}
+$actualFingerprint = Select-ProvisioningFingerprint -OutputLines $actualFingerprintOutput -AllowEmpty
 
 if ($actualFingerprint -ne $desiredFingerprint) {
     $adminPassword = ''
@@ -212,9 +238,13 @@ if ($actualFingerprint -ne $desiredFingerprint) {
     if ($LASTEXITCODE -ne 0) {
         throw 'Automatic assistant and offline RAG provisioning failed.'
     }
-    $actualFingerprint = (docker @compose exec -T open-webui python -c "import json; from pathlib import Path; print(json.loads(Path('/app/backend/data/nettap-provisioning-state.json').read_text(encoding='utf-8')).get('fingerprint',''))" | Out-String).Trim()
+    $actualFingerprintOutput = @(docker @compose exec -T open-webui python -c "import json; from pathlib import Path; print(json.loads(Path('/app/backend/data/nettap-provisioning-state.json').read_text(encoding='utf-8')).get('fingerprint',''))" 2>&1)
+    if ($LASTEXITCODE -ne 0) {
+        throw 'Unable to read the installed assistant provisioning fingerprint after reconciliation.'
+    }
+    $actualFingerprint = Select-ProvisioningFingerprint -OutputLines $actualFingerprintOutput
     if ($actualFingerprint -ne $desiredFingerprint) {
-        throw 'Assistant provisioning state does not match this release.'
+        throw "Assistant provisioning state does not match this release. Expected $desiredFingerprint; installed $actualFingerprint."
     }
 }
 

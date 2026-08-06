@@ -108,6 +108,7 @@ required_files=(
   tests/clean-package-acceptance.sh tests/compare-platform-acceptance.sh
   tests/native-model-installer-mock.sh
   tests/retire-legacy-models-mock.sh
+  tests/provisioning-fingerprint-output-mock.sh
   tests/fixtures/normalized-pcap.json tests/fixtures/normalized-logs.jsonl
   tests/fixtures/normalized-ipfix.jsonl
   tests/production-config-checks.py
