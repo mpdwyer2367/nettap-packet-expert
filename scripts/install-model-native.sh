@@ -27,7 +27,7 @@ ollama list >/dev/null 2>&1 || {
 
 echo "Downloading approved base model: ${base_model}"
 ollama pull "$base_model"
-actual_base_id="$(ollama list | awk -v name="$base_model" '$1 == name { print $2; exit }')"
+actual_base_id="$(ollama list | awk -v name="$base_model" '$1 == name { print $2 }')"
 [[ -n "$actual_base_id" ]] || { echo "ERROR: Ollama did not list ${base_model} after download." >&2; exit 5; }
 [[ "$actual_base_id" == "$expected_base_id" ]] || {
   echo "ERROR: Base-model identity mismatch: expected ${expected_base_id}, received ${actual_base_id}." >&2
