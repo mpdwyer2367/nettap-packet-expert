@@ -182,9 +182,34 @@ function renderFindings(findings) {
       const badge = document.createElement("span"); badge.className = "badge"; badge.textContent = value; badges.append(badge);
     }
     const statement = document.createElement("p"); statement.textContent = item.statement;
-    card.append(title, badges, statement);
+    const citations = document.createElement("div"); citations.className = "citation-list";
+    for (const citation of item.citations || []) {
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = "citation-button";
+      button.textContent = citation.type === "normalized_observation"
+        ? `Evidence record ${citation.sequence_number ?? "?"}`
+        : citation.type === "analysis_artifact" ? "Analysis artifact" : "Evidence manifest";
+      button.addEventListener("click", () => inspectCitation(citation));
+      citations.append(button);
+    }
+    card.append(title, badges, statement, citations);
     list.append(card);
   }
+}
+
+async function inspectCitation(citation) {
+  try {
+    let content = citation;
+    if (citation.type === "normalized_observation") {
+      content = await api(`/v1/cases/${state.activeCase.id}/observations/${citation.observation_id}`);
+    } else if (citation.type === "analysis_artifact") {
+      content = await api(`/v1/cases/${state.activeCase.id}/analyses/${citation.analysis_id}`);
+    }
+    $("#dialog-title").textContent = "Resolved evidence citation";
+    $("#dialog-content").textContent = JSON.stringify(content, null, 2);
+    $("#output-dialog").showModal();
+  } catch (error) { message(error.message, "error"); }
 }
 
 async function createCase(event) {

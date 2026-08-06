@@ -23,6 +23,12 @@ EVIDENCE_PATH = re.compile(r"^/v1/cases/([0-9a-f-]{36})/evidence$")
 ANALYZE_PATH = re.compile(r"^/v1/cases/([0-9a-f-]{36})/analyze$")
 CONTEXT_PATH = re.compile(r"^/v1/cases/([0-9a-f-]{36})/context$")
 REPORT_PATH = re.compile(r"^/v1/cases/([0-9a-f-]{36})/report\.md$")
+OBSERVATION_PATH = re.compile(
+    r"^/v1/cases/([0-9a-f-]{36})/observations/([0-9a-f-]{36})$"
+)
+ANALYSIS_PATH = re.compile(
+    r"^/v1/cases/([0-9a-f-]{36})/analyses/([0-9a-f-]{36})$"
+)
 
 
 def openapi_spec() -> dict[str, Any]:
@@ -114,6 +120,20 @@ def handler_factory(
                 match = CASE_PATH.match(route)
                 if match:
                     self.send_json(HTTPStatus.OK, repository.get_case(match.group(1)))
+                    return
+                match = OBSERVATION_PATH.match(route)
+                if match:
+                    self.send_json(
+                        HTTPStatus.OK,
+                        repository.get_observation(match.group(1), match.group(2)),
+                    )
+                    return
+                match = ANALYSIS_PATH.match(route)
+                if match:
+                    self.send_json(
+                        HTTPStatus.OK,
+                        repository.get_analysis(match.group(1), match.group(2)),
+                    )
                     return
                 match = CONTEXT_PATH.match(route)
                 if match:

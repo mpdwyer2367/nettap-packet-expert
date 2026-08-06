@@ -10,6 +10,7 @@ from typing import Any
 
 
 ENGINE_VERSION = "1.0.0"
+CITATION_LIMIT = 256
 
 
 def analyze_case(
@@ -25,9 +26,9 @@ def analyze_case(
     bytes_by_conversation: Counter[str] = Counter()
     evidence_ids = sorted({item["id"] for item in evidence})
     timestamps: list[datetime] = []
-    reset_evidence: set[str] = set()
-    truncated_evidence: set[str] = set()
-    timing_groups: dict[str, list[tuple[datetime, str]]] = defaultdict(list)
+    reset_observations: list[dict[str, Any]] = []
+    truncated_observations: list[dict[str, Any]] = []
+    timing_groups: dict[str, list[tuple[datetime, dict[str, Any]]]] = defaultdict(list)
 
     for item in observations:
         protocol = str(item.get("protocol", item.get("kind", "unknown"))).upper()
@@ -51,17 +52,22 @@ def analyze_case(
             timestamps.append(timestamp)
             if src != "unknown" and dst != "unknown":
                 timing_groups[f"{src}|{dst}|{destination}|{protocol}"].append(
-                    (timestamp, item["evidence_id"])
+                    (timestamp, item)
                 )
         if "R" in str(item.get("tcp_flags", "")):
-            reset_evidence.add(item["evidence_id"])
+            reset_observations.append(item)
         if item.get("capture_truncated") is True:
-            truncated_evidence.add(item["evidence_id"])
+            truncated_observations.append(item)
 
     quality_warnings = []
+    quality_citations = []
     for item in evidence:
         quality_warnings.extend(
             {"evidence_id": item["id"], "warning": warning}
+            for warning in item["quality_warnings"]
+        )
+        quality_citations.extend(
+            evidence_manifest_citation(item, warning)
             for warning in item["quality_warnings"]
         )
 
@@ -77,10 +83,11 @@ def analyze_case(
                 "high",
                 sorted({item["evidence_id"] for item in quality_warnings}),
                 ["Review the source-specific quality warnings before relying on negative findings."],
+                quality_citations,
             )
         )
-    if reset_evidence:
-        reset_count = sum(1 for item in observations if "R" in str(item.get("tcp_flags", "")))
+    if reset_observations:
+        reset_count = len(reset_observations)
         findings.append(
             finding(
                 "transport",
@@ -89,14 +96,15 @@ def analyze_case(
                 "A reset alone does not identify its cause.",
                 "observation",
                 "high",
-                sorted(reset_evidence),
+                sorted({item["evidence_id"] for item in reset_observations}),
                 [
                     "Correlate resets with both endpoints and application logs.",
                     "Check whether the reset direction and sequence are consistent with policy or failure.",
                 ],
+                observation_citations(reset_observations),
             )
         )
-    if truncated_evidence:
+    if truncated_observations:
         findings.append(
             finding(
                 "evidence-quality",
@@ -105,8 +113,9 @@ def analyze_case(
                 "Application-layer conclusions may therefore be incomplete.",
                 "observation",
                 "high",
-                sorted(truncated_evidence),
+                sorted({item["evidence_id"] for item in truncated_observations}),
                 ["Repeat the capture with an adequate snapshot length if payload metadata is required."],
+                observation_citations(truncated_observations),
             )
         )
 
@@ -121,6 +130,9 @@ def analyze_case(
                 if conversation_key(item) == key
             }
         )
+        matching_observations = [
+            item for item in observations if conversation_key(item) == key
+        ]
         findings.append(
             finding(
                 "traffic-distribution",
@@ -131,6 +143,7 @@ def analyze_case(
                 "high",
                 matching_evidence,
                 ["Confirm the TAP, SPAN, NPB filter and collection scope represented by this source."],
+                observation_citations(matching_observations),
             )
         )
 
@@ -153,6 +166,10 @@ def analyze_case(
             for key, count in conversations.most_common(10)
         ],
         "quality_warnings": quality_warnings,
+        "indicators": {
+            "tcp_reset_records": len(reset_observations),
+            "capture_truncated_records": len(truncated_observations),
+        },
         "method": (
             "Deterministic parsing and aggregation only. No LLM inference, threat-intelligence lookup, "
             "payload decryption or confirmation of compromise was performed."
@@ -163,7 +180,7 @@ def analyze_case(
 
 
 def regular_timing_findings(
-    groups: dict[str, list[tuple[datetime, str]]]
+    groups: dict[str, list[tuple[datetime, dict[str, Any]]]]
 ) -> list[dict[str, Any]]:
     results = []
     for key, entries in groups.items():
@@ -193,11 +210,12 @@ def regular_timing_findings(
                     "Regular timing can be benign; this is an investigation hypothesis, not confirmed C2.",
                     "hypothesis",
                     "medium",
-                    sorted({item[1] for item in entries}),
+                    sorted({item[1]["evidence_id"] for item in entries}),
                     [
                         "Correlate the endpoints with authorized asset, DNS, application and identity records.",
                         "Compare against a longer baseline and the collection sampling policy.",
                     ],
+                    observation_citations([item[1] for item in entries]),
                 )
             )
     return results[:10]
@@ -211,6 +229,7 @@ def finding(
     confidence: str,
     evidence_ids: list[str],
     validation_steps: list[str],
+    citations: list[dict[str, Any]],
 ) -> dict[str, Any]:
     return {
         "category": category,
@@ -219,7 +238,43 @@ def finding(
         "classification": classification,
         "confidence": confidence,
         "evidence_ids": evidence_ids,
+        "citations": citations,
         "validation_steps": validation_steps,
+    }
+
+
+def observation_citations(observations: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """Return bounded, exact selectors; the hashed analysis artifact covers the aggregate."""
+    citations = []
+    seen = set()
+    for item in observations:
+        observation_id = item.get("observation_id")
+        if not observation_id or observation_id in seen:
+            continue
+        seen.add(observation_id)
+        citations.append(
+            {
+                "type": "normalized_observation",
+                "evidence_id": item["evidence_id"],
+                "observation_id": observation_id,
+                "sequence_number": item.get("sequence_number"),
+                "timestamp": item.get("timestamp"),
+            }
+        )
+        if len(citations) >= CITATION_LIMIT:
+            break
+    return citations
+
+
+def evidence_manifest_citation(
+    evidence: dict[str, Any], warning: str
+) -> dict[str, Any]:
+    return {
+        "type": "evidence_manifest",
+        "evidence_id": evidence["id"],
+        "sha256": evidence["sha256"],
+        "selector": "quality_warnings",
+        "value": warning,
     }
 
 

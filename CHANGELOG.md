@@ -6,6 +6,10 @@
 - Added authenticated deterministic case inventory and minimized-context APIs plus a read-only OpenAPI tool binding for Packet Expert.
 - Provisioned the evidence tool automatically for the administrator while keeping Network & Visibility isolated from it.
 - Added professional evidence-report instructions, provenance fields, parser validation tests, and an RC6-specific provisioning fingerprint.
+- Added evidence database schema v2 with additive migration from schema v1.
+- Added typed citations for evidence manifests, exact normalized observations, and SHA-256-bound deterministic analysis artifacts.
+- Added an audited, case-scoped read-only citation resolver and one-click citation inspection in the Evidence Workspace.
+- Added negative cross-case citation tests and documented the citation trust boundary and remaining release gates.
 
 ## 0.3.0-rc.5 unified product experience candidate — 2026-08-05
 

@@ -23,6 +23,8 @@ Administrator credentials, application secrets, customer chats, uploaded evidenc
 | Destructive operator error | Review/validation/rollback guidance; non-overwriting restore | Change control and least privilege |
 | Volume/backup theft | Sensitive-backup warning and restricted permissions | Host/full-disk and backup encryption |
 | Hallucinated finding | Evidence/fact/hypothesis separation; behavioral evals | Analyst validation and authoritative tools |
+| Citation tampering or broken provenance | Case-scoped observation UUIDs, original evidence hashes, deterministic analysis-output hash, and audited resolution | Signed release evidence and tamper-evident external audit export |
+| Cross-case citation reference | Resolver requires both owning case ID and observation ID and returns `404` on mismatch | Per-user case authorization and negative tenant tests |
 | Availability loss | Health checks, restart policy, backup/restore | Host redundancy and recovery procedure |
 
 ## Accepted architectural limitations

@@ -119,7 +119,7 @@ Set-Location .\nettap-packet-expert
 
 Startup uses temporary registry egress to retrieve the verified base model, pinned Open WebUI image, and the exact offline embedding-model revision. It then removes registry egress, starts Open WebUI in offline mode, creates three managed knowledge collections, installs two managed Skills, proves retrieval using a deterministic marker, creates both managed Workspace Models, attaches the matching Skill to each, and only then starts the launcher pages. Any failed identity, cache, ingestion, retrieval, Skill, or profile check stops installation.
 
-Startup also generates `.evidence-api-token` and starts the loopback-only Evidence Workspace. Use it to create a case, upload authorized evidence, review provenance and quality, run deterministic analysis, and export the minimized case context. Raw evidence is never automatically submitted to the model. The service remains an evaluation feature and does not make RC6 production-certified.
+Startup also generates `.evidence-api-token` and starts the loopback-only Evidence Workspace. Use it to create a case, upload authorized evidence, review provenance and quality, run deterministic analysis, inspect case-scoped citations to exact normalized observations and SHA-256-bound analysis artifacts, and export the minimized case context. Raw evidence is never automatically submitted to the model. The service remains an evaluation feature and does not make RC6 production-certified.
 
 The Evidence Workspace now includes an **Assistant setup** page. Automatic
 provisioning registers its read-only OpenAPI contract with Open WebUI and pins

@@ -35,7 +35,8 @@ if [[ "$mode" == production ]]; then
   base_url="https://${hostname}:${port}/evidence"
   curl_options+=(--cacert "${project_dir}/config/tls/tls.crt" --resolve "${hostname}:${port}:127.0.0.1")
 else
-  base_url="http://127.0.0.1:$(load_env_value EVIDENCE_PORT)"
+  evidence_port="${NETTAP_EVIDENCE_TEST_PORT:-$(load_env_value EVIDENCE_PORT)}"
+  base_url="http://127.0.0.1:${evidence_port}"
 fi
 
 temporary_dir="$(mktemp -d "${TMPDIR:-/tmp}/nettap-evidence-e2e.XXXXXX")"
@@ -132,16 +133,19 @@ expected_hash = sys.argv[5]
 assert upload["sha256"] == expected_hash
 assert upload["record_count"] == 1
 assert analysis["latest_analysis"]["summary"]["observation_count"] == 1
+assert len(analysis["latest_analysis"]["output_sha256"]) == 64
 assert context["context_contract"] == "nettap-evidence-context/v1"
 assert context["data_state"] == "uploaded"
 assert context["live_telemetry_connected"] is False
 assert context["raw_evidence_included"] is False
+assert context["analysis_artifact"]["output_sha256"] == analysis["latest_analysis"]["output_sha256"]
 assert len(context["sources"]) == 1
 assert context["sources"][0]["sha256"] == expected_hash
 assert "record" not in context
 assert "normalized observations" not in json.dumps(context).lower()
 assert "live telemetry is not connected" in report.lower()
 assert "raw evidence is retained locally" in report.lower()
+assert "analysis artifact sha-256" in report.lower()
 PY
 
 echo "PASS: authenticated Evidence Workspace runtime workflow (${mode})"

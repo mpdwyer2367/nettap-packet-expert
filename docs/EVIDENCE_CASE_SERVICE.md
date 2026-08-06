@@ -46,9 +46,10 @@ production gate.
    chain-of-custody reference.
 4. Review the computed SHA-256, parser identity, record count and quality gaps.
 5. Run deterministic analysis.
-6. Review findings as observations or hypotheses with evidence identifiers and
-   validation steps.
-7. Select **Analyze in Packet Expert**. The browser opens the managed Packet
+6. Review findings as observations or hypotheses with exact, resolvable
+   citations and validation steps.
+7. Export the Markdown report or inspect the minimized LLM-safe context.
+8. Select **Analyze in Packet Expert**. The browser opens the managed Packet
    Expert profile with only the case UUID; Packet Expert uses its read-only tool
    to retrieve minimized context and produce a professional evidence-bound
    assessment.
@@ -76,6 +77,8 @@ is packaged, pinned and accepted.
 
 ## API contract
 
+The machine-readable OpenAPI 3.1 contract is in [`api/openapi.json`](../api/openapi.json).
+
 Create a case:
 
 ```bash
@@ -99,6 +102,8 @@ Principal endpoints:
 | `GET /v1/cases/{id}` | Case, sources and latest analysis |
 | `POST /v1/cases/{id}/evidence` | Hash, retain and normalize one source |
 | `POST /v1/cases/{id}/analyze` | Run deterministic analysis |
+| `GET /v1/cases/{id}/observations/{observation_id}` | Resolve one normalized-observation citation within its owning case |
+| `GET /v1/cases/{id}/analyses/{analysis_id}` | Retrieve and verify the canonical deterministic artifact within its owning case |
 | `GET /v1/cases/{id}/context` | Return minimized LLM-safe context |
 | `GET /v1/cases/{id}/report.md` | Return a reviewable Markdown report |
 | `GET /v1/configuration` | Return non-secret managed setup and parser capabilities |
@@ -126,6 +131,12 @@ metadata is omitted. Sensitive structured keys such as passwords, tokens,
 private keys and session keys are redacted during normalization. The original
 source remains sensitive and must be protected according to customer retention
 and legal-hold requirements.
+
+Findings use typed citations to evidence manifests, exact normalized observations,
+and a SHA-256-bound deterministic analysis artifact. The browser resolves an
+observation only through the owning case path. Cross-case references return `404`,
+and successful resolution creates an audit event. The analysis hash is an integrity
+reference, not a digital signature.
 
 ## Deterministic analysis in this increment
 
