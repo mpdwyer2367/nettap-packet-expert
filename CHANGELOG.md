@@ -7,6 +7,7 @@
 - Retained dry-run-first model retirement for macOS/Linux/WSL2 and Windows PowerShell, with explicit opt-in for a separately reviewed native Ollama store.
 - Clarified that both product experiences are Open WebUI profiles over one downloaded Qwen weight set and one NetTAP model manifest, not separate LLM downloads.
 - Adopted **NetTAP Network Intelligence** as the canonical product name, standardized the two experience and Evidence Workspace display names, and documented the unchanged legacy compatibility identifiers.
+- Set the browser-visible Open WebUI application name to **NetTAP Network Intelligence** through the supported `WEBUI_NAME` configuration.
 - Added updated application and model-replacement architecture visuals.
 - Added an authenticated, offline-first Evidence Workspace with persistent cases, source hashing, provenance, quality warnings and audit events.
 - Added deterministic classic-PCAP metadata parsing and normalized PCAP, syslog, IPFIX, NetFlow, sFlow, cloud-flow and JSON/JSONL ingestion without sending raw evidence to Ollama.
