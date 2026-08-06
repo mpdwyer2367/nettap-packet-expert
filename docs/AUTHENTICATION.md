@@ -53,13 +53,15 @@ for row in db.execute('SELECT name, email, role, created_at FROM user ORDER BY c
 PY
 ```
 
-When automatic provisioning detects that `.env` contains a bootstrap password
-which does not match the administrator account retained in the volume, it asks
-once for the current Open WebUI administrator password in the interactive
-terminal. The retry uses the password only through standard input to the
-one-shot provisioner; it is not printed, logged, written back to `.env`, or
-stored in the provisioning state. A rejected retry stops installation without
-resetting accounts, chats, settings, or knowledge.
+When automatic provisioning detects that the bootstrap identity in `.env` does
+not match an administrator account retained in the volume, it asks once for
+the current Open WebUI administrator email and password in the interactive
+terminal. Pressing Enter at the email prompt retains the displayed default.
+The email override and password are used only for the one-shot provisioner;
+the password travels over standard input and is not printed or logged. Neither
+value is written back to `.env` or stored in the provisioning state. A rejected
+retry stops installation without resetting accounts, chats, settings, or
+knowledge.
 
 If access is lost, create a verified backup and follow the official Open WebUI password-reset procedure. Never delete `webui.db` as an access workaround; that can remove accounts, chats, settings, and knowledge.
 
