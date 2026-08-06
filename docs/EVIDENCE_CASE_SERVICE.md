@@ -6,10 +6,11 @@ The Evidence Workspace is the first local evidence-ingestion and case-analysis
 service for NetTAP Network Intelligence. It turns approved PCAP metadata, normalized logs and flow
 records into a persistent case with source provenance, evidence-quality warnings,
 deterministic summaries, evidence-bound findings, a Markdown report and a
-minimized context suitable for an authorized NetTAP assistant.
+minimized context available to the authorized Packet Expert assistant through a
+managed read-only OpenAPI tool.
 
 This implementation is an **evaluation feature for the next suite release**. It
-does not make `0.3.0-rc.5` production-certified and is not a live NetTAP NPB,
+does not make `0.3.0-rc.6` production-certified and is not a live NetTAP NPB,
 flow collector, SIEM, IDS/IPS, NDR or autonomous controller.
 
 ## Local access
@@ -24,11 +25,18 @@ The service is bound to loopback by the local Compose profile. Every case and
 evidence API requires its generated bearer token. The health endpoint and static
 workspace shell do not disclose case data.
 
+Select **Assistant setup** in the workspace to review the effective assistant
+profile, tool binding, upload and record limits, supported parsers, and explicit
+format limitations. The page is informational for NetTAP-managed settings;
+release-controlled configuration remains the source of truth so UI edits cannot
+silently drift from the accepted package.
+
 The production Compose profile keeps the service off direct host ports and
 routes `https://<approved-hostname>:8443/evidence/` through the existing TLS
 gateway. The same independent bearer token is still required for every case and
-evidence API. Open WebUI tool attachment remains blocked until a separate
-authorization and connector acceptance decision is completed.
+evidence API. The managed tool is attached only to Packet Expert and is granted
+to the provisioning administrator. Additional-user case RBAC remains a future
+production gate.
 
 ## Workflow
 
@@ -40,7 +48,10 @@ authorization and connector acceptance decision is completed.
 5. Run deterministic analysis.
 6. Review findings as observations or hypotheses with evidence identifiers and
    validation steps.
-7. Export the Markdown report or the minimized LLM-safe context.
+7. Select **Analyze in Packet Expert**. The browser opens the managed Packet
+   Expert profile with only the case UUID; Packet Expert uses its read-only tool
+   to retrieve minimized context and produce a professional evidence-bound
+   assessment.
 
 The browser UI stores the bearer token only in the page's JavaScript memory;
 reloading the page requires the token again.
@@ -90,6 +101,9 @@ Principal endpoints:
 | `POST /v1/cases/{id}/analyze` | Run deterministic analysis |
 | `GET /v1/cases/{id}/context` | Return minimized LLM-safe context |
 | `GET /v1/cases/{id}/report.md` | Return a reviewable Markdown report |
+| `GET /v1/configuration` | Return non-secret managed setup and parser capabilities |
+| `GET /v1/tool/cases` | Read-only case inventory for the managed assistant tool |
+| `GET /openapi.json` | OpenAPI description containing only read-only minimized-context operations |
 
 ## Evidence and LLM boundary
 
@@ -156,10 +170,18 @@ WebUI data. Treat it as highly sensitive because it contains cases and original
 evidence. Restore remains non-overwriting and accepts historical v2 backups
 without an evidence volume.
 
-## Next integration gate
+## Assistant integration boundary
 
-The next connector increment should attach the context endpoint to both Open
-WebUI assistants through a reviewed read-only tool contract. It must enforce the
-user's case authorization independently of model selection. URL parameters are
-not authorization. No write-capable NetTAP NPB or device connector should be
-added until read-only acquisition, audit, validation and rollback controls pass.
+Open WebUI v0.11.0 is provisioned through its authenticated configuration and
+Workspace Model APIs. The appliance registers `nettap_evidence` as a bearer-
+authenticated OpenAPI server, verifies that Open WebUI can discover it, and
+pins `server:nettap_evidence` to Packet Expert. Only case listing and minimized
+context retrieval are exposed as model tools. Upload, analysis execution,
+deletion, raw evidence, configuration changes and device actions are not tool
+operations.
+
+This provides a usable single-administrator appliance workflow. Before broader
+customer deployment, add per-user and per-case authorization, identity mapping,
+token rotation, retention controls and connector penetration testing. No write-
+capable NetTAP NPB or device connector should be added until read-only
+acquisition, audit, validation and rollback controls pass.

@@ -22,9 +22,70 @@ class ValidationError(ValueError):
 
 
 class EvidenceService:
-    def __init__(self, repository: Repository, max_records: int):
+    def __init__(
+        self,
+        repository: Repository,
+        max_records: int,
+        max_upload_bytes: int = 50 * 1024 * 1024,
+        open_webui_public_url: str = "http://127.0.0.1:3100",
+        network_visibility_profile: str = "nettap-network-visibility",
+        packet_expert_profile: str = "nettap-packet-expert",
+    ):
         self.repository = repository
         self.max_records = max_records
+        self.max_upload_bytes = max_upload_bytes
+        self.open_webui_public_url = open_webui_public_url.rstrip("/")
+        self.network_visibility_profile = network_visibility_profile
+        self.packet_expert_profile = packet_expert_profile
+
+    def configuration(self) -> dict[str, Any]:
+        return {
+            "configuration_contract": "nettap-evidence-configuration/v1",
+            "mode": "managed",
+            "data_boundary": "uploaded-local-offline",
+            "live_telemetry_connected": False,
+            "max_upload_bytes": self.max_upload_bytes,
+            "max_records_per_source": self.max_records,
+            "assistant_integration": {
+                "open_webui_url": self.open_webui_public_url,
+                "network_visibility_profile": self.network_visibility_profile,
+                "packet_expert_profile": self.packet_expert_profile,
+                "tool_server_id": "nettap_evidence",
+                "tool_binding": "server:nettap_evidence",
+                "raw_evidence_sent_to_model": False,
+                "handoff": "case-id-and-minimized-context",
+            },
+            "source_types": [
+                {"id": "pcap", "label": "Classic PCAP", "accepted": ".pcap; Ethernet or raw IP", "parser": "built-in packet metadata", "limitations": "No PCAPNG, payload interpretation or decryption"},
+                {"id": "normalized-pcap", "label": "Normalized packet records", "accepted": "UTF-8 JSON or JSONL", "parser": "validated normalized schema", "limitations": "Requires externally normalized packet fields"},
+                {"id": "syslog", "label": "Syslog", "accepted": "UTF-8 text", "parser": "priority, host, timestamp and bounded message", "limitations": "Vendor-specific fields require normalization"},
+                {"id": "ipfix", "label": "IPFIX", "accepted": "Normalized JSON or JSONL", "parser": "validated flow records", "limitations": "Native binary IPFIX is not accepted"},
+                {"id": "netflow", "label": "NetFlow", "accepted": "Normalized JSON or JSONL", "parser": "validated flow records", "limitations": "Native binary NetFlow is not accepted"},
+                {"id": "sflow", "label": "sFlow", "accepted": "Normalized JSON or JSONL", "parser": "validated sampled-flow records", "limitations": "Native binary sFlow is not accepted"},
+                {"id": "cloud-flow", "label": "Cloud flow logs", "accepted": "Normalized JSON or JSONL", "parser": "validated cloud-flow records", "limitations": "Record schema must be identified"},
+                {"id": "jsonl", "label": "Generic structured records", "accepted": "UTF-8 JSON or JSONL", "parser": "schema-bounded structured records", "limitations": "Unrecognized fields are retained only in the protected normalized store"},
+            ],
+        }
+
+    def tool_cases(self) -> dict[str, Any]:
+        cases = self.repository.list_cases()
+        return {
+            "data_state": "uploaded",
+            "live_telemetry_connected": False,
+            "cases": [
+                {
+                    "id": item["id"],
+                    "title": item["title"],
+                    "objective": item["objective"],
+                    "environment": item["environment"],
+                    "status": item["status"],
+                    "evidence_count": item["evidence_count"],
+                    "analysis_count": item["analysis_count"],
+                    "updated_at": item["updated_at"],
+                }
+                for item in cases
+            ],
+        }
 
     def create_case(self, payload: dict[str, Any]) -> dict[str, Any]:
         title = clean_text(payload.get("title"), "title", CASE_TITLE_LIMIT, required=True)

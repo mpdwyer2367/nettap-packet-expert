@@ -19,7 +19,7 @@ The legacy `scripts/nettap-packet-expert` command remains as a compatibility wra
 ## Daily checks
 
 - Confirm the expected services are healthy.
-- Confirm `nettap-ai:0.3.0-rc.5` appears in `ollama list` and is the only NetTAP model selected by the current release.
+- Confirm `nettap-ai:0.3.0-rc.6` appears in `ollama list` and is the only NetTAP model selected by the current release.
 - Confirm Ollama is not published on a host port.
 - Confirm the Open WebUI audit log is writable and rotating.
 - Confirm the embedding and provisioning state files match the current release and show an offline RAG PASS.

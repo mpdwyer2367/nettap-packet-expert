@@ -58,7 +58,7 @@ On Windows, use `scripts/start-windows.ps1` and complete the Bash steps from WSL
 
 ## Knowledge configuration
 
-Startup automatically reconciles the reviewed shared and specialist Markdown into three managed collections through supported Open WebUI APIs. It attaches shared knowledge to both Workspace Models, Network & Visibility knowledge only to its matching profile, and Packet Expert knowledge only to Packet Expert. Both profiles use `nettap-ai:0.3.0-rc.5`. Confirm the recorded provisioning fingerprint, file hashes, exact embedding revision, and `Offline RAG verification: PASS`. Knowledge and uploaded evidence remain untrusted model inputs; neither may override system policy. See [knowledge management](KNOWLEDGE_MANAGEMENT.md).
+Startup automatically reconciles the reviewed shared and specialist Markdown into three managed collections through supported Open WebUI APIs. It attaches shared knowledge to both Workspace Models, Network & Visibility knowledge only to its matching profile, and Packet Expert knowledge only to Packet Expert. Both profiles use `nettap-ai:0.3.0-rc.6`. Confirm the recorded provisioning fingerprint, file hashes, exact embedding revision, evidence-tool binding, and `Offline RAG verification: PASS`. Knowledge and uploaded evidence remain untrusted model inputs; neither may override system policy. See [knowledge management](KNOWLEDGE_MANAGEMENT.md).
 
 ## Acceptance
 

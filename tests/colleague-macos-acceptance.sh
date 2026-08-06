@@ -53,7 +53,7 @@ echo "Manual browser acceptance is still required at http://127.0.0.1:3000 and h
 "${project_dir}/tests/evidence-runtime-e2e.sh"
 echo "1. On a fresh volume, sign in as admin@nettap.local with the generated local credential."
 echo "2. Change it, verify the generated password fails, finalize activation, and verify the new password survives restart."
-echo "3. Confirm signup is disabled and nettap-ai:0.3.0-rc.5 is the single NetTAP runtime model."
+echo "3. Confirm signup is disabled and nettap-ai:0.3.0-rc.6 is the single NetTAP runtime model."
 echo "4. Confirm port 3000 opens Network & Visibility and port 3001 opens Packet Expert."
 echo "5. Confirm port 3200 opens Evidence Workspace and requires the generated bearer token."
 echo "6. Confirm each launcher shows only its three intended starting points."

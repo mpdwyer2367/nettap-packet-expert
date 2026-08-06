@@ -8,6 +8,10 @@ services:
       WEBUI_AUTH_COOKIE_SAME_SITE: strict
       WEBUI_BANNERS: "[]"
 
+  evidence-service:
+    environment:
+      NETTAP_OPEN_WEBUI_PUBLIC_URL: https://${APPLIANCE_HOSTNAME}:${HTTPS_PORT}
+
   gateway:
     image: ${CADDY_IMAGE}
     init: true

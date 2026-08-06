@@ -19,4 +19,4 @@ backup before changing identity or password, generates the recovery credential
 locally, invalidates existing sessions, and never accepts a password on the
 command line.
 
-Version `0.3.0-rc.5` has production-hardening and profile-isolation controls but has not completed production or commercial certification. See [the security boundary](docs/SECURITY.md), [threat model](docs/THREAT_MODEL.md), and [release gates](docs/COMMERCIAL_RELEASE_GATES.md).
+Version `0.3.0-rc.6` has production-hardening and profile-isolation controls but has not completed production or commercial certification. See [the security boundary](docs/SECURITY.md), [threat model](docs/THREAT_MODEL.md), and [release gates](docs/COMMERCIAL_RELEASE_GATES.md).

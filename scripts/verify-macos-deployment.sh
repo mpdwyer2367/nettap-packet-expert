@@ -53,7 +53,7 @@ bind_address="$(load_env_value BIND_ADDRESS)"
 ollama_image="$(load_env_value OLLAMA_IMAGE)"
 webui_image="$(load_env_value OPEN_WEBUI_IMAGE)"
 
-[[ "$nettap_model" == "nettap-ai:0.3.0-rc.5" ]] || fail "Unexpected Network Intelligence model identity: $nettap_model"
+[[ "$nettap_model" == "nettap-ai:0.3.0-rc.6" ]] || fail "Unexpected Network Intelligence model identity: $nettap_model"
 model_rows="$("${compose[@]}" exec -T ollama ollama list)"
 legacy_models="$(printf '%s\n' "$model_rows" | awk -v current="$nettap_model" 'NR > 1 && $1 != current && ($1 ~ /^nettap-ai:/ || $1 ~ /^nettap-ai-backup-/ || $1 ~ /^nettap-packet-expert:/ || $1 ~ /^nettap-network-visibility:/) {print $1}')"
 [[ -z "$legacy_models" ]] || fail "Superseded NetTAP model tags remain in the appliance store: $legacy_models"
@@ -136,7 +136,7 @@ actual_files = {
 }
 assert actual_files == expected_files
 assert aggregate.hexdigest() == embedding['aggregate_sha256']
-assert provisioning['release_version'] == '0.3.0-rc.5'
+assert provisioning['release_version'] == '0.3.0-rc.6'
 assert provisioning['offline_rag']['result'] == 'PASS'
 assert {item['id'] for item in provisioning['assistants']} == {
     'nettap-network-visibility', 'nettap-packet-expert'
@@ -150,7 +150,7 @@ assert assistant_skills == {
 }
 PY
 [[ "$(installed_provisioning_fingerprint local)" == "$(provisioning_fingerprint local)" ]] || \
-  fail "Installed provisioning fingerprint differs from the RC5 source."
+  fail "Installed provisioning fingerprint differs from the RC6 source."
 echo "PASS: pinned embedding cache, managed skills, managed assistants, and offline RAG proof"
 
 admin_count="$("${compose[@]}" exec -T open-webui python - <<'PY'

@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.3.0-rc.6 validated evidence integration candidate — 2026-08-06
+
+- Added an Evidence Workspace configuration page with explicit parser capabilities, limits, assistant integration status, and source-specific upload guidance.
+- Added authenticated deterministic case inventory and minimized-context APIs plus a read-only OpenAPI tool binding for Packet Expert.
+- Provisioned the evidence tool automatically for the administrator while keeping Network & Visibility isolated from it.
+- Added professional evidence-report instructions, provenance fields, parser validation tests, and an RC6-specific provisioning fingerprint.
+
 ## 0.3.0-rc.5 unified product experience candidate — 2026-08-05
 
 - Added polished, responsive Network & Visibility and Packet Expert welcome pages with clear capability boundaries, guided starts, real application-readiness indication, and direct experience switching.

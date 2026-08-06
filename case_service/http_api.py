@@ -25,6 +25,52 @@ CONTEXT_PATH = re.compile(r"^/v1/cases/([0-9a-f-]{36})/context$")
 REPORT_PATH = re.compile(r"^/v1/cases/([0-9a-f-]{36})/report\.md$")
 
 
+def openapi_spec() -> dict[str, Any]:
+    """Expose only read-only, minimized case operations to the assistant."""
+    security = [{"bearerAuth": []}]
+    case_parameter = {
+        "name": "case_id",
+        "in": "path",
+        "required": True,
+        "description": "Evidence Workspace case UUID supplied by the authorized user.",
+        "schema": {"type": "string", "format": "uuid"},
+    }
+    return {
+        "openapi": "3.1.0",
+        "info": {
+            "title": "NetTAP Evidence Workspace",
+            "version": SERVICE_VERSION,
+            "description": "Read-only access to uploaded, validated and minimized NetTAP evidence cases. Raw evidence is never returned.",
+        },
+        "paths": {
+            "/v1/tool/cases": {
+                "get": {
+                    "operationId": "list_nettap_evidence_cases",
+                    "summary": "List authorized evidence cases",
+                    "description": "List local cases and evidence counts. This does not return raw evidence.",
+                    "security": security,
+                    "responses": {"200": {"description": "Case summaries"}},
+                }
+            },
+            "/v1/cases/{case_id}/context": {
+                "get": {
+                    "operationId": "get_nettap_case_context",
+                    "summary": "Get minimized analysis context for one case",
+                    "description": "Return provenance, quality warnings, deterministic analysis and evidence-bound findings. Raw evidence and secrets are excluded.",
+                    "parameters": [case_parameter],
+                    "security": security,
+                    "responses": {"200": {"description": "Minimized case context"}},
+                }
+            },
+        },
+        "components": {
+            "securitySchemes": {
+                "bearerAuth": {"type": "http", "scheme": "bearer"}
+            }
+        },
+    }
+
+
 def handler_factory(
     service: EvidenceService, repository: Repository, api_token: str, max_upload_bytes: int
 ) -> type[BaseHTTPRequestHandler]:
@@ -50,9 +96,18 @@ def handler_factory(
             if route == "/app.js":
                 self.send_static("app.js", "application/javascript; charset=utf-8")
                 return
+            if route == "/openapi.json":
+                self.send_json(HTTPStatus.OK, openapi_spec(), authenticated=False)
+                return
             if not self.authorized():
                 return
             try:
+                if route == "/v1/configuration":
+                    self.send_json(HTTPStatus.OK, service.configuration())
+                    return
+                if route == "/v1/tool/cases":
+                    self.send_json(HTTPStatus.OK, service.tool_cases())
+                    return
                 if route == "/v1/cases":
                     self.send_json(HTTPStatus.OK, {"cases": repository.list_cases()})
                     return

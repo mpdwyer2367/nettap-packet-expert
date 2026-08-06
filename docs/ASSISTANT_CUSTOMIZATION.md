@@ -30,7 +30,7 @@ The `assistant-provisioner` creates or updates both Skills and both profiles thr
 
 - Name: `NetTAP Network Intelligence — Network & Visibility`
 - ID: `nettap-network-visibility`
-- Base: `nettap-ai:0.3.0-rc.5`
+- Base: `nettap-ai:0.3.0-rc.6`
 - System prompt addition: begin in Network & Visibility mode and keep initial guidance broad
 - Knowledge: approved shared Network Intelligence collection plus Network & Visibility collection
 - Skill: `nettap-network-visibility`
@@ -41,14 +41,14 @@ The `assistant-provisioner` creates or updates both Skills and both profiles thr
 
 - Name: `NetTAP Network Intelligence — Packet Expert`
 - ID: `nettap-packet-expert`
-- Base: `nettap-ai:0.3.0-rc.5`
+- Base: `nettap-ai:0.3.0-rc.6`
 - System prompt addition: begin in Packet Expert mode and use evidence-first analysis
 - Knowledge: approved shared Network Intelligence collection plus Packet Expert collection
 - Skill: `nettap-packet-expert`
 - Tools: none by default
 - Suggestions: Start an investigation; Understand my evidence; Plan data collection
 
-The unwrapped `nettap-ai:0.3.0-rc.5` entry may be used for authorized unified workflows spanning architecture, acquisition, packet evidence, and remediation planning.
+The unwrapped `nettap-ai:0.3.0-rc.6` entry may be used for authorized unified workflows spanning architecture, acquisition, packet evidence, and remediation planning.
 
 The source of truth is `provisioning/open-webui.json` plus its referenced prompt, Skill and knowledge files. Installation validates every source against `provisioning/knowledge-sources.sha256`, calculates a fingerprint, synchronously uploads and embeds each managed file, performs a retrieval proof, reconciles both Skills and Workspace Models, and records `/app/backend/data/nettap-provisioning-state.json`. The provisioner refuses to overwrite an unmanaged collection or Skill with a managed identity, an unrecognized Workspace Model, or unmanaged files inside a managed collection.
 

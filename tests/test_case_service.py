@@ -96,6 +96,7 @@ class CaseServiceTest(unittest.TestCase):
         self.assertEqual(packet["protocol"], "TCP")
         self.assertNotIn("payload", packet)
         self.assertEqual(parsed.metadata["pcap_linktype"], 1)
+        self.assertFalse(parsed.metadata["truncation"])
 
     def test_pcapng_is_rejected_with_actionable_normalization_guidance(self):
         with self.assertRaisesRegex(ParseError, "normalize it with TShark"):
@@ -142,6 +143,18 @@ class CaseServiceTest(unittest.TestCase):
         thread.start()
         base = f"http://127.0.0.1:{server.server_port}"
         try:
+            with urllib.request.urlopen(f"{base}/openapi.json", timeout=5) as response:
+                specification = json.load(response)
+            operations = {
+                operation["operationId"]
+                for methods in specification["paths"].values()
+                for operation in methods.values()
+            }
+            self.assertEqual(
+                operations,
+                {"list_nettap_evidence_cases", "get_nettap_case_context"},
+            )
+
             with self.assertRaises(urllib.error.HTTPError) as unauthorized:
                 urllib.request.urlopen(f"{base}/v1/cases", timeout=5)
             self.assertEqual(unauthorized.exception.code, 401)
@@ -182,6 +195,26 @@ class CaseServiceTest(unittest.TestCase):
             with urllib.request.urlopen(analyze, timeout=5) as response:
                 analyzed = json.load(response)
             self.assertEqual(analyzed["latest_analysis"]["summary"]["observation_count"], 1)
+
+            configuration_request = urllib.request.Request(
+                f"{base}/v1/configuration",
+                headers={"Authorization": f"Bearer {TOKEN}"},
+            )
+            with urllib.request.urlopen(configuration_request, timeout=5) as response:
+                configuration = json.load(response)
+            self.assertEqual(
+                configuration["assistant_integration"]["tool_binding"],
+                "server:nettap_evidence",
+            )
+            self.assertFalse(configuration["assistant_integration"]["raw_evidence_sent_to_model"])
+
+            tool_cases_request = urllib.request.Request(
+                f"{base}/v1/tool/cases",
+                headers={"Authorization": f"Bearer {TOKEN}"},
+            )
+            with urllib.request.urlopen(tool_cases_request, timeout=5) as response:
+                tool_cases = json.load(response)
+            self.assertEqual(tool_cases["cases"][0]["id"], created["id"])
         finally:
             server.shutdown()
             server.server_close()

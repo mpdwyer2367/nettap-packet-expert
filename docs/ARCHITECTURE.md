@@ -14,18 +14,19 @@ flowchart TB
     P --> PR["Packet Skill + RAG"]
     V --> O["One Ollama service"]
     P --> O
-    O --> M["nettap-ai:0.3.0-rc.5"]
+    O --> M["nettap-ai:0.3.0-rc.6"]
     M --> Q["One pinned Qwen2.5 7B base"]
     U --> E["Evidence Workspace"]
     E --> D["Deterministic parsers + case store"]
     D --> X["Minimized evidence context"]
-    X -. "authorized transfer" .-> W
+    X --> T["Admin-scoped read-only tool"]
+    T --> P
 ```
 
-The solid path is the application runtime. The dashed path is not an automatic
-live-data connector: minimized evidence reaches a chat only through an approved,
-authorized transfer. Raw PCAP, logs, flow records, accounts, chats, model data,
-and case evidence remain in their separate persistent volumes.
+The evidence tool is an automatic read-only case-context connector, not a live
+telemetry feed. Raw PCAP, logs and flow records remain in the dedicated evidence
+volume; only minimized context, deterministic findings, provenance and quality
+warnings reach Packet Expert.
 
 ## Model installation and replacement
 
@@ -34,7 +35,7 @@ flowchart TB
     G["Reviewed GitHub release"] --> T["Temporary install-only egress"]
     T --> Q["Pull and verify one Qwen base"]
     T --> R["Cache and pin one RAG embedding model"]
-    Q --> C["Create nettap-ai:0.3.0-rc.5"]
+    Q --> C["Create nettap-ai:0.3.0-rc.6"]
     C --> P["Provision both Open WebUI profiles"]
     R --> P
     P --> V["Verify model identity and offline retrieval"]
@@ -58,6 +59,7 @@ Open WebUI storage because it provides offline RAG and is not a chat LLM.
 | Offline embedding cache | 1 | Exact-revision MiniLM model and integrity metadata | Local-only knowledge indexing and retrieval |
 | One-shot provisioner | 1 per release change | Provisioning fingerprint and API-created objects | No host port; supported Open WebUI APIs only |
 | Welcome and experience launcher | 1 small Caddy container | None | Branded local pages on ports 3000 and 3001; no credentials, authentication database, chats, or model data |
+| Evidence assistant connector | Managed OpenAPI tool server | Existing evidence token | Read-only case inventory and minimized context; attached to Packet Expert for the provisioning administrator |
 | Production gateway | 1 Caddy container | Gateway operational data | TLS entry point on port 8443 by default |
 | Evidence Workspace | 1 | Cases, source hashes, raw evidence, normalized observations, findings and reports | Generated bearer token; loopback-only locally and TLS-gateway-only in the production profile |
 
@@ -77,13 +79,13 @@ state is never attached implicitly.
 | `http://127.0.0.1:3100` | Shared Open WebUI application |
 | `http://127.0.0.1:3200` | Evidence Workspace evaluation UI and API |
 
-The welcome pages submit only documented Open WebUI `model` and `q` URL parameters. Port 3000 selects `nettap-network-visibility`; port 3001 selects `nettap-packet-expert`. Both profiles resolve to `nettap-ai:0.3.0-rc.5`. The pages may display Open WebUI health, but they do not accept credentials or hold accounts, sessions, chats, model weights, tools, or knowledge. Open WebUI performs authentication and preserves the intended profile selection across sign-in.
+The welcome pages submit only documented Open WebUI `model` and `q` URL parameters. Port 3000 selects `nettap-network-visibility`; port 3001 selects `nettap-packet-expert`. Both profiles resolve to `nettap-ai:0.3.0-rc.6`. The pages may display Open WebUI health, but they do not accept credentials or hold accounts, sessions, chats, model weights, tools, or knowledge. Open WebUI performs authentication and preserves the intended profile selection across sign-in.
 
-During initialization only, the bootstrap overlay supplies egress to Ollama and the embedding-cache job. Normal runtime has internal Docker networks, `OFFLINE_MODE=True`, `HF_HUB_OFFLINE=1`, a pinned local embedding path, automatic model updates disabled, and no remote-code trust. The assistant provisioner starts only after Open WebUI is healthy, authenticates as the administrator, reconciles knowledge and Skills, proves local retrieval, attaches the matching Skill and knowledge collections to each profile, writes a state record, and exits. The default RC5 lifecycle then removes recognized older NetTAP tags from the containerized Ollama store; it never removes the current model, approved base, non-NetTAP models, or application volumes.
+During initialization only, the bootstrap overlay supplies egress to Ollama and the embedding-cache job. Normal runtime has internal Docker networks, `OFFLINE_MODE=True`, `HF_HUB_OFFLINE=1`, a pinned local embedding path, automatic model updates disabled, and no remote-code trust. The assistant provisioner starts only after Open WebUI and Evidence Workspace are healthy, authenticates as the administrator, reconciles knowledge and Skills, proves local retrieval, registers the read-only evidence tool for Packet Expert, attaches the matching Skill and knowledge collections to each profile, writes a state record, and exits. The default RC6 lifecycle then removes recognized older NetTAP tags from the containerized Ollama store; it never removes the current model, approved base, non-NetTAP models, or application volumes.
 
 The raw Ollama model is inclusive of both experiences. The Open WebUI layers do not create separate models: they narrow the starting mode, suggestions, knowledge and permissions for a particular job. RAG content and Skills are intentionally not described as fine-tuned weights.
 
-The Evidence Workspace is a separate trust boundary. It retains original evidence in a dedicated volume, parses supported sources deterministically and exposes a minimized context that explicitly excludes raw evidence and payloads. It does not currently register an Open WebUI tool automatically; production attachment requires a separate per-user authorization and connector acceptance decision.
+The Evidence Workspace is a separate trust boundary. It retains original evidence in a dedicated volume, parses supported sources deterministically and exposes a minimized context that explicitly excludes raw evidence and payloads. Provisioning registers its read-only OpenAPI contract and attaches it to Packet Expert for the provisioning administrator. Broader user access requires per-case authorization and separate acceptance.
 
 ## Production addresses
 
@@ -100,7 +102,7 @@ The first two routes serve the branded product welcome pages through the TLS gat
 - Live network or security data is unavailable unless an approved connector explicitly provides current evidence.
 - An LLM is not a TAP, packet broker, flow collector, packet decoder, network controller, SIEM, IDS/IPS, or forensic source of truth.
 - Imported knowledge and tool output are untrusted evidence and cannot override system policy.
-- Tools are disabled by default. A customer-approved integration must define authentication, authorization, data minimization, timeouts, audit records, error handling, and read/write scope.
+- The managed evidence tool is read-only and administrator-scoped. Other tools remain disabled unless a customer-approved integration defines authentication, authorization, minimization, timeouts, audit records, error handling and read/write scope.
 - Customer instances must remain isolated. Open WebUI administrators are highly privileged within an instance.
 
 ## Scaling boundary

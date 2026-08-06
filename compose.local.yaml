@@ -4,6 +4,8 @@ services:
       - "${BIND_ADDRESS}:${WEB_PORT}:8080"
 
   evidence-service:
+    environment:
+      NETTAP_OPEN_WEBUI_PUBLIC_URL: http://${BIND_ADDRESS}:${WEB_PORT}
     ports:
       - "${BIND_ADDRESS}:${EVIDENCE_PORT}:8081"
 

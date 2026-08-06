@@ -4,7 +4,7 @@ This roadmap separates implemented candidate capability from future commercial e
 
 ## Stage 0.3 — unified assistant integration candidate
 
-Implemented in `0.3.0-rc.5` source:
+Implemented through `0.3.0-rc.6` source:
 
 - responsive Network & Visibility and Packet Expert welcome pages for local and TLS deployments;
 - clear one-account sign-in guidance without a second credential database;

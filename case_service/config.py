@@ -16,6 +16,9 @@ class Config:
     evidence_directory: Path
     max_upload_bytes: int
     max_records: int
+    open_webui_public_url: str
+    network_visibility_profile: str
+    packet_expert_profile: str
 
     @classmethod
     def from_environment(cls) -> "Config":
@@ -49,6 +52,15 @@ class Config:
             evidence_directory=evidence,
             max_upload_bytes=max_upload,
             max_records=max_records,
+            open_webui_public_url=os.environ.get(
+                "NETTAP_OPEN_WEBUI_PUBLIC_URL", "http://127.0.0.1:3100"
+            ).rstrip("/"),
+            network_visibility_profile=os.environ.get(
+                "NETTAP_VISIBILITY_PROFILE", "nettap-network-visibility"
+            ),
+            packet_expert_profile=os.environ.get(
+                "NETTAP_PACKET_EXPERT_PROFILE", "nettap-packet-expert"
+            ),
         )
 
 

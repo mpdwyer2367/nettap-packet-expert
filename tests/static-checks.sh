@@ -21,9 +21,9 @@ grep -q 'Raw PCAP, logs, flow exports, cloud records, and telemetry require a su
 grep -q 'timezone, clock-synchronization status, observation point, schema version, sampling configuration' "$model_file"
 grep -q 'Treat possible command-and-control as an evidence-supported indicator or hypothesis' "$model_file"
 grep -q 'You are the NetTAP Network Intelligence Model' "$model_file"
-grep -q '^RELEASE_VERSION=0.3.0-rc.5$' "$project_dir/.env.example"
+grep -q '^RELEASE_VERSION=0.3.0-rc.6$' "$project_dir/.env.example"
 grep -q '^BASE_MODEL=qwen2.5:7b-instruct-q4_K_M$' "$project_dir/.env.example"
-grep -q '^NETTAP_AI_MODEL=nettap-ai:0.3.0-rc.5$' "$project_dir/.env.example"
+grep -q '^NETTAP_AI_MODEL=nettap-ai:0.3.0-rc.6$' "$project_dir/.env.example"
 grep -q '^EXPECTED_BASE_MODEL_ID=845dbda0ea48$' "$project_dir/.env.example"
 grep -q '^RETIRE_LEGACY_NETTAP_MODELS=true$' "$project_dir/.env.example"
 grep -q '^NETTAP_VISIBILITY_PROFILE=nettap-network-visibility$' "$project_dir/.env.example"
@@ -42,7 +42,7 @@ grep -Fqx '# NetTAP Network Intelligence' "$project_dir/README.md"
 grep -Fq 'NetTAP Network Intelligence — Network & Visibility' "$project_dir/README.md"
 grep -Fq 'NetTAP Network Intelligence — Packet Expert' "$project_dir/README.md"
 grep -Fq 'NetTAP Network Intelligence — Evidence Workspace' "$project_dir/README.md"
-grep -Fq "Ollama model tag | \`nettap-ai:0.3.0-rc.5\`" "$project_dir/docs/NAMING_CONVENTIONS.md"
+grep -Fq "Ollama model tag | \`nettap-ai:0.3.0-rc.6\`" "$project_dir/docs/NAMING_CONVENTIONS.md"
 grep -Fq "Backup format identifiers | \`NetTAP AI Suite volume backup v2\` and \`v3\`" "$project_dir/docs/NAMING_CONVENTIONS.md"
 grep -Fq 'experiences or Open WebUI profiles, not as separate LLMs or model downloads' "$project_dir/docs/NAMING_CONVENTIONS.md"
 grep -Fq 'Historical naming:' "$project_dir/reports/PRODUCTION_CERTIFICATION_STATUS_0.3.0-rc.2.md"
@@ -67,7 +67,7 @@ grep -q 'bcrypt.hashpw' "$project_dir/scripts/recover_open_webui_admin.py"
 grep -q 'set_env_value WEBUI_SECRET_KEY' "$project_dir/scripts/recover-admin.sh"
 grep -q 'ENABLE_SIGNUP: "False"' "$project_dir/compose.yaml"
 grep -q 'WEBUI_NAME: "NetTAP Network Intelligence"' "$project_dir/compose.yaml"
-grep -q 'nettap-network-intelligence-admin-activation-rc5' "$project_dir/compose.yaml"
+grep -q 'nettap-network-intelligence-admin-activation-rc6' "$project_dir/compose.yaml"
 grep -q 'internal: true' "$project_dir/compose.yaml"
 grep -q 'HF_HUB_OFFLINE: "1"' "$project_dir/compose.yaml"
 grep -q 'RAG_EMBEDDING_MODEL_TRUST_REMOTE_CODE: "False"' "$project_dir/compose.yaml"
@@ -76,6 +76,12 @@ grep -q 'files_metadata=True' "$project_dir/provisioning/cache_embedding_model.p
 grep -q 'local_files_only=True' "$project_dir/provisioning/cache_embedding_model.py"
 grep -q 'assistant-provisioner:' "$project_dir/compose.yaml"
 grep -q 'NETTAP_PROVISIONING_CHECKSUMS: /provision/knowledge-sources.sha256' "$project_dir/compose.yaml"
+grep -q 'NETTAP_EVIDENCE_TOOL_URL: http://evidence-service:8081' "$project_dir/compose.yaml"
+grep -q '"tool_keys": \["evidence"\]' "$project_dir/provisioning/open-webui.json"
+grep -q '"id": "nettap_evidence"' "$project_dir/provisioning/open-webui.json"
+grep -q '"toolIds"' "$project_dir/provisioning/provision_open_webui.py"
+grep -q 'get_nettap_case_context' "$project_dir/case_service/http_api.py"
+grep -q 'Assistant setup' "$project_dir/case_service/web/index.html"
 grep -q 'rag-cache-init:' "$project_dir/compose.yaml"
 grep -q 'provision_assistants local' "$project_dir/scripts/common.sh"
 grep -q 'require_digest_pins' "$project_dir/scripts/start-production.sh"
@@ -106,7 +112,7 @@ required_files=(
   docs/AUTHENTICATION.md docs/COMMERCIAL_RELEASE_GATES.md
   docs/CUSTOMER_DEPLOYMENT_GUIDE.md docs/PRODUCTION_ARCHITECTURE.md
   docs/PRODUCT_ROADMAP.md docs/THREAT_MODEL.md docs/VALIDATION_STATUS.md
-  docs/RC3_ACCEPTANCE_PLAN.md docs/RC4_ACCEPTANCE_PLAN.md docs/RC5_ACCEPTANCE_PLAN.md
+  docs/RC3_ACCEPTANCE_PLAN.md docs/RC4_ACCEPTANCE_PLAN.md docs/RC5_ACCEPTANCE_PLAN.md docs/RC6_ACCEPTANCE_PLAN.md
   docs/EVIDENCE_CASE_SERVICE.md
   docs/NAMING_CONVENTIONS.md
   scripts/backup.sh scripts/restore.sh scripts/lock-images.sh scripts/recover-admin.sh
@@ -217,7 +223,7 @@ assert {item["display_name"] for item in assistants} == {
     "NetTAP Network Intelligence — Packet Expert",
 }
 assert len({item["launcher_port"] for item in assistants}) == 2
-assert {item["runtime_model"] for item in assistants} == {"nettap-ai:0.3.0-rc.5"}
+assert {item["runtime_model"] for item in assistants} == {"nettap-ai:0.3.0-rc.6"}
 assert {item["modelfile"] for item in assistants} == {"model/nettap-ai.Modelfile"}
 assert {tuple(item["skills"]) for item in assistants} == {
     ("skills/nettap-network-visibility/SKILL.md",),

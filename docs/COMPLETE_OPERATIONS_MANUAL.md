@@ -1,13 +1,13 @@
 # NetTAP Network Intelligence operations manual
 
-Release `0.3.0-rc.5` is an integration candidate for one single-node, single-customer Docker deployment. It is not a certified GA appliance until every commercial release gate passes.
+Release `0.3.0-rc.6` is an integration candidate for one single-node, single-customer Docker deployment. It is not a certified GA appliance until every commercial release gate passes.
 
 ## Components
 
 | Component | Identity |
 |---|---|
 | Shared base | `qwen2.5:7b-instruct-q4_K_M` |
-| Shared NetTAP Network Intelligence Model | `nettap-ai:0.3.0-rc.5` |
+| Shared NetTAP Network Intelligence Model | `nettap-ai:0.3.0-rc.6` |
 | Network profile | Workspace Model ID `nettap-network-visibility` over the combined model |
 | Packet profile | Workspace Model ID `nettap-packet-expert` over the combined model |
 | Local UI | `127.0.0.1:3100` |
@@ -84,7 +84,7 @@ Run `./scripts/nettap-ai provision-assistants --confirm`, then inspect the manag
 
 ### One profile is missing
 
-Run `./scripts/nettap-ai update-models --confirm` and inspect `ollama list` for `nettap-ai:0.3.0-rc.5`. The update also refreshes the pinned offline embedding cache, reconciles the managed profiles, and—after those checks pass—retires older NetTAP container tags. Review the provisioning state and rerun the behavior tests. Do not create an unversioned substitute model from the UI.
+Run `./scripts/nettap-ai update-models --confirm` and inspect `ollama list` for `nettap-ai:0.3.0-rc.6`. The update also refreshes the pinned offline embedding cache, reconciles the managed profiles and evidence tool, and—after those checks pass—retires older NetTAP container tags. Review the provisioning state and rerun the behavior tests. Do not create an unversioned substitute model from the UI.
 
 ### Existing login fails
 
