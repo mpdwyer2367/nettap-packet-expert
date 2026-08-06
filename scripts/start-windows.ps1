@@ -242,7 +242,7 @@ foreach ($line in [System.IO.File]::ReadAllLines($envPath)) {
     }
 }
 
-Write-Host "NetTAP AI Suite: http://127.0.0.1:$webPort"
+Write-Host "NetTAP Network Intelligence: http://127.0.0.1:$webPort"
 Write-Host "Network & Visibility: http://127.0.0.1:$visibilityPort"
 Write-Host "Packet Expert: http://127.0.0.1:$packetPort"
 Write-Host "Evidence Workspace: http://127.0.0.1:$evidencePort"

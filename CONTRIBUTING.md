@@ -1,6 +1,6 @@
 # Contributing
 
-NetTAP AI Suite accepts changes through reviewed pull requests. Do not commit secrets, credentials, TLS keys, customer evidence, packet captures, backups, generated private reports, model weights, or unapproved third-party binaries.
+NetTAP Network Intelligence accepts changes through reviewed pull requests. Do not commit secrets, credentials, TLS keys, customer evidence, packet captures, backups, generated private reports, model weights, or unapproved third-party binaries.
 
 Before opening a pull request:
 

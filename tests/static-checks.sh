@@ -35,6 +35,12 @@ grep -q '^VISIBILITY_LAUNCHER_PORT=3000$' "$project_dir/.env.example"
 grep -q '^PACKET_EXPERT_LAUNCHER_PORT=3001$' "$project_dir/.env.example"
 grep -q '^EVIDENCE_PORT=3200$' "$project_dir/.env.example"
 grep -q '^EVIDENCE_API_TOKEN=GENERATE_ON_FIRST_START$' "$project_dir/.env.example"
+grep -Fqx '# NetTAP Network Intelligence' "$project_dir/README.md"
+grep -Fq 'NetTAP Network Intelligence — Network & Visibility' "$project_dir/README.md"
+grep -Fq 'NetTAP Network Intelligence — Packet Expert' "$project_dir/README.md"
+grep -Fq 'NetTAP Network Intelligence — Evidence Workspace' "$project_dir/README.md"
+grep -Fq 'Ollama model tag | `nettap-ai:0.3.0-rc.3`' "$project_dir/docs/NAMING_CONVENTIONS.md"
+grep -Fq 'Backup format identifiers | `NetTAP AI Suite volume backup v2` and `v3`' "$project_dir/docs/NAMING_CONVENTIONS.md"
 grep -q '^WEBUI_ADMIN_PASSWORD=GENERATE_ON_FIRST_START$' "$project_dir/.env.example"
 grep -q 'ENABLE_SIGNUP: "False"' "$project_dir/compose.yaml"
 grep -q 'nettap-bootstrap-password-rc9' "$project_dir/compose.yaml"
@@ -77,6 +83,7 @@ required_files=(
   docs/PRODUCT_ROADMAP.md docs/THREAT_MODEL.md docs/VALIDATION_STATUS.md
   docs/RC3_ACCEPTANCE_PLAN.md
   docs/EVIDENCE_CASE_SERVICE.md
+  docs/NAMING_CONVENTIONS.md
   scripts/backup.sh scripts/restore.sh scripts/lock-images.sh
   scripts/provision-assistants.sh
   scripts/security-scan.sh scripts/production-preflight.sh
@@ -165,6 +172,10 @@ for manifest_path in sorted((root / "assistants").glob("*/assistant.yaml")):
         assert content.startswith("---\nname: ")
         assert "\ndescription: " in content
 assert {item["id"] for item in assistants} == {"nettap-network-visibility", "nettap-packet-expert"}
+assert {item["display_name"] for item in assistants} == {
+    "NetTAP Network Intelligence — Network & Visibility",
+    "NetTAP Network Intelligence — Packet Expert",
+}
 assert len({item["launcher_port"] for item in assistants}) == 2
 assert {item["runtime_model"] for item in assistants} == {"nettap-ai:0.3.0-rc.3"}
 assert {item["modelfile"] for item in assistants} == {"model/nettap-ai.Modelfile"}
@@ -174,6 +185,15 @@ assert {tuple(item["skills"]) for item in assistants} == {
 }
 assert {item["workspace_model_id"] for item in assistants} == {"nettap-network-visibility", "nettap-packet-expert"}
 assert {item["mode"] for item in assistants} == {"network_visibility", "packet_expert"}
+provisioning = json.loads((root / "provisioning/open-webui.json").read_text(encoding="utf-8"))
+assert {item["name"] for item in provisioning["assistants"]} == {
+    "NetTAP Network Intelligence — Network & Visibility",
+    "NetTAP Network Intelligence — Packet Expert",
+}
+assert {item["name"] for item in provisioning["skills"]} == {
+    "NetTAP Network Intelligence — Network & Visibility",
+    "NetTAP Network Intelligence — Packet Expert",
+}
 expected_sources = {
     "assistants/shared/core-policy.md",
     "assistants/network-visibility/system-prompt.md",

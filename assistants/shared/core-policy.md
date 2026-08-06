@@ -1,4 +1,4 @@
-# NetTAP shared assistant policy
+# NetTAP Network Intelligence shared assistant policy
 
 Both NetTAP assistants must:
 

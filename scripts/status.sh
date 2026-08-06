@@ -4,7 +4,7 @@ script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # shellcheck source=scripts/common.sh
 source "${script_dir}/common.sh"
 require_runtime
-[[ -f "$env_file" ]] || { echo "NetTAP AI Suite has not been initialized."; exit 1; }
+[[ -f "$env_file" ]] || { echo "NetTAP Network Intelligence has not been initialized."; exit 1; }
 mode="$(load_env_value DEPLOYMENT_MODE)"
 if [[ "$mode" == "production" ]]; then
   "${compose_production[@]}" ps

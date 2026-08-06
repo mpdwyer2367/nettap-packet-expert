@@ -24,7 +24,7 @@ fail() {
   exit 1
 }
 
-echo "NetTAP AI Suite canonical ${platform} runtime verification"
+echo "NetTAP Network Intelligence canonical ${platform} runtime verification"
 echo "UTC: $(date -u +%FT%TZ)"
 echo "Host: $(uname -a)"
 echo "Project directory: $project_dir"
@@ -49,7 +49,7 @@ bind_address="$(load_env_value BIND_ADDRESS)"
 ollama_image="$(load_env_value OLLAMA_IMAGE)"
 webui_image="$(load_env_value OPEN_WEBUI_IMAGE)"
 
-[[ "$nettap_model" == "nettap-ai:0.3.0-rc.3" ]] || fail "Unexpected NetTAP AI identity: $nettap_model"
+[[ "$nettap_model" == "nettap-ai:0.3.0-rc.3" ]] || fail "Unexpected Network Intelligence model identity: $nettap_model"
 [[ "$bind_address" == "127.0.0.1" ]] || fail "BIND_ADDRESS must remain 127.0.0.1 for the local profile."
 "${compose[@]}" config >/dev/null || fail "Compose configuration is invalid."
 
@@ -96,8 +96,8 @@ evidence_binding="$(docker port "$evidence_id" 8081/tcp 2>/dev/null || true)"
 [[ "$evidence_binding" == "${bind_address}:${evidence_port}" ]] || fail "Evidence Workspace binding is $evidence_binding; expected ${bind_address}:${evidence_port}."
 echo "PASS: Evidence Workspace is bound to ${bind_address}:${evidence_port}"
 
-"${compose[@]}" exec -T ollama ollama show "$nettap_model" | grep -q 'You are NetTAP AI' || fail "Combined NetTAP AI identity check failed."
-echo "PASS: combined NetTAP AI model is installed"
+"${compose[@]}" exec -T ollama ollama show "$nettap_model" | grep -q 'You are NetTAP AI' || fail "Network Intelligence model identity check failed."
+echo "PASS: NetTAP Network Intelligence Model is installed"
 
 "${compose[@]}" exec -T open-webui python - <<'PY' || fail "Provisioned assistants or offline RAG state is invalid."
 import json

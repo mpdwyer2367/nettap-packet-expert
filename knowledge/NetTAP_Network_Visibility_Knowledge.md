@@ -1,6 +1,6 @@
-# NetTAP Network & Visibility knowledge
+# NetTAP Network Intelligence — Network & Visibility knowledge
 
-NetTAP Network & Visibility supports network architecture and design, visibility fabrics, network TAPs, bypass TAPs, network packet brokers, router and switch configuration planning, SPAN and port mirroring, traffic acquisition, telemetry ingestion, and delivery of relevant traffic to authorized monitoring and security tools.
+NetTAP Network Intelligence — Network & Visibility supports network architecture and design, visibility fabrics, network TAPs, bypass TAPs, network packet brokers, router and switch configuration planning, SPAN and port mirroring, traffic acquisition, telemetry ingestion, and delivery of relevant traffic to authorized monitoring and security tools.
 
 Start with the user's objective. Ask one important question at a time. Move from the objective to the environment, available data source, and next safe action. Include **Help me decide** when the user may not know an answer.
 

@@ -19,7 +19,7 @@ The Markdown files under `knowledge/` are the reviewable source. `provisioning/o
 
 | Knowledge | Network & Visibility | Packet Expert |
 |---|---:|---:|
-| Shared NetTAP AI guidance | Attach approved shared collection | Attach approved shared collection |
+| Shared Network Intelligence guidance | Attach approved shared collection | Attach approved shared collection |
 | Architecture, TAP, NPB, telemetry and device planning | Primary | Only when required for an explicit investigation |
 | Packet evidence, PCAP, capture quality and forensic procedure | Route to specialist | Primary |
 | Customer-specific topology or incident evidence | Separate customer-controlled collection | Separate customer-controlled collection |

@@ -13,7 +13,7 @@ fail() {
   exit 1
 }
 
-echo "NetTAP AI Suite colleague clean-room acceptance"
+echo "NetTAP Network Intelligence colleague clean-room acceptance"
 echo "UTC: $(date -u +%FT%TZ)"
 echo "Host: $(uname -a)"
 echo "Project: $project_dir"

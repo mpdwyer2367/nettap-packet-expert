@@ -1,4 +1,4 @@
-# NetTAP AI Suite administration
+# NetTAP Network Intelligence administration
 
 Use the unified command:
 
@@ -29,7 +29,7 @@ The legacy `scripts/nettap-packet-expert` command remains as a compatibility wra
 1. Back up data and `.env` using [the migration procedure](MIGRATION.md).
 2. Review release notes, image digests, model ID, security scan, and rollback requirements.
 3. Apply the approved source release.
-4. Rebuild the combined model with `./scripts/nettap-ai update-models --confirm`.
+4. Rebuild the shared model with `./scripts/nettap-ai update-models --confirm`.
 5. Run static, behavioral, runtime, launcher, backup, and restore acceptance.
 6. Update managed Workspace Models and knowledge only through a reviewed source change followed by `./scripts/nettap-ai provision-assistants --confirm`.
 
@@ -38,7 +38,7 @@ The legacy `scripts/nettap-packet-expert` command remains as a compatibility wra
 The Compose project retains two persistent volumes:
 
 - `nettap-packet-expert_packet-expert-open-webui-data`: accounts, chats, application settings, managed/customer knowledge, exact-revision embedding cache, provisioning state, and audit log.
-- `nettap-packet-expert_packet-expert-ollama-data`: base model, combined NetTAP AI manifest, and any retained rollback tags.
+- `nettap-packet-expert_packet-expert-ollama-data`: base model, shared Network Intelligence model manifest, and any retained rollback tags.
 
 The launchers are stateless. Removing or recreating the launcher container does not remove chats or models.
 

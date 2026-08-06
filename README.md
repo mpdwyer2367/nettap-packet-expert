@@ -1,19 +1,19 @@
-# NetTAP AI Suite
+# NetTAP Network Intelligence
 
-NetTAP AI Suite is a customer-isolated network engineering and security operations assistant package. It runs one combined NetTAP AI model with two specialized user experiences:
+NetTAP Network Intelligence is a private, customer-isolated network visibility and forensic operations platform. It runs one shared **NetTAP Network Intelligence Model** with two specialized user experiences:
 
-- **NetTAP Network & Visibility** for architecture, device planning, TAP/SPAN/NPB deployment, telemetry acquisition, and visibility operations.
-- **NetTAP Packet Expert** for authorized packet evidence, capture planning, performance investigation, cyber visibility, and forensic analysis.
+- **NetTAP Network Intelligence — Network & Visibility** for architecture, device planning, TAP/SPAN/NPB deployment, telemetry acquisition, and visibility operations.
+- **NetTAP Network Intelligence — Packet Expert** for authorized packet evidence, capture planning, performance investigation, cyber visibility, and forensic analysis.
 
-The two experiences select the same `nettap-ai:0.3.0-rc.3` Ollama model, which is built once from `qwen2.5:7b-instruct-q4_K_M`. Thin Open WebUI Workspace Model profiles retain separate names, specialist knowledge, suggested starting points, and future tool allowlists without duplicating model weights. The raw NetTAP AI model also supports unified cross-domain workflows. One Open WebUI instance provides one account, chat history, administration, audit, backup, and update surface.
+The two experiences select the same technical Ollama model tag, `nettap-ai:0.3.0-rc.3`, built once from `qwen2.5:7b-instruct-q4_K_M`. Thin Open WebUI Workspace Model profiles retain separate names, specialist knowledge, suggested starting points, and future tool allowlists without duplicating model weights. The shared model also supports unified cross-domain workflows. One Open WebUI instance provides one account, chat history, administration, audit, backup, and update surface.
 
-The repository contains the combined model definition, both product Skills, reviewed RAG knowledge, automatic provisioning, and an evaluation local Evidence Workspace for uploaded PCAP metadata, normalized logs and flow records. It does **not** contain separately fine-tuned weights, customer telemetry, packet captures, credentials, or a live NetTAP connector. See the [combined model card](model/MODEL_CARD.md) and [Evidence Workspace guide](docs/EVIDENCE_CASE_SERVICE.md).
+The repository contains the combined model definition, both experience Skills, reviewed RAG knowledge, automatic provisioning, and the evaluation **NetTAP Network Intelligence — Evidence Workspace** for uploaded PCAP metadata, normalized logs and flow records. It does **not** contain separately fine-tuned weights, customer telemetry, packet captures, credentials, or a live NetTAP connector. See the [combined model card](model/MODEL_CARD.md), [Evidence Workspace guide](docs/EVIDENCE_CASE_SERVICE.md), and [naming conventions](docs/NAMING_CONVENTIONS.md).
 
 ## Release status
 
 `0.3.0-rc.3` is a migration and integration release candidate. Its source must pass static validation before publication, but it is not production-certified or approved for commercial appliance distribution until the exact commit has passing macOS and Windows runtime evidence, profile-isolation tests, storage measurement, SBOM/CVE acceptance, independent penetration testing, legal/licensing approval, support readiness, signature verification, and authorized release acceptance.
 
-The completed `0.2.0-rc.1` Packet Expert evidence record remains historical evidence for that earlier single-assistant candidate. It does not certify the new suite candidate. See [validation status](docs/VALIDATION_STATUS.md).
+The completed `0.2.0-rc.1` Packet Expert evidence record remains historical evidence for that earlier single-assistant candidate. It does not certify the current platform candidate. See [validation status](docs/VALIDATION_STATUS.md).
 
 ## Architecture
 
@@ -21,9 +21,9 @@ The completed `0.2.0-rc.1` Packet Expert evidence record remains historical evid
 flowchart TB
     U["Authorized user"] --> L["Assistant launchers"]
     L --> W["One Open WebUI"]
-    W --> V["Network & Visibility profile"]
-    W --> P["Packet Expert profile"]
-    U --> E["Local Evidence Workspace"]
+    W --> V["Network & Visibility experience"]
+    W --> P["Packet Expert experience"]
+    U --> E["Evidence Workspace"]
     E --> C["Cases + deterministic analysis"]
     C --> X["Minimized LLM-safe context"]
     V --> VS["Visibility Skill + RAG"]
@@ -35,9 +35,9 @@ flowchart TB
 
 The local launchers are stateless pages. Each selects its automatically managed Open WebUI Workspace Model through documented `model` and `q` URL parameters. Both Workspace Models use the same combined Ollama model, while retaining separate prompts, suggestions, and specialist knowledge bindings. Accounts, chats, model weights, and administration remain shared.
 
-## Download or create the combined model
+## Download or create the shared model
 
-The repository is the downloadable source of truth for `nettap-ai:0.3.0-rc.3`. It includes both products in one Ollama policy:
+The repository is the downloadable source of truth for the NetTAP Network Intelligence Model under technical tag `nettap-ai:0.3.0-rc.3`. It includes both experience capabilities in one Ollama policy:
 
 - Network & Visibility: architecture, TAP/SPAN/NPB design, routing and switching context, telemetry acquisition, deployment and troubleshooting.
 - Packet Expert: authorized capture planning, evidence quality, PCAP-derived analysis, performance, cyber visibility and forensics.
@@ -123,8 +123,8 @@ Do not begin by deleting containers or volumes. Follow [MIGRATION.md](docs/MIGRA
 
 1. Inventory and back up the old deployment while using the old release.
 2. Protect the old `.env` and record its source commit.
-3. Apply the reviewed suite candidate.
-4. Build one combined NetTAP AI model from the verified base.
+3. Apply the reviewed platform candidate.
+4. Build one shared NetTAP Network Intelligence Model from the verified base.
 5. Preserve existing Open WebUI accounts, chats, and Packet Expert knowledge.
 6. Add the isolated Network & Visibility knowledge collection.
 7. Validate both experience profiles, the combined model, launchers, storage, backup, restore, and rollback.
@@ -149,9 +149,9 @@ The old `scripts/nettap-packet-expert` entry point remains as a compatibility wr
 
 | Experience | Runtime model policy | Managed Skill | Knowledge source |
 |---|---|---|---|
-| Unified NetTAP AI | [nettap-ai.Modelfile](model/nettap-ai.Modelfile) | Combined policy in model | [Shared NetTAP AI knowledge](knowledge/NetTAP_AI_Knowledge.md) |
-| Network & Visibility profile | Same `nettap-ai` model | [Network & Visibility Skill](skills/nettap-network-visibility/SKILL.md) | [NetTAP Network & Visibility knowledge](knowledge/NetTAP_Network_Visibility_Knowledge.md) |
-| Packet Expert profile | Same `nettap-ai` model | [Packet Expert Skill](skills/nettap-packet-expert/SKILL.md) | [NetTAP Packet Expert knowledge](knowledge/NetTAP_Packet_Expert_Knowledge.md) |
+| Shared Network Intelligence Model | [nettap-ai.Modelfile](model/nettap-ai.Modelfile) | Combined policy in model | [Shared Network Intelligence knowledge](knowledge/NetTAP_AI_Knowledge.md) |
+| Network & Visibility experience | Same `nettap-ai` model | [Network & Visibility Skill](skills/nettap-network-visibility/SKILL.md) | [Network & Visibility knowledge](knowledge/NetTAP_Network_Visibility_Knowledge.md) |
+| Packet Expert experience | Same `nettap-ai` model | [Packet Expert Skill](skills/nettap-packet-expert/SKILL.md) | [Packet Expert knowledge](knowledge/NetTAP_Packet_Expert_Knowledge.md) |
 
 The [ingestion and analysis guidance](knowledge/NetTAP_Ingestion_Analysis_Guidance.md) is shared by both profiles. It defines accurate handling for PCAP-derived evidence, logs, flow telemetry, cloud flow records, decryption, provenance, correlation, and evidence-bounded security conclusions.
 

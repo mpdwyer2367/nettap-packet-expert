@@ -33,7 +33,7 @@ case "$command_name" in
   verify-production) exec "${script_dir}/verify-production-deployment.sh" "$@" ;;
   certify) exec "${script_dir}/certify-production.sh" "$@" ;;
   help|*)
-    echo "NetTAP AI Suite administration"
+    echo "NetTAP Network Intelligence administration"
     echo "Commands: start-local, start-wsl2, configure-production, start-production, status, health, evidence, stop, update-models, install-native-model, package-model-bundle, provision-assistants, lock-images, scan, backup, restore, verify-production, certify"
     ;;
 esac

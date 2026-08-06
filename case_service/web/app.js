@@ -209,7 +209,7 @@ async function copyContext() {
   try {
     const content = await api(`/v1/cases/${state.activeCase.id}/context`);
     await navigator.clipboard.writeText(JSON.stringify(content, null, 2));
-    message("Minimized context copied. Review it before pasting it into NetTAP AI.", "success");
+    message("Minimized context copied. Review it before pasting it into NetTAP Network Intelligence.", "success");
   } catch (error) { message(error.message, "error"); }
 }
 

@@ -1,8 +1,8 @@
-# NetTAP AI Suite architecture
+# NetTAP Network Intelligence architecture
 
 ## Decision
 
-The suite runs one Open WebUI instance, one Ollama service, and one combined NetTAP AI model built from Qwen2.5 7B in one Ollama volume. Two thin application profiles provide distinct user experiences without duplicating weights. This is a single-node, single-customer architecture; it is not a multi-tenant SaaS design.
+NetTAP Network Intelligence runs one Open WebUI instance, one Ollama service, and one shared NetTAP Network Intelligence Model built from Qwen2.5 7B in one Ollama volume. Two thin application profiles provide distinct user experiences without duplicating weights. This is a single-node, single-customer architecture; it is not a multi-tenant SaaS design.
 
 ```mermaid
 flowchart TB
@@ -25,7 +25,7 @@ flowchart TB
 | Component | Quantity | Persistent data | Boundary |
 |---|---:|---|---|
 | Open WebUI | 1 | Accounts, chats, settings, imported knowledge | Only browser and authenticated application surface |
-| Ollama | 1 | One base-model store and one combined NetTAP AI manifest | No host port in the supplied profiles |
+| Ollama | 1 | One base-model store and one shared Network Intelligence model manifest | No host port in the supplied profiles |
 | Network & Visibility profile | 1 | Managed Workspace Model and isolated specialist knowledge collection | Broad architecture, deployment, visibility, and telemetry workflow |
 | Packet Expert profile | 1 | Managed Workspace Model and isolated specialist knowledge collection | Packet evidence, capture planning, forensics, and security investigation |
 | Managed Open WebUI Skills | 2 | Versioned Markdown instructions with preserved access grants | One specialist Skill is attached to each profile; Skills do not duplicate weights or execute tools |
@@ -50,7 +50,7 @@ The launchers submit only documented Open WebUI `model` and `q` URL parameters. 
 
 During initialization only, the bootstrap overlay supplies egress to Ollama and the embedding-cache job. Normal runtime has internal Docker networks, `OFFLINE_MODE=True`, `HF_HUB_OFFLINE=1`, a pinned local embedding path, automatic model updates disabled, and no remote-code trust. The assistant provisioner starts only after Open WebUI is healthy, authenticates as the administrator, reconciles knowledge and Skills, proves local retrieval, attaches the matching Skill and knowledge collections to each profile, writes a state record, and exits.
 
-The raw Ollama model is inclusive of both products. The Open WebUI layers do not create separate models: they narrow the starting mode, suggestions, knowledge and permissions for a particular job. RAG content and Skills are intentionally not described as fine-tuned weights.
+The raw Ollama model is inclusive of both experiences. The Open WebUI layers do not create separate models: they narrow the starting mode, suggestions, knowledge and permissions for a particular job. RAG content and Skills are intentionally not described as fine-tuned weights.
 
 The Evidence Workspace is a separate trust boundary. It retains original evidence in a dedicated volume, parses supported sources deterministically and exposes a minimized context that explicitly excludes raw evidence and payloads. It does not currently register an Open WebUI tool automatically; production attachment requires a separate per-user authorization and connector acceptance decision.
 

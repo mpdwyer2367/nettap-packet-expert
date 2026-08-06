@@ -1,4 +1,4 @@
-# NetTAP AI model card
+# NetTAP Network Intelligence Model card
 
 ## Identity
 
@@ -11,7 +11,7 @@
 | NetTAP model definition | `model/nettap-ai.Modelfile` |
 | NetTAP copyright | Copyright 2026 NetTAP Technology Limited |
 
-`nettap-ai:0.3.0-rc.3` is one combined Ollama model definition for both NetTAP Network & Visibility and NetTAP Packet Expert. It is not a separately fine-tuned weight set. Ollama creates it from the verified Qwen2.5 7B base plus the NetTAP system policy in the Modelfile, using Ollama's documented [`Modelfile` and `ollama create` workflow](https://docs.ollama.com/modelfile).
+The NetTAP Network Intelligence Model uses the technical tag `nettap-ai:0.3.0-rc.3`. It is one combined Ollama model definition for the Network & Visibility and Packet Expert experiences, not a separately fine-tuned weight set. Ollama creates it from the verified Qwen2.5 7B base plus the NetTAP system policy in the Modelfile, using Ollama's documented [`Modelfile` and `ollama create` workflow](https://docs.ollama.com/modelfile).
 
 ## Included product capability
 
@@ -20,7 +20,7 @@
 | Network architecture, TAP/SPAN/NPB design, telemetry acquisition, deployment and troubleshooting | Included | Network & Visibility prompt, Skill and RAG collection |
 | Packet acquisition planning, evidence quality, PCAP-derived analysis, performance, cyber visibility and forensics | Included | Packet Expert prompt, Skill and RAG collection |
 | Evidence boundaries, live-data disclosure, configuration safety, decryption handling and prompt-injection resistance | Shared and always active | Reinforced by both profiles |
-| Cross-domain workflow from visibility design to evidence collection and investigation | Included as Unified mode | User may select the raw NetTAP AI model or move between profiles |
+| Cross-domain workflow from visibility design to evidence collection and investigation | Included as Unified mode | User may select the shared technical model or move between profiles |
 
 The two Open WebUI Workspace Models are lightweight product profiles over the same Ollama model. They do not copy the 7B weights. Specialist Markdown knowledge and [Open WebUI Skills](https://docs.openwebui.com/features/workspace/skills/) remain versioned outside the weights so they can be reviewed, hashed, tested, and updated without pretending a RAG update is fine-tuning.
 

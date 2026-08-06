@@ -1,6 +1,6 @@
 # Colleague evaluation guide
 
-This is the shortest controlled macOS evaluation path for NetTAP AI Suite `0.3.0-rc.3`. It does not grant production or commercial approval.
+This is the shortest controlled macOS evaluation path for NetTAP Network Intelligence `0.3.0-rc.3`. It does not grant production or commercial approval.
 
 ## Fresh evaluation
 

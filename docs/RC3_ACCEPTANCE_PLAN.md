@@ -2,7 +2,7 @@
 
 ## Decision boundary
 
-NetTAP AI Suite `0.3.0-rc.3` becomes eligible for a production-candidate decision only after the exact signed package passes both supported-host runs and every independent approval below. Source CI or one host alone cannot grant production, customer, or commercial approval.
+NetTAP Network Intelligence `0.3.0-rc.3` becomes eligible for a production-candidate decision only after the exact signed package passes both supported-host runs and every independent approval below. Source CI or one host alone cannot grant production, customer, or commercial approval.
 
 ## Frozen candidate identity
 

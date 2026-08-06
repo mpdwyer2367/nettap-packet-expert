@@ -174,8 +174,8 @@ provisioning_identity="$(installed_provisioning_fingerprint local)"
 
 echo
 echo "Manual browser/profile checkpoint"
-echo "1. Port 3000 must open NetTAP Network & Visibility with its three broad suggestions."
-echo "2. Port 3001 must open NetTAP Packet Expert with its three evidence-focused suggestions."
+echo "1. Port 3000 must open NetTAP Network Intelligence — Network & Visibility with its three broad suggestions."
+echo "2. Port 3001 must open NetTAP Network Intelligence — Packet Expert with its three evidence-focused suggestions."
 echo "3. Both profiles must answer through the shared model and retrieve only their intended managed knowledge."
 echo "4. Port 3100 must retain the changed administrator password after restart."
 echo "5. Port 3200 must open Evidence Workspace, accept the generated token, and display the runtime acceptance case without exposing raw records in the LLM-safe context."

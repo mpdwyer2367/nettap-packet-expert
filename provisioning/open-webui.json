@@ -11,7 +11,7 @@
   "knowledge_collections": [
     {
       "key": "shared",
-      "name": "NetTAP AI Shared (Managed)",
+      "name": "NetTAP Network Intelligence Shared (Managed)",
       "description": "Shared NetTAP safety, evidence, ingestion, and operational guidance.",
       "files": [
         "knowledge/NetTAP_AI_Knowledge.md",
@@ -21,7 +21,7 @@
     },
     {
       "key": "network_visibility",
-      "name": "NetTAP Network & Visibility (Managed)",
+      "name": "NetTAP Network Intelligence — Network & Visibility (Managed)",
       "description": "Architecture, deployment, visibility-fabric, device, and telemetry guidance.",
       "files": [
         "knowledge/NetTAP_Network_Visibility_Knowledge.md"
@@ -29,7 +29,7 @@
     },
     {
       "key": "packet_expert",
-      "name": "NetTAP Packet Expert (Managed)",
+      "name": "NetTAP Network Intelligence — Packet Expert (Managed)",
       "description": "Authorized packet-derived evidence, capture quality, forensic, and investigation guidance.",
       "files": [
         "knowledge/NetTAP_Packet_Expert_Knowledge.md"
@@ -40,24 +40,24 @@
     {
       "key": "network_visibility",
       "id": "nettap-network-visibility",
-      "name": "NetTAP Network & Visibility",
+      "name": "NetTAP Network Intelligence — Network & Visibility",
       "description": "Design, deploy, validate, and troubleshoot network visibility, acquisition, telemetry, and monitoring-tool delivery.",
       "file": "skills/nettap-network-visibility/SKILL.md",
-      "tags": ["NetTAP", "Network Visibility", "Managed"]
+      "tags": ["NetTAP", "Network Intelligence", "Network Visibility", "Managed"]
     },
     {
       "key": "packet_expert",
       "id": "nettap-packet-expert",
-      "name": "NetTAP Packet Expert",
+      "name": "NetTAP Network Intelligence — Packet Expert",
       "description": "Plan authorized evidence collection and analyze normalized packet-derived, log, flow, performance, security, and forensic evidence.",
       "file": "skills/nettap-packet-expert/SKILL.md",
-      "tags": ["NetTAP", "Packet Expert", "Managed"]
+      "tags": ["NetTAP", "Network Intelligence", "Packet Expert", "Managed"]
     }
   ],
   "assistants": [
     {
       "id": "nettap-network-visibility",
-      "name": "NetTAP Network & Visibility",
+      "name": "NetTAP Network Intelligence — Network & Visibility",
       "description": "Network architecture, device planning, NetTAP visibility, traffic acquisition, and telemetry guidance.",
       "knowledge_keys": ["shared", "network_visibility"],
       "skill_keys": ["network_visibility"],
@@ -70,11 +70,11 @@
         {"title": ["Design or", "configure"], "content": "Help me design or configure my network from the objective and environment."},
         {"title": ["Connect", "visibility and data"], "content": "Help me add NetTAP visibility or collect the right traffic and telemetry."}
       ],
-      "tags": ["NetTAP", "Network Visibility"]
+      "tags": ["NetTAP", "Network Intelligence", "Network Visibility"]
     },
     {
       "id": "nettap-packet-expert",
-      "name": "NetTAP Packet Expert",
+      "name": "NetTAP Network Intelligence — Packet Expert",
       "description": "Authorized packet evidence, performance investigation, cyber visibility, and forensic analysis guidance.",
       "knowledge_keys": ["shared", "packet_expert"],
       "skill_keys": ["packet_expert"],
@@ -87,7 +87,7 @@
         {"title": ["Understand", "my evidence"], "content": "Help me understand what evidence I have and what it can support."},
         {"title": ["Plan", "data collection"], "content": "Help me plan the minimum safe traffic, log, or telemetry collection."}
       ],
-      "tags": ["NetTAP", "Packet Expert"]
+      "tags": ["NetTAP", "Network Intelligence", "Packet Expert"]
     }
   ]
 }

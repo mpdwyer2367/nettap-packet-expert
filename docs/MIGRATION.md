@@ -1,4 +1,4 @@
-# Migration from standalone Packet Expert to NetTAP AI Suite
+# Migration from standalone Packet Expert to NetTAP Network Intelligence
 
 This migration preserves the existing Open WebUI and Ollama volumes. It does not merge SQLite databases, copy password hashes, or attach one data volume to concurrent Open WebUI containers.
 
@@ -101,7 +101,7 @@ Record disk use before and after. The release creates one combined NetTAP custom
 
 If acceptance fails:
 
-1. Stop the suite with `./scripts/stop.sh`.
+1. Stop the product with `./scripts/stop.sh`.
 2. Return to the recorded `0.2.0-rc.1` commit.
 3. Restore the protected pre-migration `.env`.
 4. Start the prior profile and validate its health.

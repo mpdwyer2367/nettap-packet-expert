@@ -5,7 +5,7 @@ project_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 source "${project_dir}/scripts/common.sh"
 
 require_runtime
-[[ -f "$env_file" ]] || { echo "ERROR: Deploy NetTAP AI Suite before running recovery acceptance." >&2; exit 3; }
+[[ -f "$env_file" ]] || { echo "ERROR: Deploy NetTAP Network Intelligence before running recovery acceptance." >&2; exit 3; }
 temporary_dir="$(mktemp -d "${TMPDIR:-/tmp}/nettap-backup-test.XXXXXX")"
 target_prefix="nettap-restore-test-$$"
 ollama_test_volume="${target_prefix}-ollama-data"

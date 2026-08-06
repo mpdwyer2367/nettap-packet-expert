@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-echo "NetTAP Packet Expert read-only deployment inventory"
+echo "NetTAP Network Intelligence read-only deployment inventory"
 echo "UTC: $(date -u +%FT%TZ)"
 echo "Host: $(uname -a)"
 echo "NOTE: This script does not stop, remove, or modify containers, volumes, models, or files."

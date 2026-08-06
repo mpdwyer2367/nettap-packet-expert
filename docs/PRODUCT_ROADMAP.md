@@ -72,7 +72,7 @@ flowchart LR
     C --> V["Normalize, validate, redact"]
     V --> S["Evidence store / search"]
     S --> A["Read-only retrieval API"]
-    A --> P["NetTAP AI in authorized evidence mode"]
+    A --> P["Network Intelligence in evidence mode"]
 ```
 
 Prioritized inputs:

@@ -1,9 +1,9 @@
-# NetTAP Evidence Workspace
+# NetTAP Network Intelligence — Evidence Workspace
 
 ## Purpose and status
 
 The Evidence Workspace is the first local evidence-ingestion and case-analysis
-service for NetTAP AI. It turns approved PCAP metadata, normalized logs and flow
+service for NetTAP Network Intelligence. It turns approved PCAP metadata, normalized logs and flow
 records into a persistent case with source provenance, evidence-quality warnings,
 deterministic summaries, evidence-bound findings, a Markdown report and a
 minimized context suitable for an authorized NetTAP assistant.

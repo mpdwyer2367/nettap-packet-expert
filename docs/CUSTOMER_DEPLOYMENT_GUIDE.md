@@ -2,7 +2,7 @@
 
 ## Supported scope
 
-Deploy one NetTAP AI Suite instance per customer or security boundary. The instance contains one combined NetTAP AI model, two Open WebUI experience profiles, one Open WebUI, and one Ollama model store. This guide covers the Docker software-appliance candidate on macOS or a Windows host running Docker Desktop with WSL 2/Linux containers. The target must meet the sizing and release gates for the exact commit and image digests.
+Deploy one NetTAP Network Intelligence instance per customer or security boundary. The instance contains one shared NetTAP Network Intelligence Model, two Open WebUI experience profiles, one Open WebUI, and one Ollama model store. This guide covers the Docker software-appliance candidate on macOS or a Windows host running Docker Desktop with WSL 2/Linux containers. The target must meet the sizing and release gates for the exact commit and image digests.
 
 ## Customer prerequisites
 

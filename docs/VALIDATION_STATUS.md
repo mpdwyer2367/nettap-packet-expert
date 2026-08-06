@@ -7,7 +7,7 @@
 | Suite release | `0.3.0-rc.3` |
 | Shared base | `qwen2.5:7b-instruct-q4_K_M` |
 | Expected base ID | `845dbda0ea48` |
-| Combined NetTAP AI model | `nettap-ai:0.3.0-rc.3` |
+| Shared NetTAP Network Intelligence Model | `nettap-ai:0.3.0-rc.3` |
 | Experience profiles | `nettap-network-visibility`, `nettap-packet-expert` |
 | Managed Skills | `nettap-network-visibility`, `nettap-packet-expert` |
 | Offline embedding model | `sentence-transformers/all-MiniLM-L6-v2@1110a243fdf4706b3f48f1d95db1a4f5529b4d41` |
@@ -44,4 +44,4 @@ The historical [0.2.0-rc.1 release record](../reports/RELEASE_ACCEPTANCE_0.2.0-r
 
 Until all evidence is complete, the accurate statement is:
 
-> NetTAP AI Suite 0.3.0-rc.3 is an integration release candidate for controlled evaluation of one combined NetTAP AI model over one Qwen2.5 7B base, with two distinct Open WebUI experience profiles.
+> NetTAP Network Intelligence 0.3.0-rc.3 is an integration release candidate for controlled evaluation of one shared NetTAP Network Intelligence Model over one Qwen2.5 7B base, with two distinct Open WebUI experience profiles.

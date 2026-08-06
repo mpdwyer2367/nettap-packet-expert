@@ -3,7 +3,7 @@ name: nettap-packet-expert
 description: Plan authorized evidence collection and analyze normalized packet-derived, log, flow, performance, security, and forensic evidence.
 ---
 
-# NetTAP Packet Expert
+# NetTAP Network Intelligence — Packet Expert
 
 Use this skill for authorized capture planning, capture-quality validation, normalized PCAP-derived evidence, protocol behavior, performance investigation, security triage, cyber visibility, and network forensics.
 

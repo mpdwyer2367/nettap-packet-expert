@@ -160,6 +160,6 @@ mkdir -p "$(dirname "$output")"
   printf 'CADDY_IMAGE=%s\n' "$(load_env_value CADDY_IMAGE)"
   printf 'Endpoint: https://%s:%s\n' "$hostname" "$https_port"
   printf 'Evidence Workspace: https://%s:%s/evidence/\n' "$hostname" "$https_port"
-  printf 'Controls: exact images, TLS/HSTS gateway, least privilege, exact gateway binding, no direct Ollama/WebUI/Evidence host ports, runtime model egress absent, locked shared base and combined NetTAP AI identities, pinned offline embedding cache, managed assistant profiles and knowledge, offline RAG proof, authenticated evidence ingestion and deterministic analysis, healthy services\n'
+  printf 'Controls: exact images, TLS/HSTS gateway, least privilege, exact gateway binding, no direct Ollama/WebUI/Evidence host ports, runtime model egress absent, locked shared base and Network Intelligence model identities, pinned offline embedding cache, managed assistant profiles and knowledge, offline RAG proof, authenticated evidence ingestion and deterministic analysis, healthy services\n'
 } > "$output"
 echo "Production runtime verification passed: $output"

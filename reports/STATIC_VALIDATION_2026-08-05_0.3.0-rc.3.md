@@ -1,4 +1,4 @@
-# Static validation — NetTAP AI Suite 0.3.0-rc.3
+# Static validation — NetTAP Network Intelligence 0.3.0-rc.3
 
 Date: 2026-08-05
 
