@@ -22,6 +22,10 @@ class ProvisioningError(RuntimeError):
     pass
 
 
+class ProvisioningAuthenticationError(ProvisioningError):
+    pass
+
+
 def required_env(name: str) -> str:
     value = os.environ.get(name, "").strip()
     if not value:
@@ -160,13 +164,20 @@ class ApiClient:
         raise ProvisioningError("Open WebUI did not become healthy within three minutes")
 
     def signin(self, email: str, password: str):
-        _, response = self.request(
+        status, response = self.request(
             "POST",
             "/api/v1/auths/signin",
             {"email": email, "password": password},
+            allow=(400, 401, 403),
         )
-        if response.get("role") != "admin" or not response.get("token"):
-            raise ProvisioningError("provisioning credential did not produce an administrator session")
+        if status != 200:
+            raise ProvisioningAuthenticationError(
+                "Open WebUI rejected the administrator credential; an existing data volume keeps its existing password"
+            )
+        if not isinstance(response, dict) or response.get("role") != "admin" or not response.get("token"):
+            raise ProvisioningAuthenticationError(
+                "Open WebUI credential did not produce an administrator session"
+            )
         self.token = response["token"]
 
     def upload(self, knowledge_id: str, collection_key: str, release: str, relative: str):
@@ -590,6 +601,9 @@ def main() -> int:
 if __name__ == "__main__":
     try:
         raise SystemExit(main())
+    except ProvisioningAuthenticationError as exc:
+        print(f"ERROR: {exc}", file=sys.stderr)
+        raise SystemExit(11)
     except ProvisioningError as exc:
         print(f"ERROR: {exc}", file=sys.stderr)
         raise SystemExit(1)

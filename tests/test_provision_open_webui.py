@@ -189,10 +189,10 @@ class ProvisioningTest(unittest.TestCase):
         self.server.server_close()
         self.tempdir.cleanup()
 
-    def run_provisioner(self, *args, check=True):
+    def run_provisioner(self, *args, check=True, password="Test-password-123!"):
         return subprocess.run(
             ["python3", str(PROVISIONER), *args],
-            input="Test-password-123!\n",
+            input=f"{password}\n",
             text=True,
             capture_output=True,
             check=check,
@@ -277,6 +277,13 @@ class ProvisioningTest(unittest.TestCase):
         two = self.run_provisioner("--fingerprint").stdout.strip()
         self.assertEqual(one, two)
         self.assertRegex(one, r"^[0-9a-f]{64}$")
+
+    def test_rejected_admin_credential_has_distinct_exit_code(self):
+        result = self.run_provisioner(check=False, password="Wrong-password-123!")
+        self.assertEqual(result.returncode, 11)
+        self.assertIn("existing data volume keeps its existing password", result.stderr)
+        self.assertFalse(self.state_path.exists())
+        self.assertEqual(Handler.state.uploads, 0)
 
     def test_refuses_unmanaged_collection_name_collision(self):
         Handler.state.knowledge["operator-1"] = {

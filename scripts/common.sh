@@ -289,7 +289,7 @@ PY
 }
 
 provision_assistants() {
-  local mode="$1" desired actual password
+  local mode="$1" desired actual password provision_status
   local -a selected=("${compose_local[@]}")
   if [[ "$mode" == production ]]; then selected=("${compose_production[@]}"); fi
   desired="$(provisioning_fingerprint "$mode")"
@@ -311,12 +311,38 @@ provision_assistants() {
     printf '\n' >&2
   fi
   [[ -n "$password" ]] || { echo "ERROR: Administrator password is empty." >&2; return 7; }
-  if ! printf '%s\n' "$password" | "${selected[@]}" --profile provision run --rm -T assistant-provisioner; then
+  if printf '%s\n' "$password" | "${selected[@]}" --profile provision run --rm -T assistant-provisioner; then
+    provision_status=0
+  else
+    provision_status=$?
+  fi
+  if [[ $provision_status -eq 11 ]]; then
     unset password
-    echo "ERROR: Automatic assistant and offline RAG provisioning failed; review the provisioner error above." >&2
-    return 7
+    [[ -t 0 ]] || {
+      echo "ERROR: The stored bootstrap password does not match this existing Open WebUI volume." >&2
+      echo "Run ./scripts/provision-assistants.sh --confirm from an interactive terminal and enter the current administrator password." >&2
+      return 7
+    }
+    echo "The existing Open WebUI volume retained a different administrator password." >&2
+    printf 'Current Open WebUI administrator password: ' >&2
+    IFS= read -r -s password
+    printf '\n' >&2
+    [[ -n "$password" ]] || { echo "ERROR: Administrator password is empty." >&2; return 7; }
+    if printf '%s\n' "$password" | "${selected[@]}" --profile provision run --rm -T assistant-provisioner; then
+      provision_status=0
+    else
+      provision_status=$?
+    fi
   fi
   unset password
+  if [[ $provision_status -ne 0 ]]; then
+    if [[ $provision_status -eq 11 ]]; then
+      echo "ERROR: Open WebUI rejected the current administrator password." >&2
+    else
+      echo "ERROR: Automatic assistant and offline RAG provisioning failed; review the provisioner error above." >&2
+    fi
+    return 7
+  fi
   actual="$(installed_provisioning_fingerprint "$mode")"
   [[ "$actual" == "$desired" ]] || {
     echo "ERROR: Assistant provisioning state does not match the release fingerprint." >&2
