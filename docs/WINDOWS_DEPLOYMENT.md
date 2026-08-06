@@ -17,7 +17,7 @@ Set-Location .\nettap-packet-expert
 .\scripts\start-windows.ps1
 ```
 
-The first start downloads the approved Qwen2.5 7B base and exact offline embedding revision, verifies them, builds one combined `nettap-ai:0.3.0-rc.4` model, removes temporary egress, provisions three knowledge collections and two Workspace Models, proves offline retrieval, retires older NetTAP container tags, and then starts one Open WebUI with two stateless experience launchers.
+The first start downloads the approved Qwen2.5 7B base and exact offline embedding revision, verifies them, builds one combined `nettap-ai:0.3.0-rc.5` model, removes temporary egress, provisions three knowledge collections and two Workspace Models, proves offline retrieval, retires older NetTAP container tags, and then starts one Open WebUI with two stateless experience launchers.
 
 Open:
 
@@ -32,7 +32,7 @@ Use `admin@nettap.local` with the locally generated password file printed by the
 
 ```powershell
 docker compose --env-file .env -f compose.yaml -f compose.local.yaml ps
-docker compose --env-file .env -f compose.yaml -f compose.local.yaml exec -T ollama ollama show nettap-ai:0.3.0-rc.4
+docker compose --env-file .env -f compose.yaml -f compose.local.yaml exec -T ollama ollama show nettap-ai:0.3.0-rc.5
 Invoke-WebRequest http://127.0.0.1:3100/health -UseBasicParsing
 Invoke-WebRequest http://127.0.0.1:3200/health -UseBasicParsing
 Invoke-WebRequest http://127.0.0.1:3000/ -UseBasicParsing
@@ -51,9 +51,9 @@ Use the exact signed package used by the macOS tester. From an Ubuntu WSL2 shell
 ```bash
 chmod +x scripts/* tests/*.sh
 ./tests/clean-package-acceptance.sh \
-  --archive /mnt/c/approved/nettap-ai-suite-0.3.0-rc.4-source.tar.gz \
+  --archive /mnt/c/approved/nettap-ai-suite-0.3.0-rc.5-source.tar.gz \
   --evidence-dir /mnt/c/protected/nettap-rc3-windows \
   --public-key /mnt/c/approved/cosign.pub
 ```
 
-The evidence directory must be empty. The test verifies WSL2, starts a unique clean Compose project, and records Windows/WSL2 acceptance against the package commit, tree, and SHA-256. `--allow-unsigned-evaluation` is not acceptable for release evidence. After both platform runs, compare their summaries as described in [the RC4 acceptance plan](RC4_ACCEPTANCE_PLAN.md).
+The evidence directory must be empty. The test verifies WSL2, starts a unique clean Compose project, and records Windows/WSL2 acceptance against the package commit, tree, and SHA-256. `--allow-unsigned-evaluation` is not acceptable for release evidence. After both platform runs, compare their summaries as described in [the RC5 acceptance plan](RC5_ACCEPTANCE_PLAN.md).

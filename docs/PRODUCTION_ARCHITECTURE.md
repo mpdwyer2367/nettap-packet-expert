@@ -9,7 +9,8 @@ The supported commercial candidate is a single-node, single-customer Docker soft
 ```mermaid
 flowchart LR
     B["Customer browser"] -->|HTTPS| G["Caddy TLS gateway"]
-    G -->|internal HTTP| W["Open WebUI"]
+    G --> L["Branded experience welcome"]
+    L -->|authenticated handoff| W["Open WebUI"]
     W --> V["Network & Visibility profile"]
     W --> P["Packet Expert profile"]
     V -->|internal API| N["One nettap-ai model"]
@@ -37,7 +38,7 @@ Open WebUI administrators can access and control the application instance. They 
 
 | Component | Responsibility | Explicit non-capability |
 |---|---|---|
-| Caddy | TLS termination and security headers | Customer identity provider |
+| Caddy | TLS termination, security headers, and stateless experience welcome pages | Customer identity provider or credential store |
 | Open WebUI | Authentication, chat, model and knowledge access | Strong tenant isolation inside one instance |
 | Ollama | Local model serving and model storage | Network capture or telemetry collector |
 | Shared NetTAP Network Intelligence Model | Architecture, visibility, telemetry, packet, performance and forensic advisory reasoning | Live collection, autonomous remediation or forensic proof |

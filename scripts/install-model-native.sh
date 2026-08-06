@@ -5,7 +5,7 @@ script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 project_dir="$(cd "${script_dir}/.." && pwd)"
 base_model="qwen2.5:7b-instruct-q4_K_M"
 expected_base_id="845dbda0ea48"
-model_name="nettap-ai:0.3.0-rc.4"
+model_name="nettap-ai:0.3.0-rc.5"
 modelfile="${project_dir}/model/nettap-ai.Modelfile"
 
 if [[ "${1:-}" != "--confirm-download" || $# -ne 1 ]]; then

@@ -4,8 +4,11 @@ This roadmap separates implemented candidate capability from future commercial e
 
 ## Stage 0.3 — unified assistant integration candidate
 
-Implemented in `0.3.0-rc.4` source:
+Implemented in `0.3.0-rc.5` source:
 
+- responsive Network & Visibility and Packet Expert welcome pages for local and TLS deployments;
+- clear one-account sign-in guidance without a second credential database;
+- application-readiness indication, guided starts, and cross-experience navigation;
 - one shared Qwen2.5 7B base, one combined `nettap-ai` model, and one Ollama volume;
 - one combined Network & Visibility, Packet Expert, and cross-domain reasoning policy;
 - one Open WebUI account, chat, administration, and backup surface;

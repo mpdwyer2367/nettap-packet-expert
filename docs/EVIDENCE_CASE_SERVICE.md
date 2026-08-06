@@ -9,7 +9,7 @@ deterministic summaries, evidence-bound findings, a Markdown report and a
 minimized context suitable for an authorized NetTAP assistant.
 
 This implementation is an **evaluation feature for the next suite release**. It
-does not make `0.3.0-rc.4` production-certified and is not a live NetTAP NPB,
+does not make `0.3.0-rc.5` production-certified and is not a live NetTAP NPB,
 flow collector, SIEM, IDS/IPS, NDR or autonomous controller.
 
 ## Local access

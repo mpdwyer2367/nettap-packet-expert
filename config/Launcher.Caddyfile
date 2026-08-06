@@ -4,6 +4,11 @@
 }
 
 :3000 {
+	@health path /system/health
+	handle @health {
+		rewrite * /health
+		reverse_proxy open-webui:8080
+	}
 	@open path /open
 	redir @open "{$SUITE_URL}/?model={$NETTAP_VISIBILITY_PROFILE}&q=Begin%20in%20Network%20%26%20Visibility%20mode.%20Ask%20one%20simple%20question%20to%20understand%20my%20network%20goal." 302
 	@start path /start
@@ -12,7 +17,7 @@
 	redir @design "{$SUITE_URL}/?model={$NETTAP_VISIBILITY_PROFILE}&q=Use%20Network%20%26%20Visibility%20mode.%20Help%20me%20design%20or%20improve%20my%20network.%20Ask%20for%20the%20minimum%20environment%20details%20you%20need." 302
 	@connect path /connect
 	redir @connect "{$SUITE_URL}/?model={$NETTAP_VISIBILITY_PROFILE}&q=Use%20Network%20%26%20Visibility%20mode.%20Help%20me%20choose%20how%20to%20add%20NetTAP%20visibility%20and%20collect%20the%20right%20traffic%20or%20telemetry%20for%20my%20goal." 302
-	handle /shared.css {
+	handle_path /ui/* {
 		root * /srv
 		file_server
 	}
@@ -21,7 +26,7 @@
 		file_server
 	}
 	header {
-		Content-Security-Policy "default-src 'self'; style-src 'self'; img-src 'self' data:; object-src 'none'; base-uri 'none'; frame-ancestors 'none'"
+		Content-Security-Policy "default-src 'self'; style-src 'self'; script-src 'self'; connect-src 'self'; img-src 'self' data:; object-src 'none'; base-uri 'none'; frame-ancestors 'none'"
 		X-Content-Type-Options "nosniff"
 		X-Frame-Options "DENY"
 		Referrer-Policy "no-referrer"
@@ -30,6 +35,11 @@
 }
 
 :3001 {
+	@health path /system/health
+	handle @health {
+		rewrite * /health
+		reverse_proxy open-webui:8080
+	}
 	@open path /open
 	redir @open "{$SUITE_URL}/?model={$NETTAP_PACKET_EXPERT_PROFILE}&q=Begin%20in%20Packet%20Expert%20mode.%20Ask%20one%20simple%20question%20to%20define%20my%20authorized%20investigation." 302
 	@start path /start
@@ -38,7 +48,7 @@
 	redir @evidence "{$SUITE_URL}/?model={$NETTAP_PACKET_EXPERT_PROFILE}&q=Use%20Packet%20Expert%20mode.%20Help%20me%20understand%20what%20packet-derived%20evidence%20is%20actually%20available%20and%20what%20it%20can%20prove." 302
 	@capture path /capture
 	redir @capture "{$SUITE_URL}/?model={$NETTAP_PACKET_EXPERT_PROFILE}&q=Use%20Packet%20Expert%20mode.%20Help%20me%20plan%20a%20safe%2C%20authorized%20capture%20for%20my%20investigation%20without%20assuming%20a%20capture%20already%20exists." 302
-	handle /shared.css {
+	handle_path /ui/* {
 		root * /srv
 		file_server
 	}
@@ -47,7 +57,7 @@
 		file_server
 	}
 	header {
-		Content-Security-Policy "default-src 'self'; style-src 'self'; img-src 'self' data:; object-src 'none'; base-uri 'none'; frame-ancestors 'none'"
+		Content-Security-Policy "default-src 'self'; style-src 'self'; script-src 'self'; connect-src 'self'; img-src 'self' data:; object-src 'none'; base-uri 'none'; frame-ancestors 'none'"
 		X-Content-Type-Options "nosniff"
 		X-Frame-Options "DENY"
 		Referrer-Policy "no-referrer"

@@ -29,6 +29,7 @@ services:
     volumes:
       - ./config/Caddyfile:/etc/caddy/Caddyfile:ro
       - ./config/tls:/etc/caddy/tls:ro
+      - ./launchers:/srv:ro
       - packet-expert-gateway-data:/data
       - packet-expert-gateway-config:/config
     networks: [user-access]
