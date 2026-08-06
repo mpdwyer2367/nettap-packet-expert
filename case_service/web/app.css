@@ -70,6 +70,9 @@ textarea { min-height: 82px; resize: vertical; }
 .warning { color: var(--warn) !important; }
 .finding-card { margin-top: 10px; border-left-color: var(--cyan); }
 .badge { display: inline-block; margin-right: 6px; padding: 3px 7px; border-radius: 99px; color: #bfeefa; background: #164a61; font-size: 10px; text-transform: uppercase; }
+.citation-list { display: flex; flex-wrap: wrap; gap: .45rem; margin-top: .75rem; }
+.citation-button { padding: .4rem .65rem; border: 1px solid var(--cyan); border-radius: .45rem; background: transparent; color: var(--cyan); cursor: pointer; }
+.citation-button:focus-visible { outline: 3px solid white; outline-offset: 2px; }
 #summary { color: var(--muted); line-height: 1.6; }
 dialog { width: min(1000px, 90vw); max-height: 84vh; color: var(--text); border: 1px solid var(--line); border-radius: 14px; background: #071b29; }
 dialog::backdrop { background: rgba(0,0,0,.72); }

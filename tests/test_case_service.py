@@ -8,6 +8,7 @@ from datetime import datetime, timedelta, timezone
 import hashlib
 import json
 from pathlib import Path
+import sqlite3
 import struct
 import tempfile
 from threading import Thread
@@ -15,7 +16,7 @@ import unittest
 import urllib.error
 import urllib.request
 
-from case_service.database import Repository
+from case_service.database import NotFoundError, Repository, compact_json
 from case_service.http_api import handler_factory
 from case_service.parsers import ParseError, parse_evidence
 from case_service.service import EvidenceService, ValidationError, sanitize_filename
@@ -75,6 +76,25 @@ class CaseServiceTest(unittest.TestCase):
         hypotheses = [item for item in result["findings"] if item["classification"] == "hypothesis"]
         self.assertEqual(len(hypotheses), 1)
         self.assertIn("not confirmed C2", hypotheses[0]["statement"])
+        observation_citations = [
+            item
+            for item in hypotheses[0]["citations"]
+            if item["type"] == "normalized_observation"
+        ]
+        self.assertEqual(len(observation_citations), 8)
+        resolved = self.repository.get_observation(
+            case["id"], observation_citations[0]["observation_id"]
+        )
+        self.assertEqual(resolved["evidence_id"], evidence["id"])
+        self.assertEqual(resolved["sequence_number"], 1)
+        self.assertEqual(len(result["latest_analysis"]["output_sha256"]), 64)
+        artifact = self.repository.get_analysis(
+            case["id"], result["latest_analysis"]["id"]
+        )
+        self.assertEqual(
+            hashlib.sha256(compact_json(artifact["artifact"]).encode()).hexdigest(),
+            artifact["output_sha256"],
+        )
 
         context = self.service.context(case["id"])
         rendered = json.dumps(context)
@@ -83,6 +103,8 @@ class CaseServiceTest(unittest.TestCase):
         self.assertNotIn("must-not-reach-context", rendered)
         self.assertIn("sensitive record field(s) were redacted", rendered)
         self.assertIn(evidence["id"], rendered)
+        self.assertIn("analysis_artifact", rendered)
+        self.assertIn("Resolvable citations", self.service.markdown_report(case["id"]))
 
     def test_pcap_parser_extracts_metadata_without_payload(self):
         capture = build_pcap()
@@ -134,6 +156,53 @@ class CaseServiceTest(unittest.TestCase):
         self.assertEqual(sanitize_filename("../../private/customer.pcap"), "customer.pcap")
         self.assertEqual(sanitize_filename("..\\..\\bad|name.pcap"), "bad_name.pcap")
 
+    def test_citation_resolution_is_scoped_to_case(self):
+        first = self.make_case()
+        second = self.make_case()
+        payload = b'{"src_ip":"192.0.2.1","dst_ip":"198.51.100.2"}\n'
+        self.service.ingest(first["id"], "jsonl", "records.jsonl", payload, {}, None)
+        observation = self.repository.observations_for_case(first["id"])[0]
+        with self.assertRaisesRegex(NotFoundError, "observation not found in case"):
+            self.repository.get_observation(second["id"], observation["observation_id"])
+        analyzed = self.service.analyze(first["id"])
+        with self.assertRaisesRegex(NotFoundError, "analysis not found in case"):
+            self.repository.get_analysis(second["id"], analyzed["latest_analysis"]["id"])
+
+    def test_schema_v1_database_is_migrated_without_data_loss(self):
+        database = self.root / "legacy.db"
+        with sqlite3.connect(database) as connection:
+            connection.executescript(
+                """
+                CREATE TABLE schema_metadata (key TEXT PRIMARY KEY, value TEXT NOT NULL);
+                INSERT INTO schema_metadata VALUES('schema_version','1');
+                CREATE TABLE findings (
+                    id TEXT PRIMARY KEY, case_id TEXT NOT NULL, category TEXT NOT NULL,
+                    title TEXT NOT NULL, statement TEXT NOT NULL, classification TEXT NOT NULL,
+                    confidence TEXT NOT NULL, evidence_ids_json TEXT NOT NULL,
+                    validation_steps_json TEXT NOT NULL, created_at TEXT NOT NULL
+                );
+                CREATE TABLE analyses (
+                    id TEXT PRIMARY KEY, case_id TEXT NOT NULL, created_at TEXT NOT NULL,
+                    engine_version TEXT NOT NULL, summary_json TEXT NOT NULL
+                );
+                """
+            )
+        migrated = Repository(database, self.root / "legacy-files")
+        with migrated.connection() as connection:
+            version = connection.execute(
+                "SELECT value FROM schema_metadata WHERE key='schema_version'"
+            ).fetchone()["value"]
+            finding_columns = {
+                row["name"] for row in connection.execute("PRAGMA table_info(findings)")
+            }
+            analysis_columns = {
+                row["name"] for row in connection.execute("PRAGMA table_info(analyses)")
+            }
+        self.assertEqual(version, "2")
+        self.assertIn("citations_json", finding_columns)
+        self.assertIn("output_sha256", analysis_columns)
+        self.assertIn("artifact_json", analysis_columns)
+
     def test_api_requires_bearer_token_and_supports_end_to_end_case(self):
         server = ThreadingHTTPServer(
             ("127.0.0.1", 0), handler_factory(self.service, self.repository, TOKEN, 1024 * 1024)
@@ -182,6 +251,22 @@ class CaseServiceTest(unittest.TestCase):
             with urllib.request.urlopen(analyze, timeout=5) as response:
                 analyzed = json.load(response)
             self.assertEqual(analyzed["latest_analysis"]["summary"]["observation_count"], 1)
+            observation = self.repository.observations_for_case(created["id"])[0]
+            resolve = urllib.request.Request(
+                f"{base}/v1/cases/{created['id']}/observations/{observation['observation_id']}",
+                headers={"Authorization": f"Bearer {TOKEN}"},
+            )
+            with urllib.request.urlopen(resolve, timeout=5) as response:
+                resolved = json.load(response)
+            self.assertEqual(resolved["observation_id"], observation["observation_id"])
+            self.assertEqual(resolved["sequence_number"], 1)
+            artifact_request = urllib.request.Request(
+                f"{base}/v1/cases/{created['id']}/analyses/{analyzed['latest_analysis']['id']}",
+                headers={"Authorization": f"Bearer {TOKEN}"},
+            )
+            with urllib.request.urlopen(artifact_request, timeout=5) as response:
+                artifact = json.load(response)
+            self.assertEqual(artifact["output_sha256"], analyzed["latest_analysis"]["output_sha256"])
         finally:
             server.shutdown()
             server.server_close()

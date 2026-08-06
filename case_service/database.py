@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from contextlib import contextmanager
 from datetime import datetime, timezone
+import hashlib
 import json
 import os
 from pathlib import Path
@@ -12,7 +13,7 @@ from typing import Any, Iterator
 import uuid
 
 
-SCHEMA_VERSION = 1
+SCHEMA_VERSION = 2
 
 
 def utc_now() -> str:
@@ -110,6 +111,7 @@ class Repository:
                     classification TEXT NOT NULL,
                     confidence TEXT NOT NULL,
                     evidence_ids_json TEXT NOT NULL,
+                    citations_json TEXT NOT NULL,
                     validation_steps_json TEXT NOT NULL,
                     created_at TEXT NOT NULL
                 );
@@ -118,7 +120,9 @@ class Repository:
                     case_id TEXT NOT NULL REFERENCES cases(id) ON DELETE CASCADE,
                     created_at TEXT NOT NULL,
                     engine_version TEXT NOT NULL,
-                    summary_json TEXT NOT NULL
+                    summary_json TEXT NOT NULL,
+                    output_sha256 TEXT NOT NULL,
+                    artifact_json TEXT NOT NULL
                 );
                 CREATE TABLE IF NOT EXISTS audit_events (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -134,8 +138,20 @@ class Repository:
             row = connection.execute(
                 "SELECT value FROM schema_metadata WHERE key = 'schema_version'"
             ).fetchone()
-            if row and int(row["value"]) != SCHEMA_VERSION:
-                raise RuntimeError("Unsupported evidence database schema version")
+            if row:
+                current_version = int(row["value"])
+                if current_version == 1:
+                    connection.execute(
+                        "ALTER TABLE findings ADD COLUMN citations_json TEXT NOT NULL DEFAULT '[]'"
+                    )
+                    connection.execute(
+                        "ALTER TABLE analyses ADD COLUMN output_sha256 TEXT NOT NULL DEFAULT ''"
+                    )
+                    connection.execute(
+                        "ALTER TABLE analyses ADD COLUMN artifact_json TEXT NOT NULL DEFAULT '{}'"
+                    )
+                elif current_version != SCHEMA_VERSION:
+                    raise RuntimeError("Unsupported evidence database schema version")
             connection.execute(
                 "INSERT OR REPLACE INTO schema_metadata(key,value) VALUES('schema_version',?)",
                 (str(SCHEMA_VERSION),),
@@ -305,8 +321,65 @@ class Repository:
             value = json.loads(row["normalized_json"])
             value["observation_id"] = row["id"]
             value["evidence_id"] = row["evidence_id"]
+            value["sequence_number"] = row["sequence_number"]
             result.append(value)
         return result
+
+    def get_observation(self, case_id: str, observation_id: str) -> dict[str, Any]:
+        """Resolve a citation without permitting cross-case object access."""
+        with self.connection() as connection:
+            row = connection.execute(
+                """
+                SELECT id, evidence_id, sequence_number, observed_at, kind, normalized_json
+                FROM observations WHERE case_id = ? AND id = ?
+                """,
+                (case_id, observation_id),
+            ).fetchone()
+            if not row:
+                raise NotFoundError("observation not found in case")
+            self._audit(
+                connection,
+                "citation.resolve",
+                case_id,
+                row["evidence_id"],
+                "success",
+                {"observation_id": observation_id},
+            )
+        value = json.loads(row["normalized_json"])
+        value.update(
+            {
+                "observation_id": row["id"],
+                "evidence_id": row["evidence_id"],
+                "sequence_number": row["sequence_number"],
+                "observed_at": row["observed_at"],
+                "kind": row["kind"],
+            }
+        )
+        return value
+
+    def get_analysis(self, case_id: str, analysis_id: str) -> dict[str, Any]:
+        """Return the canonical hashed analysis artifact within its owning case."""
+        with self.connection() as connection:
+            row = connection.execute(
+                """
+                SELECT id, case_id, created_at, engine_version, output_sha256, artifact_json
+                FROM analyses WHERE case_id = ? AND id = ?
+                """,
+                (case_id, analysis_id),
+            ).fetchone()
+            if not row:
+                raise NotFoundError("analysis not found in case")
+            self._audit(
+                connection,
+                "analysis.resolve",
+                case_id,
+                None,
+                "success",
+                {"analysis_id": analysis_id},
+            )
+        value = dict(row)
+        value["artifact"] = json.loads(value.pop("artifact_json"))
+        return value
 
     def save_analysis(
         self,
@@ -317,13 +390,29 @@ class Repository:
     ) -> dict[str, Any]:
         analysis_id = str(uuid.uuid4())
         now = utc_now()
+        artifact_json = compact_json({"summary": summary, "findings": findings})
+        output_sha256 = hashlib.sha256(artifact_json.encode("utf-8")).hexdigest()
         with self.connection() as connection:
             if not connection.execute("SELECT 1 FROM cases WHERE id = ?", (case_id,)).fetchone():
                 raise NotFoundError("case not found")
             connection.execute("DELETE FROM findings WHERE case_id = ?", (case_id,))
-            for finding in findings:
+            for index, finding in enumerate(findings):
+                citations = list(finding.get("citations", []))
+                citations.append(
+                    {
+                        "type": "analysis_artifact",
+                        "analysis_id": analysis_id,
+                        "output_sha256": output_sha256,
+                        "result_path": f"/findings/{index}",
+                    }
+                )
                 connection.execute(
-                    "INSERT INTO findings VALUES(?,?,?,?,?,?,?,?,?,?)",
+                    """
+                    INSERT INTO findings(
+                        id,case_id,category,title,statement,classification,confidence,
+                        evidence_ids_json,citations_json,validation_steps_json,created_at
+                    ) VALUES(?,?,?,?,?,?,?,?,?,?,?)
+                    """,
                     (
                         str(uuid.uuid4()),
                         case_id,
@@ -333,13 +422,26 @@ class Repository:
                         finding["classification"],
                         finding["confidence"],
                         compact_json(finding["evidence_ids"]),
+                        compact_json(citations),
                         compact_json(finding["validation_steps"]),
                         now,
                     ),
                 )
             connection.execute(
-                "INSERT INTO analyses VALUES(?,?,?,?,?)",
-                (analysis_id, case_id, now, engine_version, compact_json(summary)),
+                """
+                INSERT INTO analyses(
+                    id,case_id,created_at,engine_version,summary_json,output_sha256,artifact_json
+                ) VALUES(?,?,?,?,?,?,?)
+                """,
+                (
+                    analysis_id,
+                    case_id,
+                    now,
+                    engine_version,
+                    compact_json(summary),
+                    output_sha256,
+                    artifact_json,
+                ),
             )
             connection.execute("UPDATE cases SET updated_at = ? WHERE id = ?", (now, case_id))
             self._audit(
@@ -381,11 +483,13 @@ class Repository:
     def _analysis_row(row: sqlite3.Row) -> dict[str, Any]:
         value = dict(row)
         value["summary"] = json.loads(value.pop("summary_json"))
+        value.pop("artifact_json", None)
         return value
 
     @staticmethod
     def _finding_row(row: sqlite3.Row) -> dict[str, Any]:
         value = dict(row)
         value["evidence_ids"] = json.loads(value.pop("evidence_ids_json"))
+        value["citations"] = json.loads(value.pop("citations_json"))
         value["validation_steps"] = json.loads(value.pop("validation_steps_json"))
         return value

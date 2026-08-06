@@ -1,0 +1,132 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "NetTAP Network Intelligence Evidence API",
+    "version": "0.4.0-dev.2",
+    "description": "Evaluation-only, local API for cases, normalized evidence, deterministic analysis, citations, and reports."
+  },
+  "servers": [
+    {"url": "http://127.0.0.1:3200", "description": "Loopback evaluation endpoint"}
+  ],
+  "security": [{"bearerAuth": []}],
+  "paths": {
+    "/health": {
+      "get": {
+        "security": [],
+        "operationId": "getHealth",
+        "responses": {"200": {"description": "Service health"}}
+      }
+    },
+    "/v1/cases": {
+      "get": {
+        "operationId": "listCases",
+        "responses": {"200": {"description": "Visible case summaries"}, "401": {"$ref": "#/components/responses/Unauthorized"}}
+      },
+      "post": {
+        "operationId": "createCase",
+        "requestBody": {
+          "required": true,
+          "content": {"application/json": {"schema": {"$ref": "#/components/schemas/CreateCase"}}}
+        },
+        "responses": {"201": {"description": "Created case"}, "400": {"$ref": "#/components/responses/BadRequest"}, "401": {"$ref": "#/components/responses/Unauthorized"}}
+      }
+    },
+    "/v1/cases/{case_id}": {
+      "get": {
+        "operationId": "getCase",
+        "parameters": [{"$ref": "#/components/parameters/CaseId"}],
+        "responses": {"200": {"description": "Case, evidence, latest analysis, and findings"}, "404": {"$ref": "#/components/responses/NotFound"}}
+      }
+    },
+    "/v1/cases/{case_id}/evidence": {
+      "post": {
+        "operationId": "ingestEvidence",
+        "parameters": [
+          {"$ref": "#/components/parameters/CaseId"},
+          {"name": "source_type", "in": "query", "required": true, "schema": {"type": "string"}},
+          {"name": "filename", "in": "query", "required": true, "schema": {"type": "string"}},
+          {"name": "X-Content-SHA256", "in": "header", "required": false, "schema": {"type": "string", "pattern": "^[0-9a-fA-F]{64}$"}},
+          {"name": "X-NetTAP-Metadata", "in": "header", "required": false, "description": "Base64url-encoded JSON provenance object", "schema": {"type": "string"}}
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {"application/octet-stream": {"schema": {"type": "string", "contentEncoding": "binary"}}}
+        },
+        "responses": {"201": {"description": "Validated and normalized evidence manifest"}, "400": {"$ref": "#/components/responses/BadRequest"}, "413": {"description": "Configured upload limit exceeded"}}
+      }
+    },
+    "/v1/cases/{case_id}/analyze": {
+      "post": {
+        "operationId": "analyzeCase",
+        "parameters": [{"$ref": "#/components/parameters/CaseId"}],
+        "responses": {"200": {"description": "Deterministic analysis and cited findings"}, "400": {"$ref": "#/components/responses/BadRequest"}, "404": {"$ref": "#/components/responses/NotFound"}}
+      }
+    },
+    "/v1/cases/{case_id}/observations/{observation_id}": {
+      "get": {
+        "operationId": "resolveObservationCitation",
+        "parameters": [
+          {"$ref": "#/components/parameters/CaseId"},
+          {"$ref": "#/components/parameters/ObservationId"}
+        ],
+        "responses": {"200": {"description": "Normalized observation without raw evidence"}, "404": {"$ref": "#/components/responses/NotFound"}}
+      }
+    },
+    "/v1/cases/{case_id}/analyses/{analysis_id}": {
+      "get": {
+        "operationId": "resolveAnalysisCitation",
+        "parameters": [
+          {"$ref": "#/components/parameters/CaseId"},
+          {"$ref": "#/components/parameters/AnalysisId"}
+        ],
+        "responses": {"200": {"description": "Canonical deterministic artifact and SHA-256"}, "404": {"$ref": "#/components/responses/NotFound"}}
+      }
+    },
+    "/v1/cases/{case_id}/context": {
+      "get": {
+        "operationId": "getMinimizedContext",
+        "parameters": [{"$ref": "#/components/parameters/CaseId"}],
+        "responses": {"200": {"description": "nettap-evidence-context/v1 without raw evidence"}, "404": {"$ref": "#/components/responses/NotFound"}}
+      }
+    },
+    "/v1/cases/{case_id}/report.md": {
+      "get": {
+        "operationId": "getMarkdownReport",
+        "parameters": [{"$ref": "#/components/parameters/CaseId"}],
+        "responses": {"200": {"description": "Reviewable Markdown report"}, "404": {"$ref": "#/components/responses/NotFound"}}
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": {"type": "http", "scheme": "bearer"}
+    },
+    "parameters": {
+      "CaseId": {"name": "case_id", "in": "path", "required": true, "schema": {"type": "string", "format": "uuid"}},
+      "ObservationId": {"name": "observation_id", "in": "path", "required": true, "schema": {"type": "string", "format": "uuid"}},
+      "AnalysisId": {"name": "analysis_id", "in": "path", "required": true, "schema": {"type": "string", "format": "uuid"}}
+    },
+    "schemas": {
+      "CreateCase": {
+        "type": "object",
+        "required": ["title"],
+        "additionalProperties": false,
+        "properties": {
+          "title": {"type": "string", "minLength": 1, "maxLength": 160},
+          "objective": {"type": "string", "maxLength": 4096},
+          "environment": {"type": "string", "maxLength": 4096}
+        }
+      },
+      "Error": {
+        "type": "object",
+        "required": ["error"],
+        "properties": {"error": {"type": "string"}}
+      }
+    },
+    "responses": {
+      "BadRequest": {"description": "Invalid request or evidence", "content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}},
+      "Unauthorized": {"description": "Valid bearer token required", "content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}},
+      "NotFound": {"description": "Object is absent or outside the selected case", "content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}}
+    }
+  }
+}

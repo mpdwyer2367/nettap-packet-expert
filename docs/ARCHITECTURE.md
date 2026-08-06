@@ -80,6 +80,17 @@ The raw Ollama model is inclusive of both experiences. The Open WebUI layers do 
 
 The Evidence Workspace is a separate trust boundary. It retains original evidence in a dedicated volume, parses supported sources deterministically and exposes a minimized context that explicitly excludes raw evidence and payloads. It does not currently register an Open WebUI tool automatically; production attachment requires a separate per-user authorization and connector acceptance decision.
 
+### Citation boundary
+
+Evidence database schema v2 separates three citation targets: the immutable evidence
+manifest, an exact normalized observation, and the deterministic analysis artifact.
+Observation citations use a server-generated observation UUID plus the owning case and
+evidence UUID, source sequence number, and timestamp. The read-only resolver requires the
+case and observation to match and audits successful access. It returns normalized metadata,
+never the retained source bytes. Each analysis records a SHA-256 over canonical summary and
+finding output; this detects output drift but is not a release signature or tamper-evident
+audit chain. See [ADR 0001](decisions/0001-resolvable-evidence-citations.md).
+
 ## Production addresses
 
 The TLS gateway is the only production browser entry point:

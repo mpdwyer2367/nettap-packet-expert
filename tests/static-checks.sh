@@ -78,6 +78,7 @@ required_files=(
   case_service/database.py case_service/parsers.py case_service/analysis.py
   case_service/service.py case_service/http_api.py
   case_service/web/index.html case_service/web/app.css case_service/web/app.js
+  api/openapi.json
   knowledge/NetTAP_AI_Knowledge.md knowledge/NetTAP_Ingestion_Analysis_Guidance.md
   knowledge/NetTAP_Provisioning_Probe.md provisioning/open-webui.json
   provisioning/cache_embedding_model.py provisioning/provision_open_webui.py
@@ -91,6 +92,8 @@ required_files=(
   docs/PRODUCT_ROADMAP.md docs/THREAT_MODEL.md docs/VALIDATION_STATUS.md
   docs/RC3_ACCEPTANCE_PLAN.md docs/RC4_ACCEPTANCE_PLAN.md
   docs/EVIDENCE_CASE_SERVICE.md
+  docs/current-state.md docs/release-gates.md docs/open-questions.md
+  docs/decisions/0001-resolvable-evidence-citations.md
   docs/NAMING_CONVENTIONS.md
   scripts/backup.sh scripts/restore.sh scripts/lock-images.sh
   scripts/provision-assistants.sh
@@ -164,6 +167,10 @@ for line in (root / "provisioning/knowledge-sources.sha256").read_text(encoding=
     checksums[relative] = digest
 
 json.loads((root / "tests/fixtures/normalized-pcap.json").read_text(encoding="utf-8"))
+openapi = json.loads((root / "api/openapi.json").read_text(encoding="utf-8"))
+assert openapi["openapi"] == "3.1.0"
+assert "/v1/cases/{case_id}/observations/{observation_id}" in openapi["paths"]
+assert "/v1/cases/{case_id}/analyses/{analysis_id}" in openapi["paths"]
 for fixture in ("normalized-logs.jsonl", "normalized-ipfix.jsonl"):
     lines = (root / "tests/fixtures" / fixture).read_text(encoding="utf-8").splitlines()
     assert lines

@@ -1,5 +1,12 @@
 # Changelog
 
+## Unreleased — evidence citation integrity
+
+- Added evidence database schema v2 with additive migration from schema v1.
+- Added typed citations for evidence manifests, exact normalized observations, and SHA-256-bound deterministic analysis artifacts.
+- Added an audited, case-scoped read-only citation resolver and one-click citation inspection in the Evidence Workspace.
+- Added negative cross-case citation tests and documented the citation trust boundary and remaining release gates.
+
 ## 0.3.0-rc.4 one-model replacement and canonical naming candidate — 2026-08-05
 
 - Advanced the combined model policy to `nettap-ai:0.3.0-rc.4` and changed its embedded identity to **NetTAP Network Intelligence Model**.
