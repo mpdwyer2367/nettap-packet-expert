@@ -11,10 +11,25 @@ An empty Open WebUI data volume creates one local administrator:
 
 There is no shared default password. The ignored file `.bootstrap-admin-password` is created with restricted local permissions and contains the one-time value. Open WebUI creates the account only when its user database is empty; existing volumes keep their existing accounts.
 
+## User-facing sign-in path
+
+The product welcome pages on local ports 3000 and 3001, and the production
+`/visibility/` and `/packet-expert/` routes, explain the account boundary and
+provide a **Sign in and open this experience** action. These pages do not accept,
+proxy, log, or store credentials. Open WebUI remains the authoritative
+authentication and session service.
+
+An unauthenticated user is sent to the Open WebUI sign-in page and returned to
+the selected managed Workspace Model. An authenticated user moves between both
+experiences without a second login. The URL selects a starting profile; it is
+not an authorization control. Open WebUI model, knowledge, Skill, tool, and user
+access rules remain authoritative.
+
 ## Required activation
 
 1. Keep the application on `127.0.0.1`.
-2. Sign in using the generated credential file.
+2. Open the desired welcome page, select **Sign in and open this experience**,
+   and sign in using the generated credential file.
 3. In **Settings > Account**, choose a unique password of 12–72 characters with upper, lower, number, and symbol.
 4. Sign out, verify the generated password fails, and verify the new password succeeds.
 5. Run `./scripts/finalize-admin.sh --confirm` and type `FINALIZE`.
@@ -23,7 +38,7 @@ Finalization removes the local credential file, marks the bootstrap value retire
 
 ## Enforcement boundary
 
-The repository enforces production blocking and credential-file retirement. The operator confirmation remains a human assertion that the old password was rejected; stock Open WebUI does not expose a dedicated forced-first-login transaction to this Compose deployment. The activation warning is present in the loopback profile and removed by the production overlay after the activation gate.
+The repository enforces production blocking and credential-file retirement. The operator confirmation remains a human assertion that the old password was rejected; stock Open WebUI does not expose a dedicated forced-first-login transaction to this Compose deployment. The welcome page makes the required change explicit, and the activation warning is present in the loopback profile and removed by the production overlay after the activation gate.
 
 ## Existing installations
 

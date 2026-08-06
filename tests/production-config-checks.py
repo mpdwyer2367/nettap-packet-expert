@@ -123,9 +123,9 @@ assert gateway["environment"]["NETTAP_PACKET_EXPERT_PROFILE"] == "${NETTAP_PACKE
 assert gateway["depends_on"]["evidence-service"]["condition"] == "service_healthy"
 
 env_example = (root / ".env.example").read_text(encoding="utf-8")
-assert "RELEASE_VERSION=0.3.0-rc.4" in env_example
+assert "RELEASE_VERSION=0.3.0-rc.5" in env_example
 assert "BASE_MODEL=qwen2.5:7b-instruct-q4_K_M" in env_example
-assert "NETTAP_AI_MODEL=nettap-ai:0.3.0-rc.4" in env_example
+assert "NETTAP_AI_MODEL=nettap-ai:0.3.0-rc.5" in env_example
 assert "RETIRE_LEGACY_NETTAP_MODELS=true" in env_example
 assert "EXPECTED_BASE_MODEL_ID=845dbda0ea48" in env_example
 assert "NETTAP_VISIBILITY_PROFILE=nettap-network-visibility" in env_example
@@ -143,6 +143,10 @@ for control in ("tls /etc/caddy/tls/tls.crt", "Strict-Transport-Security", "X-Fr
     assert control in caddy
 assert "/visibility" in caddy
 assert "/packet-expert" in caddy
+assert "/system/health" in caddy
+assert "./launchers:/srv:ro" in production["services"]["gateway"]["volumes"]
+assert "handle_path /visibility/*" in caddy
+assert "handle_path /packet-expert/*" in caddy
 assert "NETTAP_VISIBILITY_PROFILE" in caddy
 assert "NETTAP_PACKET_EXPERT_PROFILE" in caddy
 assert "NETTAP_AI_MODEL" not in caddy
@@ -153,6 +157,22 @@ launcher = (root / "config/Launcher.Caddyfile").read_text(encoding="utf-8")
 for control in (":3000", ":3001", "NETTAP_VISIBILITY_PROFILE", "NETTAP_PACKET_EXPERT_PROFILE", "Content-Security-Policy"):
     assert control in launcher
 assert "NETTAP_AI_MODEL" not in launcher
+assert "handle_path /ui/*" in launcher
+assert "reverse_proxy open-webui:8080" in launcher
+
+for page in ("network-visibility", "packet-expert"):
+    html = (root / "launchers" / page / "index.html").read_text(encoding="utf-8")
+    assert "Sign in and open this experience" in html
+    assert "admin@nettap.local" in html
+    assert "there is no shared default password" in html
+    assert "../ui/shared.css" in html
+    assert "../ui/launcher.js" in html
+    assert "<form" not in html
+    assert 'type="password"' not in html
+
+launcher_js = (root / "launchers/launcher.js").read_text(encoding="utf-8")
+for control in ("/system/health", "data-switch-experience", "data-shared-app", "data-evidence-app"):
+    assert control in launcher_js
 
 workflow = (root / ".github/workflows/validate.yml").read_text(encoding="utf-8")
 for profile in ("compose.local.yaml", "compose.production.yaml", "compose.bootstrap.yaml"):

@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.3.0-rc.5 unified product experience candidate — 2026-08-05
+
+- Added polished, responsive Network & Visibility and Packet Expert welcome pages with clear capability boundaries, guided starts, real application-readiness indication, and direct experience switching.
+- Made the same branded pages available through the production TLS gateway at `/visibility/` and `/packet-expert/`.
+- Clarified the one-account authentication workflow without adding a second credential store: the welcome pages never accept credentials, and Open WebUI remains authoritative for login, roles, sessions, password changes, and access control.
+- Kept one `nettap-ai:0.3.0-rc.5` Ollama model manifest over one Qwen2.5 7B weight set; both managed Workspace Models retain separate prompts, Skills, RAG knowledge, suggestions, and permissions.
+- Updated macOS, Windows/WSL2, migration, architecture, authentication, operations, validation, and release-candidate records for RC5.
+- Retained fail-closed production and commercial gates pending exact-build runtime, security, signing, legal, support, and commercial acceptance.
+
 ## 0.3.0-rc.4 one-model replacement and canonical naming candidate — 2026-08-05
 
 - Advanced the combined model policy to `nettap-ai:0.3.0-rc.4` and changed its embedded identity to **NetTAP Network Intelligence Model**.

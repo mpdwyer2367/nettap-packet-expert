@@ -446,6 +446,8 @@ def reconcile_assistant(client: ApiClient, assistant: dict, knowledge: dict, ski
         adoptable_bases = {
             "nettap-ai:0.3.0-rc.1",
             "nettap-ai:0.3.0-rc.2",
+            "nettap-ai:0.3.0-rc.3",
+            "nettap-ai:0.3.0-rc.4",
             required_env("NETTAP_AI_MODEL"),
         }
         if not managed and (

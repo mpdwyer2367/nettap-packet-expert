@@ -1,9 +1,9 @@
 schema_version: 1
 id: nettap-packet-expert
 display_name: NetTAP Network Intelligence — Packet Expert
-version: 0.3.0-rc.4
+version: 0.3.0-rc.5
 base_model: qwen2.5:7b-instruct-q4_K_M
-runtime_model: nettap-ai:0.3.0-rc.4
+runtime_model: nettap-ai:0.3.0-rc.5
 workspace_model_id: nettap-packet-expert
 mode: packet_expert
 modelfile: model/nettap-ai.Modelfile
@@ -16,8 +16,8 @@ skills:
   - skills/nettap-packet-expert/SKILL.md
 launcher_port: 3001
 starter_prompts:
-  - Start an investigation
+  - Help me start an investigation
   - Understand my evidence
-  - Plan a capture
+  - Plan the minimum safe collection
 tool_policy: no_tools_by_default
 live_data_default: unavailable

@@ -41,7 +41,7 @@ model tag advances with each model-policy release:
 | Identifier | Retained value |
 |---|---|
 | GitHub repository | `mpdwyer2367/nettap-packet-expert` |
-| Ollama model tag | `nettap-ai:0.3.0-rc.4` |
+| Ollama model tag | `nettap-ai:0.3.0-rc.5` |
 | Current Modelfile identity marker | `You are the NetTAP Network Intelligence Model` |
 | Administration command | `nettap-ai` |
 | Compose project and volume prefix | `nettap-packet-expert` |
@@ -86,7 +86,7 @@ Preferred:
 - “Deploy NetTAP Network Intelligence for private network visibility and forensic operations.”
 - “Open NetTAP Network Intelligence — Packet Expert.”
 - “Both experiences use the shared NetTAP Network Intelligence Model.”
-- “The technical Ollama tag remains `nettap-ai:0.3.0-rc.4`.”
+- “The technical Ollama tag remains `nettap-ai:0.3.0-rc.5`.”
 
 Avoid:
 
