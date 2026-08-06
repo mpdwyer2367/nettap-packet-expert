@@ -1,5 +1,5 @@
 /*
- * NetTAP Engineering Intelligence runtime branding.
+ * NetTAP Engineering Intelligence Suite runtime branding.
  *
  * LICENSE GUARD:
  * KEEP_OPEN_WEBUI_ATTRIBUTION should remain true unless your deployment
@@ -9,7 +9,7 @@
   "use strict";
 
   const CONFIG = Object.freeze({
-    productName: "NetTAP Engineering Intelligence",
+    productName: "NetTAP Engineering Intelligence Suite",
     securityNotice:
       "Authorized users only. Verify product specifications, pricing, compatibility, and production designs against approved NetTAP sources.",
     keepOpenWebUIAttribution: true
@@ -21,6 +21,7 @@
       modelNames: [
         "NetTAP Packet Expert",
         "NetTAP Packet Expert (Clone)",
+        // Upgrade aliases for models created before the product naming standard.
         "NetTAP PCAP Expert",
         "NetTAP PCAP Expert (Clone)"
       ],
@@ -50,10 +51,13 @@
     {
       key: "network-visibility",
       modelNames: [
+        "NetTAP Visibility Architect",
+        "NetTAP Visibility Architect (Clone)",
+        // Upgrade aliases for models created before the product naming standard.
         "NetTAP Network & Visibility Architect",
         "NetTAP Network & Visibility Architect (Clone)"
       ],
-      heading: "Network Visibility Quick Actions",
+      heading: "Visibility Architect Quick Actions",
       description: "Start with architecture, evidence coverage, or service health.",
       groups: [
         {
@@ -93,21 +97,21 @@
     const panel = document.createElement("div");
     panel.id = "nettap-brand-panel";
     panel.setAttribute("role", "complementary");
-    panel.setAttribute("aria-label", "NetTAP Engineering Intelligence");
+    panel.setAttribute("aria-label", "NetTAP Engineering Intelligence Suite");
 
     panel.innerHTML = `
       <div>
         <img
           class="nettap-wordmark"
           src="/static/nettap-main-logo.png"
-          alt="NetTAP Engineering Intelligence"
+          alt="NetTAP Engineering Intelligence Suite"
         />
-        <p class="nettap-kicker">Contained AI</p>
+        <p class="nettap-kicker">NetTAP Private AI</p>
         <h1 class="nettap-hero-title">See every packet &amp; test every signal.</h1>
         <p class="nettap-hero-copy">
-          NetTAP Private AI securely assists with network troubleshooting,
-          security operations, packet analysis, optical connectivity, and
-          L2–L7 testing.
+          The secure deployment platform for NetTAP Visibility Architect and
+          NetTAP Packet Expert, covering network architecture, troubleshooting,
+          packet analysis, security operations, and L2–L7 testing.
         </p>
         <ul class="nettap-capabilities" aria-label="Capabilities">
           <li>Trace traffic from TAP or SPAN through packet brokers to security tools</li>
@@ -197,6 +201,36 @@
     }
   }
 
+  function renameAuthProductHeading(root) {
+    const heading = Array.from(root.querySelectorAll("form div")).find(
+      (element) =>
+        element.childElementCount === 0 &&
+        ["Sign in to Open WebUI", "Sign up to Open WebUI"].includes(
+          element.textContent?.trim() || ""
+        )
+    );
+    if (heading) {
+      heading.textContent = heading.textContent.replace(
+        "Open WebUI",
+        "NetTAP Private AI"
+      );
+    }
+
+    const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+    const updates = [];
+    while (walker.nextNode()) {
+      const node = walker.currentNode;
+      const value = (node.nodeValue || "").trim();
+      if (value === "Sign in to Open WebUI" || value === "Sign up to Open WebUI") {
+        updates.push(node);
+      }
+    }
+
+    for (const node of updates) {
+      node.nodeValue = node.nodeValue.replace("Open WebUI", "NetTAP Private AI");
+    }
+  }
+
   function applyAuthBranding() {
     const authPage = qs("#auth-page");
     if (!authPage) return;
@@ -211,6 +245,7 @@
 
     addPasswordHelp(authPage);
     addSecurityNotice(authPage);
+    renameAuthProductHeading(authPage);
     cleanVisibleProductName(authPage);
   }
 
@@ -227,7 +262,7 @@
 
     const brand = document.createElement("div");
     brand.id = "nettap-chat-brand";
-    brand.setAttribute("aria-label", "NetTAP Engineering Intelligence");
+    brand.setAttribute("aria-label", "NetTAP Engineering Intelligence Suite");
     brand.innerHTML = `
       <img
         src="/static/nettap-main-logo.png"

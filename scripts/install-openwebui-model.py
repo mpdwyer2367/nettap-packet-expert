@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Create or update the NetTAP PCAP Expert workspace model."""
+"""Create or update the NetTAP Packet Expert workspace model."""
 
 import argparse
 import asyncio

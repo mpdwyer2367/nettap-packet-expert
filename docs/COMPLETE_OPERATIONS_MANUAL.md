@@ -1,5 +1,9 @@
 # NetTAP Packet Expert operations manual
 
+NetTAP Packet Expert is the packet analysis and troubleshooting component of
+the **NetTAP Engineering Intelligence Suite**, delivered securely through
+**NetTAP Private AI**.
+
 Release `0.3.0-rc.1` is a production-hardening candidate for a single-node, single-customer Docker software appliance. It is not a certified GA appliance until every [commercial release gate](COMMERCIAL_RELEASE_GATES.md) passes.
 
 ## Sources of truth
@@ -26,7 +30,7 @@ Release `0.3.0-rc.1` is a production-hardening candidate for a single-node, sing
 | Production UI | customer HTTPS name, port `8443` by default |
 | Administrator login | `admin@nettap.local` with locally generated bootstrap password |
 | Persistent volumes | Ollama models; Open WebUI accounts/chats/knowledge |
-| Workspace model definition | `openwebui/models/nettap-pcap-expert.json` |
+| Workspace model definition | `openwebui/models/nettap-packet-expert.json` |
 | Active Packet Expert skill | `openwebui/skills/` |
 | Custom tools/functions | none installed; `openwebui/settings/extensions.json` |
 | Suggestions | six model-specific packet-analysis actions |

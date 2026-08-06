@@ -37,7 +37,7 @@ required_files=(
   scripts/verify-release.sh scripts/certify-production.sh
   tests/model-behavior-eval.sh tests/backup-restore-e2e.sh
   tests/production-config-checks.py
-  openwebui/models/nettap-pcap-expert.json
+  openwebui/models/nettap-packet-expert.json
   openwebui/skills/manifest.json
   openwebui/settings/extensions.json
   openwebui/static/custom.css
@@ -84,7 +84,7 @@ import json
 import sys
 from pathlib import Path
 root = Path(sys.argv[1])
-model = json.loads((root / 'openwebui/models/nettap-pcap-expert.json').read_text())
+model = json.loads((root / 'openwebui/models/nettap-packet-expert.json').read_text())
 assert model['base_model_id'] == 'nettap-packet-expert:latest'
 assert len(model['meta']['suggestion_prompts']) == 6
 assert model['params']['num_ctx'] == 8192

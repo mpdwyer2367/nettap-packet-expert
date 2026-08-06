@@ -1,8 +1,21 @@
 # NetTAP Packet Expert
 
-NetTAP Packet Expert is a customer-isolated network and security operations assistant. It combines a Qwen3 8B model, a version-controlled NetTAP operating policy, Ollama, Open WebUI, and an optional TLS gateway.
+**Packet analysis and troubleshooting for the NetTAP Engineering Intelligence Suite**
+
+NetTAP Packet Expert is the packet analysis and troubleshooting component of
+the **NetTAP Engineering Intelligence Suite**. It runs through **NetTAP Private
+AI**, the secure deployment platform, as a customer-isolated network and
+security operations assistant. It combines a Qwen3 8B model, a
+version-controlled NetTAP operating policy, Ollama, Open WebUI, and an optional
+TLS gateway.
 
 The repository builds a custom Ollama model definition; it does **not** contain separately fine-tuned weights. First initialization downloads `qwen3:8b` and creates `nettap-packet-expert:latest`.
+
+The repository, CLI, image, and model coordinates keep the stable
+`nettap-packet-expert` identifier for compatible upgrades. The Open WebUI model
+definition now uses the product-aligned filename
+`openwebui/models/nettap-packet-expert.json`; its stable database ID remains
+`nettap-pcap-expert` so existing deployments are updated rather than duplicated.
 
 ## Product status
 
@@ -114,7 +127,7 @@ Restore is non-destructive: it verifies checksums, requires the matching softwar
 
 ## Knowledge and model behavior
 
-The Ollama behavior and exact current inference parameters are in [the Modelfile](model/Modelfile). The application-level prompt, capability policy, tags, and suggestions are in [`openwebui/models/nettap-pcap-expert.json`](openwebui/models/nettap-pcap-expert.json). The shared NetTAP chat and suggestion-card theme is mounted from `openwebui/static/`. The Packet Expert skill and its checksum are in `openwebui/skills/`. The source deployment has no custom Open WebUI tools or legacy functions; that inventory is recorded in `openwebui/settings/extensions.json`.
+The Ollama behavior and exact current inference parameters are in [the Modelfile](model/Modelfile). The application-level prompt, capability policy, tags, and suggestions are in [`openwebui/models/nettap-packet-expert.json`](openwebui/models/nettap-packet-expert.json). The shared NetTAP chat and suggestion-card theme is mounted from `openwebui/static/`. The Packet Expert skill and its checksum are in `openwebui/skills/`. The source deployment has no custom Open WebUI tools or legacy functions; that inventory is recorded in `openwebui/settings/extensions.json`.
 
 Supplemental administrator-managed knowledge is in [the knowledge file](knowledge/NetTAP_Packet_Expert_Knowledge.md), with its expected checksum in `knowledge/manifest.json`. Import the Markdown file under **Workspace > Knowledge**, restrict its access, and attach it to the Packet Expert model. Updating Git does not automatically replace an imported Open WebUI knowledge revision. Confidential internal and customer knowledge is intentionally excluded from this public repository.
 
