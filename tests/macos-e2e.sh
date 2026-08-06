@@ -25,7 +25,7 @@ packet_port="$(load_env_value PACKET_EXPERT_LAUNCHER_PORT)"
 visibility_profile="$(load_env_value NETTAP_VISIBILITY_PROFILE)"
 packet_profile="$(load_env_value NETTAP_PACKET_EXPERT_PROFILE)"
 
-"${compose[@]}" exec -T ollama ollama show "$nettap_model" | grep -q 'You are NetTAP AI'
+"${compose[@]}" exec -T ollama ollama show "$nettap_model" | grep -q 'You are the NetTAP Network Intelligence Model'
 
 admin_count="$("${compose[@]}" exec -T open-webui python - <<'PY'
 import sqlite3

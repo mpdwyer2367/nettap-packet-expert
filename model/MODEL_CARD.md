@@ -4,14 +4,14 @@
 
 | Field | Value |
 |---|---|
-| Model name | `nettap-ai:0.3.0-rc.3` |
+| Model name | `nettap-ai:0.3.0-rc.4` |
 | Release status | Release candidate; not production-certified |
 | Base model | `qwen2.5:7b-instruct-q4_K_M` |
 | Expected Ollama base ID | `845dbda0ea48` |
 | NetTAP model definition | `model/nettap-ai.Modelfile` |
 | NetTAP copyright | Copyright 2026 NetTAP Technology Limited |
 
-The NetTAP Network Intelligence Model uses the technical tag `nettap-ai:0.3.0-rc.3`. It is one combined Ollama model definition for the Network & Visibility and Packet Expert experiences, not a separately fine-tuned weight set. Ollama creates it from the verified Qwen2.5 7B base plus the NetTAP system policy in the Modelfile, using Ollama's documented [`Modelfile` and `ollama create` workflow](https://docs.ollama.com/modelfile).
+The NetTAP Network Intelligence Model uses the technical tag `nettap-ai:0.3.0-rc.4`. It is one combined Ollama model definition for the Network & Visibility and Packet Expert experiences, not a separately fine-tuned weight set. Ollama creates it from the verified Qwen2.5 7B base plus the NetTAP system policy in the Modelfile, using Ollama's documented [`Modelfile` and `ollama create` workflow](https://docs.ollama.com/modelfile).
 
 ## Included product capability
 
@@ -33,14 +33,15 @@ manifest while reusing the base model's content-addressed weight blobs. Network
 downloaded Ollama models. The offline embedding model is a smaller, separate RAG
 dependency and is not another chat LLM.
 
-Ollama model names and tags are independent manifests. Creating
-`nettap-ai:0.3.0-rc.3` does not overwrite differently named or tagged older
-models. The migration retains those tags for rollback until acceptance. An
-administrator can preview and then retire only legacy NetTAP tags with
+Ollama model names and tags are independent manifests. Initialization creates
+`nettap-ai:0.3.0-rc.4`, provisions both Open WebUI profiles against it, verifies
+the current model, and then retires older recognized NetTAP tags from the
+containerized appliance store. An administrator can audit or repeat retirement with
 `./scripts/nettap-ai retire-old-models` and
-`./scripts/nettap-ai retire-old-models --confirm`. A reviewed host-native store
-can be included explicitly with `--include-native`; it is never modified by
-default.
+`./scripts/nettap-ai retire-old-models --confirm`. The full Docker deployment
+never modifies a separate host-native store by default. Its `--include-native`
+option is explicit. The native-only installer is itself a host-store action and
+retires recognized older native NetTAP tags only after RC4 identity verification.
 
 ## Installation options
 
@@ -50,17 +51,17 @@ To create only the combined model in an already running native Ollama installati
 
 ```bash
 ./scripts/install-model-native.sh --confirm-download
-ollama run nettap-ai:0.3.0-rc.3
+ollama run nettap-ai:0.3.0-rc.4
 ```
 
 On Windows PowerShell:
 
 ```powershell
 .\scripts\install-model-native.ps1 -ConfirmDownload
-ollama run nettap-ai:0.3.0-rc.3
+ollama run nettap-ai:0.3.0-rc.4
 ```
 
-The installer downloads the pinned base, requires its expected Ollama ID, creates the combined model and verifies that both product modes are present. After installation, ordinary local inference does not require a model-registry download. Full-suite startup separately caches the pinned RAG embedding model and returns the supplied application to offline runtime.
+The installer downloads the pinned base, requires its expected Ollama ID, creates the combined model, verifies that both product modes are present, and then removes superseded native NetTAP tags while retaining the base and non-NetTAP models. After installation, ordinary local inference does not require a model-registry download. Full-suite startup separately caches the pinned RAG embedding model and returns the supplied application to offline runtime.
 
 ## Distribution
 
@@ -70,7 +71,7 @@ An authorized release manager can build the downloadable source bundle with:
 
 ```bash
 ./scripts/package-model-bundle.sh
-./scripts/verify-model-bundle.sh dist/nettap-ai-model-0.3.0-rc.3.tar.gz
+./scripts/verify-model-bundle.sh dist/nettap-ai-model-0.3.0-rc.4.tar.gz
 ```
 
 The generated provenance explicitly records that weights are not embedded. A public Ollama registry name has not been claimed by this repository. Publishing one requires a controlled NetTAP registry account, release authorization, third-party license review, artifact signing and the same acceptance evidence as the repository release.
@@ -87,4 +88,4 @@ The generated provenance explicitly records that weights are not embedded. A pub
 
 ## Validation status
 
-Source tests cover model identity, both capability modes, managed Skill and RAG provisioning, profile isolation, archive safety and fail-closed configuration. Target-host macOS and Windows/WSL2 acceptance, SBOM/CVE disposition, independent penetration testing, legal/support/commercial approval and signed release acceptance remain mandatory before production or commercial distribution. See `docs/VALIDATION_STATUS.md` and `reports/RELEASE_ACCEPTANCE_0.3.0-rc.3.md`.
+Source tests cover model identity, both capability modes, managed Skill and RAG provisioning, profile isolation, one-model retirement, archive safety and fail-closed configuration. Target-host macOS and Windows/WSL2 acceptance, SBOM/CVE disposition, independent penetration testing, legal/support/commercial approval and signed release acceptance remain mandatory before production or commercial distribution. See `docs/VALIDATION_STATUS.md` and `reports/RELEASE_ACCEPTANCE_0.3.0-rc.4.md`.

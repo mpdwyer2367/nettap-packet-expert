@@ -66,8 +66,8 @@ jobs:
       - name: Build and verify unsigned source candidate
         run: |
           ./scripts/package-release.sh --unsigned-candidate
-          ./scripts/verify-release.sh dist/nettap-ai-suite-0.3.0-rc.3-source.tar.gz
+          ./scripts/verify-release.sh dist/nettap-ai-suite-0.3.0-rc.4-source.tar.gz
       - name: Build and verify combined model bundle
         run: |
           ./scripts/package-model-bundle.sh
-          ./scripts/verify-model-bundle.sh dist/nettap-ai-model-0.3.0-rc.3.tar.gz
+          ./scripts/verify-model-bundle.sh dist/nettap-ai-model-0.3.0-rc.4.tar.gz

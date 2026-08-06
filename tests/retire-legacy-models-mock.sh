@@ -11,8 +11,11 @@ cp "$project_dir/scripts/retire-legacy-models.sh" "$test_root/project/scripts/re
 
 cat > "$test_root/project/.env" <<'EOF'
 DEPLOYMENT_MODE=local
-NETTAP_AI_MODEL=nettap-ai:0.3.0-rc.3
+NETTAP_AI_MODEL=nettap-ai:0.3.0-rc.4
 BASE_MODEL=qwen2.5:7b-instruct-q4_K_M
+EOF
+cat > "$test_root/project/.env.example" <<'EOF'
+NETTAP_AI_MODEL=nettap-ai:0.3.0-rc.4
 EOF
 
 cat > "$test_root/bin/docker" <<'EOF'
@@ -24,7 +27,7 @@ elif [[ "$*" == *" ps -q ollama" ]]; then
   echo "ollama-container"
 elif [[ "$*" == *" exec -T ollama ollama list" ]]; then
   echo 'NAME                                ID              SIZE'
-  echo 'nettap-ai:0.3.0-rc.3                current         4.7 GB'
+  echo 'nettap-ai:0.3.0-rc.4                current         4.7 GB'
   if ! grep -Fqx 'container:nettap-ai:latest' "$NETTAP_RETIRE_TEST_LOG" 2>/dev/null; then
     echo 'nettap-ai:latest                    legacy-one      4.7 GB'
   fi
@@ -72,6 +75,14 @@ dry_run="$("${test_root}/project/scripts/retire-legacy-models.sh" --include-nati
 [[ "$dry_run" == *"Legacy native tag: nettap-packet-expert:latest"* ]]
 [[ ! -e "$NETTAP_RETIRE_TEST_LOG" ]]
 
+printf '%s\n' 'NETTAP_AI_MODEL=nettap-ai:unexpected' > "$test_root/project/.env.example"
+if "${test_root}/project/scripts/retire-legacy-models.sh" --confirm >/dev/null 2>&1; then
+  echo "Retirement accepted an unapproved release model identity." >&2
+  exit 1
+fi
+[[ ! -e "$NETTAP_RETIRE_TEST_LOG" ]]
+printf '%s\n' 'NETTAP_AI_MODEL=nettap-ai:0.3.0-rc.4' > "$test_root/project/.env.example"
+
 "${test_root}/project/scripts/retire-legacy-models.sh" --confirm --include-native >/dev/null
 
 grep -Fqx 'container:nettap-ai:latest' "$NETTAP_RETIRE_TEST_LOG"
@@ -79,7 +90,7 @@ grep -Fqx 'container:nettap-ai-backup-20260730:latest' "$NETTAP_RETIRE_TEST_LOG"
 grep -Fqx 'container:nettap-packet-expert:latest' "$NETTAP_RETIRE_TEST_LOG"
 grep -Fqx 'native:nettap-ai:latest' "$NETTAP_RETIRE_TEST_LOG"
 grep -Fqx 'native:nettap-packet-expert:latest' "$NETTAP_RETIRE_TEST_LOG"
-if grep -Eq '0\.3\.0-rc\.3|qwen|kimi|qwen3' "$NETTAP_RETIRE_TEST_LOG"; then
+if grep -Eq '0\.3\.0-rc\.4|qwen|kimi|qwen3' "$NETTAP_RETIRE_TEST_LOG"; then
   echo "Retirement attempted to remove a protected model." >&2
   exit 1
 fi

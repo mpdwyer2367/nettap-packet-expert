@@ -1,6 +1,6 @@
 # Colleague evaluation guide
 
-This is the shortest controlled macOS evaluation path for NetTAP Network Intelligence `0.3.0-rc.3`. It does not grant production or commercial approval.
+This is the shortest controlled macOS evaluation path for NetTAP Network Intelligence `0.3.0-rc.4`. It does not grant production or commercial approval.
 
 ## Fresh evaluation
 
@@ -18,7 +18,7 @@ chmod +x scripts/* tests/*.sh
 1. Open <http://127.0.0.1:3000>; confirm the Network & Visibility page and its three broad starting points.
 2. Open <http://127.0.0.1:3001>; confirm the Packet Expert page and its three investigation starting points.
 3. Sign in once and confirm both use the same Open WebUI account and history.
-4. Confirm `nettap-ai:0.3.0-rc.3` is the single NetTAP runtime model and both managed Workspace Model profiles were provisioned automatically.
+4. Confirm `nettap-ai:0.3.0-rc.4` is the single NetTAP runtime model and both managed Workspace Model profiles were provisioned automatically.
 5. Confirm neither profile claims that live traffic, telemetry, or a capture is available.
 6. Confirm Network & Visibility requests device identity before exact configuration.
 7. Confirm an explicit Packet Expert mode request produces an evidence-first PCAP workflow from the same model.

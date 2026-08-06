@@ -5,7 +5,7 @@ script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 project_dir="$(cd "${script_dir}/.." && pwd)"
 base_model="qwen2.5:7b-instruct-q4_K_M"
 expected_base_id="845dbda0ea48"
-model_name="nettap-ai:0.3.0-rc.3"
+model_name="nettap-ai:0.3.0-rc.4"
 modelfile="${project_dir}/model/nettap-ai.Modelfile"
 
 if [[ "${1:-}" != "--confirm-download" || $# -ne 1 ]]; then
@@ -37,7 +37,7 @@ actual_base_id="$(ollama list | awk -v name="$base_model" '$1 == name { print $2
 echo "Creating NetTAP Network Intelligence Model: ${model_name}"
 ollama create "$model_name" -f "$modelfile"
 rendered="$(ollama show --modelfile "$model_name")"
-[[ "$rendered" == *"You are NetTAP AI"* ]] || {
+[[ "$rendered" == *"You are the NetTAP Network Intelligence Model"* ]] || {
   echo "ERROR: Combined model identity verification failed." >&2
   exit 6
 }
@@ -50,6 +50,23 @@ rendered="$(ollama show --modelfile "$model_name")"
   exit 6
 }
 
+installed_models="$(ollama list | awk 'NR > 1 {gsub(/\r/, "", $1); print $1}')"
+while IFS= read -r installed_model; do
+  case "$installed_model" in
+    "$model_name"|"$base_model"|"") ;;
+    nettap-ai:*|nettap-ai-backup-*|nettap-packet-expert:*|nettap-network-visibility:*)
+      ollama rm "$installed_model"
+      ;;
+  esac
+done <<< "$installed_models"
+
+remaining_legacy="$(ollama list | awk -v current="$model_name" 'NR > 1 && $1 != current && ($1 ~ /^nettap-ai:/ || $1 ~ /^nettap-ai-backup-/ || $1 ~ /^nettap-packet-expert:/ || $1 ~ /^nettap-network-visibility:/) {print $1}')"
+[[ -z "$remaining_legacy" ]] || {
+  echo "ERROR: Superseded native NetTAP tags remain: $remaining_legacy" >&2
+  exit 6
+}
+
 echo "PASS: ${model_name} is saved in the active Ollama store."
+echo "PASS: superseded native NetTAP model tags were retired."
 echo "Run it directly with: ollama run ${model_name}"
 echo "For both branded assistants, offline RAG, accounts, and launchers, use the full Docker deployment in README.md."

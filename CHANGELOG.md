@@ -1,15 +1,18 @@
 # Changelog
 
-## Unreleased — local evidence and case-analysis workspace
+## 0.3.0-rc.4 one-model replacement and canonical naming candidate — 2026-08-05
 
-- Added dry-run-first model retirement for macOS/Linux/WSL2 and Windows PowerShell so accepted upgrades can remove retired NetTAP tags while preserving the one current model, shared base, non-NetTAP models and application data.
+- Advanced the combined model policy to `nettap-ai:0.3.0-rc.4` and changed its embedded identity to **NetTAP Network Intelligence Model**.
+- Added automatic post-verification retirement of superseded NetTAP container tags so a successful deployment leaves one current NetTAP model tag for both Open WebUI experiences.
+- Retained dry-run-first model retirement for macOS/Linux/WSL2 and Windows PowerShell, with explicit opt-in for a separately reviewed native Ollama store.
 - Clarified that both product experiences are Open WebUI profiles over one downloaded Qwen weight set and one NetTAP model manifest, not separate LLM downloads.
 - Adopted **NetTAP Network Intelligence** as the canonical product name, standardized the two experience and Evidence Workspace display names, and documented the unchanged legacy compatibility identifiers.
+- Added updated application and model-replacement architecture visuals.
 - Added an authenticated, offline-first Evidence Workspace with persistent cases, source hashing, provenance, quality warnings and audit events.
 - Added deterministic classic-PCAP metadata parsing and normalized PCAP, syslog, IPFIX, NetFlow, sFlow, cloud-flow and JSON/JSONL ingestion without sending raw evidence to Ollama.
 - Added evidence-bound summaries, observations and explicitly qualified hypotheses, plus Markdown reports and minimized `nettap-evidence-context/v1` exports.
 - Added a dedicated evidence volume, generated API token, loopback local endpoint, TLS-gateway production-candidate route, backup-v3 coverage and non-overwriting restore support.
-- Added service-level functional/security tests and extended deployment validation. Existing `nettap-ai:0.3.0-rc.3` model weights and policy identity are unchanged; this is an evaluation feature for the next release and requires target-host acceptance before release promotion.
+- Added service-level functional/security tests and extended deployment validation. This remains an evaluation candidate and requires target-host acceptance before release promotion.
 
 ## 0.3.0-rc.3 automatic assistants and offline RAG candidate — 2026-08-05
 

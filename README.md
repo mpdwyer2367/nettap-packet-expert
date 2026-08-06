@@ -5,13 +5,13 @@ NetTAP Network Intelligence is a private, customer-isolated network visibility a
 - **NetTAP Network Intelligence — Network & Visibility** for architecture, device planning, TAP/SPAN/NPB deployment, telemetry acquisition, and visibility operations.
 - **NetTAP Network Intelligence — Packet Expert** for authorized packet evidence, capture planning, performance investigation, cyber visibility, and forensic analysis.
 
-The two experiences select the same technical Ollama model tag, `nettap-ai:0.3.0-rc.3`, built once from `qwen2.5:7b-instruct-q4_K_M`. A fresh appliance downloads one Qwen weight set and creates one NetTAP model manifest over those shared blobs. Thin Open WebUI Workspace Model profiles retain separate names, specialist knowledge, suggested starting points, and future tool allowlists without downloading or duplicating a second 7B model. The shared model also supports unified cross-domain workflows. One Open WebUI instance provides one account, chat history, administration, audit, backup, and update surface.
+The two experiences select the same technical Ollama model tag, `nettap-ai:0.3.0-rc.4`, built once from `qwen2.5:7b-instruct-q4_K_M`. A fresh appliance downloads one Qwen weight set and creates one NetTAP model manifest over those shared blobs. Thin Open WebUI Workspace Model profiles retain separate names, specialist knowledge, suggested starting points, and future tool allowlists without downloading or duplicating a second 7B model. The shared model also supports unified cross-domain workflows. One Open WebUI instance provides one account, chat history, administration, audit, backup, and update surface.
 
 The repository contains the combined model definition, both experience Skills, reviewed RAG knowledge, automatic provisioning, and the evaluation **NetTAP Network Intelligence — Evidence Workspace** for uploaded PCAP metadata, normalized logs and flow records. It does **not** contain separately fine-tuned weights, customer telemetry, packet captures, credentials, or a live NetTAP connector. See the [combined model card](model/MODEL_CARD.md), [Evidence Workspace guide](docs/EVIDENCE_CASE_SERVICE.md), and [naming conventions](docs/NAMING_CONVENTIONS.md).
 
 ## Release status
 
-`0.3.0-rc.3` is a migration and integration release candidate. Its source must pass static validation before publication, but it is not production-certified or approved for commercial appliance distribution until the exact commit has passing macOS and Windows runtime evidence, profile-isolation tests, storage measurement, SBOM/CVE acceptance, independent penetration testing, legal/licensing approval, support readiness, signature verification, and authorized release acceptance.
+`0.3.0-rc.4` is a migration and integration release candidate. Its source must pass static validation before publication, but it is not production-certified or approved for commercial appliance distribution until the exact commit has passing macOS and Windows runtime evidence, profile-isolation tests, storage measurement, SBOM/CVE acceptance, independent penetration testing, legal/licensing approval, support readiness, signature verification, and authorized release acceptance.
 
 The completed `0.2.0-rc.1` Packet Expert evidence record remains historical evidence for that earlier single-assistant candidate. It does not certify the current platform candidate. See [validation status](docs/VALIDATION_STATUS.md).
 
@@ -19,25 +19,24 @@ The completed `0.2.0-rc.1` Packet Expert evidence record remains historical evid
 
 ```mermaid
 flowchart TB
-    U["Authorized user"] --> L["Assistant launchers"]
+    U["Authorized user"] --> L["Branded launchers"]
     L --> W["One Open WebUI"]
-    W --> V["Network & Visibility experience"]
-    W --> P["Packet Expert experience"]
-    U --> E["Evidence Workspace"]
-    E --> C["Cases + deterministic analysis"]
-    C --> X["Minimized LLM-safe context"]
-    V --> VS["Visibility Skill + RAG"]
-    P --> PS["Packet Skill + RAG"]
-    V --> N["One nettap-ai model"]
+    W --> V["Network & Visibility profile"]
+    W --> P["Packet Expert profile"]
+    V --> N["One nettap-ai:0.3.0-rc.4 model"]
     P --> N
-    N --> Q["One Qwen2.5 7B base"]
+    N --> Q["One pinned Qwen2.5 7B base"]
+    U --> E["Evidence Workspace"]
+    E --> D["Deterministic case analysis"]
+    D --> X["Minimized evidence context"]
+    X -. "authorized transfer" .-> W
 ```
 
 The local launchers are stateless pages. Each selects its automatically managed Open WebUI Workspace Model through documented `model` and `q` URL parameters. Both Workspace Models use the same combined Ollama model, while retaining separate prompts, suggestions, and specialist knowledge bindings. Accounts, chats, model weights, and administration remain shared.
 
 ## Download or create the shared model
 
-The repository is the downloadable source of truth for the NetTAP Network Intelligence Model under technical tag `nettap-ai:0.3.0-rc.3`. It includes both experience capabilities in one Ollama policy:
+The repository is the downloadable source of truth for the NetTAP Network Intelligence Model under technical tag `nettap-ai:0.3.0-rc.4`. It includes both experience capabilities in one Ollama policy:
 
 - Network & Visibility: architecture, TAP/SPAN/NPB design, routing and switching context, telemetry acquisition, deployment and troubleshooting.
 - Packet Expert: authorized capture planning, evidence quality, PCAP-derived analysis, performance, cyber visibility and forensics.
@@ -49,7 +48,7 @@ For an existing native Ollama installation on macOS, Linux or WSL/Git Bash:
 git clone https://github.com/mpdwyer2367/nettap-packet-expert.git
 cd nettap-packet-expert
 ./scripts/install-model-native.sh --confirm-download
-ollama run nettap-ai:0.3.0-rc.3
+ollama run nettap-ai:0.3.0-rc.4
 ```
 
 For native Windows PowerShell:
@@ -58,10 +57,10 @@ For native Windows PowerShell:
 git clone https://github.com/mpdwyer2367/nettap-packet-expert.git
 Set-Location .\nettap-packet-expert
 .\scripts\install-model-native.ps1 -ConfirmDownload
-ollama run nettap-ai:0.3.0-rc.3
+ollama run nettap-ai:0.3.0-rc.4
 ```
 
-This saves the combined model in that machine's active Ollama store. The native-only path does not install Open WebUI, assistant profiles, RAG or launchers; use the full deployment below for both finished product experiences.
+This saves the combined model in that machine's active Ollama store and, only after identity verification succeeds, removes recognized superseded native NetTAP tags. It preserves the Qwen base and non-NetTAP models. The native-only path does not install Open WebUI, assistant profiles, RAG or launchers; use the full deployment below for both finished product experiences.
 
 The GitHub repository deliberately does not duplicate the multi-gigabyte Qwen base weights. A release manager can produce a checksum-verifiable bundle of the model definition, both Skills, knowledge and installers with `./scripts/package-model-bundle.sh`. The bundle recreates the model through Ollama after checking the pinned base ID. See the [model card](model/MODEL_CARD.md) for the exact inclusions and limits.
 
@@ -111,7 +110,7 @@ Set-Location .\nettap-packet-expert
 
 Startup uses temporary registry egress to retrieve the verified base model, pinned Open WebUI image, and the exact offline embedding-model revision. It then removes registry egress, starts Open WebUI in offline mode, creates three managed knowledge collections, installs two managed Skills, proves retrieval using a deterministic marker, creates both managed Workspace Models, attaches the matching Skill to each, and only then starts the launcher pages. Any failed identity, cache, ingestion, retrieval, Skill, or profile check stops installation.
 
-Startup also generates `.evidence-api-token` and starts the loopback-only Evidence Workspace. Use it to create a case, upload authorized evidence, review provenance and quality, run deterministic analysis, and export the minimized case context. Raw evidence is never automatically submitted to the model. The service is an evaluation feature for the next release and does not change the RC3 production-certification status.
+Startup also generates `.evidence-api-token` and starts the loopback-only Evidence Workspace. Use it to create a case, upload authorized evidence, review provenance and quality, run deterministic analysis, and export the minimized case context. Raw evidence is never automatically submitted to the model. The service remains an evaluation feature and does not change the RC4 production-certification status.
 
 The startup script also generates a unique bootstrap password and prints the protected local file containing it. Sign in as `admin@nettap.local`, change the password immediately, verify the generated password no longer works, and complete administrator finalization. There is no shared or committed default password.
 
@@ -145,12 +144,12 @@ Never merge Open WebUI SQLite files or mount one SQLite volume into multiple run
 ./scripts/nettap-ai stop
 ```
 
-Model retirement is deliberately separate from installation. The dry run lists
-retired NetTAP tags without changing them. After backup and acceptance,
-`--confirm` removes only older NetTAP tags from the appliance Ollama store while
-retaining the current model, Qwen base, non-NetTAP models, accounts, chats,
-knowledge, evidence and Docker volumes. Add `--include-native` only when an old
-host-native NetTAP model store has also been reviewed and should be retired.
+RC4 defaults `RETIRE_LEGACY_NETTAP_MODELS=true`. After the new model identity,
+both Open WebUI profiles, and offline retrieval are verified, initialization
+removes only older recognized NetTAP tags from the appliance Ollama store. The
+dry-run command audits the result. The current model, Qwen base, non-NetTAP
+models, accounts, chats, knowledge, evidence, and Docker volumes remain. Add
+`--include-native` only when a separate host-native store has been reviewed.
 
 The old `scripts/nettap-packet-expert` entry point remains as a compatibility wrapper for the 0.3 migration. See [administration](docs/ADMINISTRATION.md), [backup and restore](docs/COMPLETE_OPERATIONS_MANUAL.md), and [authentication](docs/AUTHENTICATION.md).
 
@@ -164,7 +163,7 @@ The old `scripts/nettap-packet-expert` entry point remains as a compatibility wr
 
 The [ingestion and analysis guidance](knowledge/NetTAP_Ingestion_Analysis_Guidance.md) is shared by both profiles. It defines accurate handling for PCAP-derived evidence, logs, flow telemetry, cloud flow records, decryption, provenance, correlation, and evidence-bounded security conclusions.
 
-Critical evidence and safety rules are built into the combined Ollama model definition. RC3 reconciles reviewed Git sources into restricted managed Open WebUI collections through supported application APIs; it never writes Open WebUI database tables directly. Shared knowledge is attached to both profiles and each specialist collection only to its matching profile. Source changes produce a new provisioning fingerprint and require a successful administrator-authenticated reconciliation before the launchers are enabled.
+Critical evidence and safety rules are built into the combined Ollama model definition. RC4 reconciles reviewed Git sources into restricted managed Open WebUI collections through supported application APIs; it never writes Open WebUI database tables directly. Shared knowledge is attached to both profiles and each specialist collection only to its matching profile. Source changes produce a new provisioning fingerprint and require a successful administrator-authenticated reconciliation before the launchers are enabled.
 
 See [assistant customization](docs/ASSISTANT_CUSTOMIZATION.md), [knowledge management](docs/KNOWLEDGE_MANAGEMENT.md), and [tool security](docs/TOOL_SECURITY.md).
 
@@ -197,12 +196,12 @@ Release acceptance must start from the signed source package rather than a worki
 
 ```bash
 ./tests/clean-package-acceptance.sh \
-  --archive /approved/nettap-ai-suite-0.3.0-rc.3-source.tar.gz \
-  --evidence-dir /protected/nettap-rc3-acceptance \
+  --archive /approved/nettap-ai-suite-0.3.0-rc.4-source.tar.gz \
+  --evidence-dir /protected/nettap-rc4-acceptance \
   --public-key /approved/cosign.pub
 ```
 
-The clean-package test creates an isolated Compose project with empty volumes, verifies the package against its exact Git tree and signature, installs the candidate, requires administrator password replacement, verifies ports 3000/3001/3100/3200, exercises automatic offline RAG, both assistants, and authenticated evidence ingestion, executes all fourteen behavior cases plus normalized packet/log/IPFIX examples, measures shared model storage, and tests restart, backup/restore, failed-update recovery, SBOM, and the vulnerability policy. Compare the two resulting summaries with `./tests/compare-platform-acceptance.sh`. See [the RC3 acceptance plan](docs/RC3_ACCEPTANCE_PLAN.md).
+The clean-package test creates an isolated Compose project with empty volumes, verifies the package against its exact Git tree and signature, installs the candidate, requires administrator password replacement, verifies ports 3000/3001/3100/3200, exercises automatic offline RAG, both assistants, and authenticated evidence ingestion, executes all fourteen behavior cases plus normalized packet/log/IPFIX examples, measures shared model storage, and tests restart, backup/restore, failed-update recovery, SBOM, and the vulnerability policy. Compare the two resulting summaries with `./tests/compare-platform-acceptance.sh`. See [the RC4 acceptance plan](docs/RC4_ACCEPTANCE_PLAN.md).
 
 The tests verify model identity, provisioning API behavior and idempotence, exact embedding revision metadata, offline retrieval proof, managed profile selection, combined capabilities, evidence boundaries, shared runtime, and recovery controls. They do not prove factual accuracy for every prompt or replace target-host, independent security, and customer acceptance.
 
@@ -245,7 +244,7 @@ The certification command is fail-closed and cannot manufacture external evidenc
 ```bash
 ./scripts/certify-production.sh
 COSIGN_KEY=/secure/release.key ./scripts/package-release.sh
-./scripts/verify-release.sh dist/nettap-ai-suite-0.3.0-rc.3-source.tar.gz /path/to/cosign.pub
+./scripts/verify-release.sh dist/nettap-ai-suite-0.3.0-rc.4-source.tar.gz /path/to/cosign.pub
 ```
 
 NetTAP-authored source, configuration, and documentation are licensed under the [Apache License 2.0](LICENSE), copyright 2026 NetTAP Technology Limited. The license does not relicense container images, base-model artifacts, or other dependencies and does not grant trademark rights. Review [third-party notices](THIRD_PARTY_NOTICES.md) before distribution.

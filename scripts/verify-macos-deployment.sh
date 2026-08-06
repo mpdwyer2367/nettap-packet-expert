@@ -49,7 +49,11 @@ bind_address="$(load_env_value BIND_ADDRESS)"
 ollama_image="$(load_env_value OLLAMA_IMAGE)"
 webui_image="$(load_env_value OPEN_WEBUI_IMAGE)"
 
-[[ "$nettap_model" == "nettap-ai:0.3.0-rc.3" ]] || fail "Unexpected Network Intelligence model identity: $nettap_model"
+[[ "$nettap_model" == "nettap-ai:0.3.0-rc.4" ]] || fail "Unexpected Network Intelligence model identity: $nettap_model"
+model_rows="$("${compose[@]}" exec -T ollama ollama list)"
+legacy_models="$(printf '%s\n' "$model_rows" | awk -v current="$nettap_model" 'NR > 1 && $1 != current && ($1 ~ /^nettap-ai:/ || $1 ~ /^nettap-ai-backup-/ || $1 ~ /^nettap-packet-expert:/ || $1 ~ /^nettap-network-visibility:/) {print $1}')"
+[[ -z "$legacy_models" ]] || fail "Superseded NetTAP model tags remain in the appliance store: $legacy_models"
+echo "PASS: one current NetTAP model tag"
 [[ "$bind_address" == "127.0.0.1" ]] || fail "BIND_ADDRESS must remain 127.0.0.1 for the local profile."
 "${compose[@]}" config >/dev/null || fail "Compose configuration is invalid."
 
@@ -96,7 +100,7 @@ evidence_binding="$(docker port "$evidence_id" 8081/tcp 2>/dev/null || true)"
 [[ "$evidence_binding" == "${bind_address}:${evidence_port}" ]] || fail "Evidence Workspace binding is $evidence_binding; expected ${bind_address}:${evidence_port}."
 echo "PASS: Evidence Workspace is bound to ${bind_address}:${evidence_port}"
 
-"${compose[@]}" exec -T ollama ollama show "$nettap_model" | grep -q 'You are NetTAP AI' || fail "Network Intelligence model identity check failed."
+"${compose[@]}" exec -T ollama ollama show "$nettap_model" | grep -q 'You are the NetTAP Network Intelligence Model' || fail "Network Intelligence model identity check failed."
 echo "PASS: NetTAP Network Intelligence Model is installed"
 
 "${compose[@]}" exec -T open-webui python - <<'PY' || fail "Provisioned assistants or offline RAG state is invalid."
@@ -126,7 +130,7 @@ actual_files = {
 }
 assert actual_files == expected_files
 assert aggregate.hexdigest() == embedding['aggregate_sha256']
-assert provisioning['release_version'] == '0.3.0-rc.3'
+assert provisioning['release_version'] == '0.3.0-rc.4'
 assert provisioning['offline_rag']['result'] == 'PASS'
 assert {item['id'] for item in provisioning['assistants']} == {
     'nettap-network-visibility', 'nettap-packet-expert'
@@ -140,7 +144,7 @@ assert assistant_skills == {
 }
 PY
 [[ "$(installed_provisioning_fingerprint local)" == "$(provisioning_fingerprint local)" ]] || \
-  fail "Installed provisioning fingerprint differs from the RC3 source."
+  fail "Installed provisioning fingerprint differs from the RC4 source."
 echo "PASS: pinned embedding cache, managed skills, managed assistants, and offline RAG proof"
 
 admin_count="$("${compose[@]}" exec -T open-webui python - <<'PY'

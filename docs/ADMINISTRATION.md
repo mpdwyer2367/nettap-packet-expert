@@ -19,7 +19,7 @@ The legacy `scripts/nettap-packet-expert` command remains as a compatibility wra
 ## Daily checks
 
 - Confirm the expected services are healthy.
-- Confirm `nettap-ai:0.3.0-rc.3` appears in `ollama list` and is the only NetTAP model selected by the current release.
+- Confirm `nettap-ai:0.3.0-rc.4` appears in `ollama list` and is the only NetTAP model selected by the current release.
 - Confirm Ollama is not published on a host port.
 - Confirm the Open WebUI audit log is writable and rotating.
 - Confirm the embedding and provisioning state files match the current release and show an offline RAG PASS.
@@ -31,7 +31,7 @@ The legacy `scripts/nettap-packet-expert` command remains as a compatibility wra
 1. Back up data and `.env` using [the migration procedure](MIGRATION.md).
 2. Review release notes, image digests, model ID, security scan, and rollback requirements.
 3. Apply the approved source release.
-4. Rebuild the shared model with `./scripts/nettap-ai update-models --confirm`.
+4. Rebuild the shared model with `./scripts/nettap-ai update-models --confirm`; the default lifecycle provisions both profiles and removes older NetTAP container tags only after validation succeeds.
 5. Run static, behavioral, runtime, launcher, backup, and restore acceptance.
 6. Update managed Workspace Models and knowledge only through a reviewed source change followed by `./scripts/nettap-ai provision-assistants --confirm`.
 
@@ -48,19 +48,20 @@ The launchers are stateless. Removing or recreating the launcher container does 
 
 The appliance installs one current NetTAP Network Intelligence Model and two
 lightweight Open WebUI experience profiles. The profiles do not download or
-duplicate the Qwen 7B weights. Ollama may retain older NetTAP tags after an
-upgrade so a tested rollback remains possible; a retained tag consumes model
-store space only when it uniquely references blobs and does not run a second
-inference service.
+duplicate the Qwen 7B weights. With `RETIRE_LEGACY_NETTAP_MODELS=true`, a
+successful install or update removes recognized older NetTAP tags from the
+containerized appliance store. The approved Qwen base remains because it is the
+source for the current model, and the separately pinned embedding model remains
+because Open WebUI requires it for offline RAG.
 
-After the current deployment has passed backup, restart, both-experience and
-rollback acceptance, preview retirement:
+Audit the automatic result:
 
 ```bash
 ./scripts/nettap-ai retire-old-models
 ```
 
-Then remove only retired NetTAP tags from the containerized appliance store:
+If automatic retirement was disabled for controlled testing, remove only
+retired NetTAP tags from the containerized appliance store:
 
 ```bash
 ./scripts/nettap-ai retire-old-models --confirm
@@ -73,11 +74,13 @@ On Windows PowerShell use:
 .\scripts\retire-legacy-models.ps1 -Confirm
 ```
 
-An older native Ollama installation is a separate store. Use
-`--include-native` or `-IncludeNative` only after the dry run proves that the
-containerized current model is healthy and the listed native NetTAP tags are no
-longer needed. The command never removes non-NetTAP models, the approved Qwen
-base, Open WebUI data, knowledge, evidence or Docker volumes.
+An older native Ollama installation is a separate store. The full Docker
+deployment does not touch it. Use `--include-native` or `-IncludeNative` only
+after the dry run proves that the containerized current model is healthy and the
+listed native NetTAP tags are no longer needed. A native-only installation
+retires recognized older native NetTAP tags after verifying the current model.
+Neither path removes non-NetTAP models, the approved Qwen base, Open WebUI data,
+knowledge, evidence, or Docker volumes.
 
 ## Incident handling
 

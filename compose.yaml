@@ -155,7 +155,7 @@ services:
       DEFAULT_PINNED_MODELS: ${NETTAP_VISIBILITY_PROFILE},${NETTAP_PACKET_EXPERT_PROFILE}
       MODEL_ORDER_LIST: "[\"${NETTAP_VISIBILITY_PROFILE}\",\"${NETTAP_PACKET_EXPERT_PROFILE}\",\"${NETTAP_AI_MODEL}\"]"
       WEBUI_BANNERS: >-
-        [{"id":"nettap-bootstrap-password-rc9","type":"warning","title":"Complete administrator activation","content":"This installation generated a unique bootstrap credential. Change it in Settings > Account, verify the old credential fails, then run the administrator finalization command before enabling production access.","dismissible":false,"timestamp":1785864000}]
+        [{"id":"nettap-network-intelligence-admin-activation-rc4","type":"warning","title":"Complete administrator activation","content":"This installation generated a unique bootstrap credential. Change it in Settings > Account, verify the old credential fails, then run the administrator finalization command before enabling production access.","dismissible":false,"timestamp":1785864000}]
       DEFAULT_PROMPT_SUGGESTIONS: >-
         [{"title":["Start with","my goal"],"content":"Ask me one simple question to understand what I want to accomplish."},{"title":["Explain this","assistant"],"content":"Briefly explain what this selected NetTAP assistant can help me do."},{"title":["Help me","decide"],"content":"I am not sure where to start. Ask me one important question at a time."}]
     expose: ["8080"]

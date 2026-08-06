@@ -60,6 +60,11 @@ fi
 base_name="$(load_env_value BASE_MODEL)"
 nettap_name="$(load_env_value NETTAP_AI_MODEL)"
 model_rows="$("${compose_production[@]}" exec -T ollama ollama list)"
+legacy_models="$(printf '%s\n' "$model_rows" | awk -v current="$nettap_name" 'NR > 1 && $1 != current && ($1 ~ /^nettap-ai:/ || $1 ~ /^nettap-ai-backup-/ || $1 ~ /^nettap-packet-expert:/ || $1 ~ /^nettap-network-visibility:/) {print $1}')"
+[[ -z "$legacy_models" ]] || {
+  echo "FAIL: Superseded NetTAP model tags remain in the appliance store: $legacy_models" >&2
+  exit 12
+}
 base_id="$(printf '%s\n' "$model_rows" | awk -v name="$base_name" '$1 == name {print $2}')"
 nettap_id="$(printf '%s\n' "$model_rows" | awk -v name="$nettap_name" '$1 == name {print $2}')"
 [[ "$base_id" == "$(load_env_value EXPECTED_BASE_MODEL_ID)" ]] || {
@@ -100,7 +105,7 @@ actual_files = {
 }
 assert actual_files == expected_files
 assert aggregate.hexdigest() == embedding['aggregate_sha256']
-assert provisioning['release_version'] == '0.3.0-rc.3'
+assert provisioning['release_version'] == '0.3.0-rc.4'
 assert provisioning['offline_rag']['result'] == 'PASS'
 assert {item['id'] for item in provisioning['assistants']} == {
     'nettap-network-visibility', 'nettap-packet-expert'
@@ -112,7 +117,7 @@ then
   exit 12
 fi
 [[ "$(installed_provisioning_fingerprint production)" == "$(provisioning_fingerprint production)" ]] || {
-  echo "FAIL: Installed provisioning fingerprint differs from the RC3 source." >&2
+  echo "FAIL: Installed provisioning fingerprint differs from the RC4 source." >&2
   exit 12
 }
 hostname="$(load_env_value APPLIANCE_HOSTNAME)"

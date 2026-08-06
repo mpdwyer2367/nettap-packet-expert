@@ -18,7 +18,7 @@ fi)
 archive_digest="$(if command -v shasum >/dev/null 2>&1; then shasum -a 256 "$archive"; else sha256sum "$archive"; fi | awk '{print $1}')"
 grep -Fqx "Artifact: $archive_name" "$provenance"
 grep -Fqx "SHA256: $archive_digest" "$provenance"
-grep -Fqx 'Model: nettap-ai:0.3.0-rc.3' "$provenance"
+grep -Fqx 'Model: nettap-ai:0.3.0-rc.4' "$provenance"
 grep -Fqx 'Base: qwen2.5:7b-instruct-q4_K_M' "$provenance"
 grep -Fqx 'Expected-Base-ID: 845dbda0ea48' "$provenance"
 grep -Fqx 'Contains-Weights: no' "$provenance"
@@ -58,6 +58,7 @@ grep -Fqx "Provisioning-Sources-SHA256: $sources_digest" "$provenance"
 else
   sha256sum -c provisioning/knowledge-sources.sha256
 fi)
+grep -Fq 'You are the NetTAP Network Intelligence Model' "${bundle_root}/model/nettap-ai.Modelfile"
 grep -Fq 'Network & Visibility mode' "${bundle_root}/model/nettap-ai.Modelfile"
 grep -Fq 'Packet Expert mode' "${bundle_root}/model/nettap-ai.Modelfile"
 echo "PASS: NetTAP Network Intelligence Model bundle verified."

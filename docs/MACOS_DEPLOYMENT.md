@@ -12,7 +12,7 @@ chmod +x scripts/* tests/*.sh
 ./scripts/start-macos.sh
 ```
 
-The first start downloads the approved Qwen2.5 7B base and exact offline embedding revision, verifies them, builds one combined `nettap-ai:0.3.0-rc.3` model, removes temporary egress, provisions three knowledge collections and two Workspace Models, proves offline retrieval, and then starts one Open WebUI with two stateless experience launchers.
+The first start downloads the approved Qwen2.5 7B base and exact offline embedding revision, verifies them, builds one combined `nettap-ai:0.3.0-rc.4` model, removes temporary egress, provisions three knowledge collections and two Workspace Models, proves offline retrieval, retires older NetTAP container tags, and then starts one Open WebUI with two stateless experience launchers.
 
 Open:
 
@@ -42,12 +42,12 @@ For release acceptance, do not validate a mutable checkout. Copy the signed arch
 
 ```bash
 ./tests/clean-package-acceptance.sh \
-  --archive /approved/nettap-ai-suite-0.3.0-rc.3-source.tar.gz \
+  --archive /approved/nettap-ai-suite-0.3.0-rc.4-source.tar.gz \
   --evidence-dir /protected/nettap-rc3-macos \
   --public-key /approved/cosign.pub
 ```
 
-The evidence directory must be empty. The test uses a unique Compose project and verifies empty initial volumes. `--allow-unsigned-evaluation` is available only for non-release evaluation and cannot produce signature-passing release evidence. Preserve the generated summary and supporting reports outside the temporary runtime. See [the RC3 acceptance plan](RC3_ACCEPTANCE_PLAN.md).
+The evidence directory must be empty. The test uses a unique Compose project and verifies empty initial volumes. `--allow-unsigned-evaluation` is available only for non-release evaluation and cannot produce signature-passing release evidence. Preserve the generated summary and supporting reports outside the temporary runtime. See [the RC4 acceptance plan](RC4_ACCEPTANCE_PLAN.md).
 
 ## Apple Silicon boundary
 

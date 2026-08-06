@@ -4,7 +4,7 @@ This roadmap separates implemented candidate capability from future commercial e
 
 ## Stage 0.3 — unified assistant integration candidate
 
-Implemented in `0.3.0-rc.3` source:
+Implemented in `0.3.0-rc.4` source:
 
 - one shared Qwen2.5 7B base, one combined `nettap-ai` model, and one Ollama volume;
 - one combined Network & Visibility, Packet Expert, and cross-domain reasoning policy;
