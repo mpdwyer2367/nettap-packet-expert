@@ -60,6 +60,11 @@ ollama_container="$("${selected[@]}" ps -q ollama)"
 
 current_model="$(load_env_value NETTAP_AI_MODEL)"
 base_model="$(load_env_value BASE_MODEL)"
+approved_model="$(sed -n 's/^NETTAP_AI_MODEL=//p' "${project_dir}/.env.example" | tail -n 1)"
+[[ -n "$approved_model" && "$current_model" == "$approved_model" ]] || {
+  echo "ERROR: .env selects $current_model but this release approves $approved_model; no tags were changed." >&2
+  exit 5
+}
 container_rows="$("${selected[@]}" exec -T ollama ollama list)"
 printf '%s\n' "$container_rows" | awk -v model="$current_model" 'NR > 1 && $1 == model {found=1} END {exit !found}' || {
   echo "ERROR: Current NetTAP Network Intelligence Model is not installed: $current_model" >&2

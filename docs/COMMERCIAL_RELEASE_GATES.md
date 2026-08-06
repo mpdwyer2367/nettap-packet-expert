@@ -32,7 +32,7 @@ Evidence filenames under ignored `reports/production/private/`:
 - `support-readiness-approval.txt`
 - `signed-acceptance.txt`
 
-Presence alone is not a substitute for review. Each text record must include exact lines `Version: 0.3.0-rc.3`, `Commit: <full-commit>`, `Tree: <full-tree>`, `Package: nettap-ai-suite-0.3.0-rc.3-source.tar.gz`, `Package SHA256: <digest>` and `Result: PASS` plus signer, date, scope, exceptions, and linked protected evidence. `signed-acceptance.txt` must also contain `Signature verification: PASS`. The script validates these markers; authorized people validate their truth and attachments.
+Presence alone is not a substitute for review. Each text record must include exact lines `Version: 0.3.0-rc.4`, `Commit: <full-commit>`, `Tree: <full-tree>`, `Package: nettap-ai-suite-0.3.0-rc.4-source.tar.gz`, `Package SHA256: <digest>` and `Result: PASS` plus signer, date, scope, exceptions, and linked protected evidence. `signed-acceptance.txt` must also contain `Signature verification: PASS`. The script validates these markers; authorized people validate their truth and attachments.
 
 Both runtime records must also identify the same Git tree, source-package filename, source-package SHA-256, and immutable image digests. Generate them with `tests/clean-package-acceptance.sh`, then run:
 

@@ -20,10 +20,12 @@ grep -q 'IPsec is a security suite; its ESP mode can provide confidentiality thr
 grep -q 'Raw PCAP, logs, flow exports, cloud records, and telemetry require a supported parser and validated schema' "$model_file"
 grep -q 'timezone, clock-synchronization status, observation point, schema version, sampling configuration' "$model_file"
 grep -q 'Treat possible command-and-control as an evidence-supported indicator or hypothesis' "$model_file"
-grep -q '^RELEASE_VERSION=0.3.0-rc.3$' "$project_dir/.env.example"
+grep -q 'You are the NetTAP Network Intelligence Model' "$model_file"
+grep -q '^RELEASE_VERSION=0.3.0-rc.4$' "$project_dir/.env.example"
 grep -q '^BASE_MODEL=qwen2.5:7b-instruct-q4_K_M$' "$project_dir/.env.example"
-grep -q '^NETTAP_AI_MODEL=nettap-ai:0.3.0-rc.3$' "$project_dir/.env.example"
+grep -q '^NETTAP_AI_MODEL=nettap-ai:0.3.0-rc.4$' "$project_dir/.env.example"
 grep -q '^EXPECTED_BASE_MODEL_ID=845dbda0ea48$' "$project_dir/.env.example"
+grep -q '^RETIRE_LEGACY_NETTAP_MODELS=true$' "$project_dir/.env.example"
 grep -q '^NETTAP_VISIBILITY_PROFILE=nettap-network-visibility$' "$project_dir/.env.example"
 grep -q '^NETTAP_PACKET_EXPERT_PROFILE=nettap-packet-expert$' "$project_dir/.env.example"
 grep -q '^RAG_EMBEDDING_MODEL_REVISION=1110a243fdf4706b3f48f1d95db1a4f5529b4d41$' "$project_dir/.env.example"
@@ -39,7 +41,7 @@ grep -Fqx '# NetTAP Network Intelligence' "$project_dir/README.md"
 grep -Fq 'NetTAP Network Intelligence — Network & Visibility' "$project_dir/README.md"
 grep -Fq 'NetTAP Network Intelligence — Packet Expert' "$project_dir/README.md"
 grep -Fq 'NetTAP Network Intelligence — Evidence Workspace' "$project_dir/README.md"
-grep -Fq "Ollama model tag | \`nettap-ai:0.3.0-rc.3\`" "$project_dir/docs/NAMING_CONVENTIONS.md"
+grep -Fq "Ollama model tag | \`nettap-ai:0.3.0-rc.4\`" "$project_dir/docs/NAMING_CONVENTIONS.md"
 grep -Fq "Backup format identifiers | \`NetTAP AI Suite volume backup v2\` and \`v3\`" "$project_dir/docs/NAMING_CONVENTIONS.md"
 grep -Fq 'experiences or Open WebUI profiles, not as separate LLMs or model downloads' "$project_dir/docs/NAMING_CONVENTIONS.md"
 grep -Fq 'Historical naming:' "$project_dir/reports/PRODUCTION_CERTIFICATION_STATUS_0.3.0-rc.2.md"
@@ -48,7 +50,7 @@ grep -q 'retire-old-models)' "$project_dir/scripts/nettap-ai"
 grep -q 'nettap-ai-backup-\*' "$project_dir/scripts/retire-legacy-models.sh"
 grep -q '^WEBUI_ADMIN_PASSWORD=GENERATE_ON_FIRST_START$' "$project_dir/.env.example"
 grep -q 'ENABLE_SIGNUP: "False"' "$project_dir/compose.yaml"
-grep -q 'nettap-bootstrap-password-rc9' "$project_dir/compose.yaml"
+grep -q 'nettap-network-intelligence-admin-activation-rc4' "$project_dir/compose.yaml"
 grep -q 'internal: true' "$project_dir/compose.yaml"
 grep -q 'HF_HUB_OFFLINE: "1"' "$project_dir/compose.yaml"
 grep -q 'RAG_EMBEDDING_MODEL_TRUST_REMOTE_CODE: "False"' "$project_dir/compose.yaml"
@@ -86,7 +88,7 @@ required_files=(
   docs/AUTHENTICATION.md docs/COMMERCIAL_RELEASE_GATES.md
   docs/CUSTOMER_DEPLOYMENT_GUIDE.md docs/PRODUCTION_ARCHITECTURE.md
   docs/PRODUCT_ROADMAP.md docs/THREAT_MODEL.md docs/VALIDATION_STATUS.md
-  docs/RC3_ACCEPTANCE_PLAN.md
+  docs/RC3_ACCEPTANCE_PLAN.md docs/RC4_ACCEPTANCE_PLAN.md
   docs/EVIDENCE_CASE_SERVICE.md
   docs/NAMING_CONVENTIONS.md
   scripts/backup.sh scripts/restore.sh scripts/lock-images.sh
@@ -118,6 +120,9 @@ required_files=(
   reports/STATIC_VALIDATION_2026-08-05_0.3.0-rc.3.md
   reports/RC3_ACCEPTANCE_AUTOMATION_STATUS.md
   reports/NATIVE_MODEL_CREATION_2026-08-05_0.3.0-rc.3.md
+  reports/PRODUCTION_CERTIFICATION_STATUS_0.3.0-rc.4.md
+  reports/RELEASE_ACCEPTANCE_0.3.0-rc.4.md
+  reports/STATIC_VALIDATION_2026-08-05_0.3.0-rc.4.md
 )
 for file in "${required_files[@]}"; do test -f "${project_dir}/${file}"; done
 
@@ -184,7 +189,7 @@ assert {item["display_name"] for item in assistants} == {
     "NetTAP Network Intelligence — Packet Expert",
 }
 assert len({item["launcher_port"] for item in assistants}) == 2
-assert {item["runtime_model"] for item in assistants} == {"nettap-ai:0.3.0-rc.3"}
+assert {item["runtime_model"] for item in assistants} == {"nettap-ai:0.3.0-rc.4"}
 assert {item["modelfile"] for item in assistants} == {"model/nettap-ai.Modelfile"}
 assert {tuple(item["skills"]) for item in assistants} == {
     ("skills/nettap-network-visibility/SKILL.md",),
@@ -229,6 +234,10 @@ grep -q 'Production certification decision: \*\*NOT GRANTED' "$project_dir/repor
 grep -q 'Release disposition: \*\*EVALUATION ONLY' "$project_dir/reports/RELEASE_ACCEPTANCE_0.3.0-rc.3.md"
 grep -q 'Production/customer deployment approval: \*\*NOT GRANTED' "$project_dir/reports/RELEASE_ACCEPTANCE_0.3.0-rc.3.md"
 grep -q 'Commercial distribution approval: \*\*NOT GRANTED' "$project_dir/reports/RELEASE_ACCEPTANCE_0.3.0-rc.3.md"
+grep -q 'Production certification decision: \*\*NOT GRANTED' "$project_dir/reports/PRODUCTION_CERTIFICATION_STATUS_0.3.0-rc.4.md"
+grep -q 'Release disposition: \*\*EVALUATION ONLY' "$project_dir/reports/RELEASE_ACCEPTANCE_0.3.0-rc.4.md"
+grep -q 'Production/customer deployment approval: \*\*NOT GRANTED' "$project_dir/reports/RELEASE_ACCEPTANCE_0.3.0-rc.4.md"
+grep -q 'Commercial distribution approval: \*\*NOT GRANTED' "$project_dir/reports/RELEASE_ACCEPTANCE_0.3.0-rc.4.md"
 
 if grep -RInE --exclude=static-checks.sh '(^|[^A-Za-z])(admin/admin|admin@nettap[.]local[[:space:]]*/[[:space:]]*admin)([^A-Za-z]|$)' \
   "$project_dir/README.md" "$project_dir/docs" "$project_dir/scripts" "$project_dir/tests"; then

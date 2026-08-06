@@ -33,16 +33,18 @@ name has been established.
 ## Technical compatibility identifiers
 
 The following are implementation identifiers, not customer-facing product names.
-They remain unchanged in the current candidate to preserve upgrades, stored data,
-automation and rollback:
+Their established forms remain stable in the current candidate to preserve
+upgrades, stored data, automation, and rollback; the release portion of the
+model tag advances with each model-policy release:
 
 | Identifier | Retained value |
 |---|---|
 | GitHub repository | `mpdwyer2367/nettap-packet-expert` |
-| Ollama model tag | `nettap-ai:0.3.0-rc.3` |
-| Current Modelfile identity marker | `You are NetTAP AI` |
+| Ollama model tag | `nettap-ai:0.3.0-rc.4` |
+| Current Modelfile identity marker | `You are the NetTAP Network Intelligence Model` |
 | Administration command | `nettap-ai` |
 | Compose project and volume prefix | `nettap-packet-expert` |
+| Default appliance hostname | `nettap-ai.local` |
 | Workspace Model IDs | `nettap-network-visibility`, `nettap-packet-expert` |
 | Source archive compatibility basename | `nettap-ai-suite-<version>-source.tar.gz` |
 | Backup format identifiers | `NetTAP AI Suite volume backup v2` and `v3` |
@@ -52,8 +54,9 @@ Do not rename these identifiers inside an existing release. A future identifier
 migration requires a new release, explicit data migration, rollback procedure and
 acceptance evidence. Documentation may call them “legacy compatibility
 identifiers” when their relationship to the product name needs explanation.
-The current Modelfile marker remains only because release tests use it to verify
-the installed RC3 model; UI and documentation display the canonical model name.
+The current Modelfile marker, Open WebUI profile names, launcher labels, and
+documentation use the canonical product hierarchy. The technical Ollama tag
+remains `nettap-ai:<version>` for upgrade compatibility.
 The retained release and backup record keys allow comparison with existing
 acceptance evidence and restorable backups; they are not display names.
 
@@ -82,7 +85,7 @@ Preferred:
 - “Deploy NetTAP Network Intelligence for private network visibility and forensic operations.”
 - “Open NetTAP Network Intelligence — Packet Expert.”
 - “Both experiences use the shared NetTAP Network Intelligence Model.”
-- “The technical Ollama tag remains `nettap-ai:0.3.0-rc.3`.”
+- “The technical Ollama tag remains `nettap-ai:0.3.0-rc.4`.”
 
 Avoid:
 

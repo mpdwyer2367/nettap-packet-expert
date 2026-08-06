@@ -6,7 +6,7 @@ param(
 $ErrorActionPreference = 'Stop'
 $BaseModel = 'qwen2.5:7b-instruct-q4_K_M'
 $ExpectedBaseId = '845dbda0ea48'
-$ModelName = 'nettap-ai:0.3.0-rc.3'
+$ModelName = 'nettap-ai:0.3.0-rc.4'
 $ProjectDirectory = Split-Path -Parent $PSScriptRoot
 $Modelfile = Join-Path $ProjectDirectory 'model/nettap-ai.Modelfile'
 
@@ -38,10 +38,29 @@ Write-Host "Creating NetTAP Network Intelligence Model: $ModelName"
 & ollama create $ModelName -f $Modelfile
 if ($LASTEXITCODE -ne 0) { throw "Ollama could not create $ModelName." }
 $Rendered = (& ollama show --modelfile $ModelName) -join "`n"
-foreach ($RequiredText in @('You are NetTAP AI', 'Network & Visibility mode', 'Packet Expert mode')) {
+foreach ($RequiredText in @('You are the NetTAP Network Intelligence Model', 'Network & Visibility mode', 'Packet Expert mode')) {
     if (-not $Rendered.Contains($RequiredText)) { throw "Combined model verification is missing: $RequiredText" }
 }
 
+$installedModels = @(& ollama list | Select-Object -Skip 1 | ForEach-Object { ($_ -split '\s+')[0] })
+foreach ($InstalledModel in $installedModels) {
+    $isNetTAP = (
+        $InstalledModel -like 'nettap-ai:*' -or
+        $InstalledModel -like 'nettap-ai-backup-*' -or
+        $InstalledModel -like 'nettap-packet-expert:*' -or
+        $InstalledModel -like 'nettap-network-visibility:*'
+    )
+    if ($isNetTAP -and $InstalledModel -ne $ModelName) {
+        & ollama rm $InstalledModel
+        if ($LASTEXITCODE -ne 0) { throw "Unable to retire superseded NetTAP model: $InstalledModel" }
+    }
+}
+$remainingLegacy = @(& ollama list | Select-Object -Skip 1 | ForEach-Object { ($_ -split '\s+')[0] } | Where-Object {
+    $_ -ne $ModelName -and ($_ -like 'nettap-ai:*' -or $_ -like 'nettap-ai-backup-*' -or $_ -like 'nettap-packet-expert:*' -or $_ -like 'nettap-network-visibility:*')
+})
+if ($remainingLegacy.Count -gt 0) { throw "Superseded native NetTAP tags remain: $($remainingLegacy -join ', ')" }
+
 Write-Host "PASS: $ModelName is saved in the active Ollama store."
+Write-Host 'PASS: superseded native NetTAP model tags were retired.'
 Write-Host "Run it directly with: ollama run $ModelName"
 Write-Host 'For both branded assistants, offline RAG, accounts, and launchers, use the full Docker deployment in README.md.'

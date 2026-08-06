@@ -6,19 +6,45 @@ NetTAP Network Intelligence runs one Open WebUI instance, one Ollama service, an
 
 ```mermaid
 flowchart TB
-    U["Authorized user"] --> L["NetTAP assistant launchers"]
-    L --> W["One Open WebUI"]
+    U["Authorized user"] --> L["Branded launchers"]
+    L --> W["One authenticated Open WebUI"]
     W --> V["Network & Visibility profile"]
     W --> P["Packet Expert profile"]
+    V --> VR["Visibility Skill + RAG"]
+    P --> PR["Packet Skill + RAG"]
+    V --> O["One Ollama service"]
+    P --> O
+    O --> M["nettap-ai:0.3.0-rc.4"]
+    M --> Q["One pinned Qwen2.5 7B base"]
     U --> E["Evidence Workspace"]
-    E --> C["Case store + deterministic analysis"]
-    C --> X["Minimized context"]
-    V --> VS["Visibility Skill + RAG"]
-    P --> PS["Packet Skill + RAG"]
-    V --> N["One nettap-ai model"]
-    P --> N
-    N --> Q["One Qwen2.5 7B base"]
+    E --> D["Deterministic parsers + case store"]
+    D --> X["Minimized evidence context"]
+    X -. "authorized transfer" .-> W
 ```
+
+The solid path is the application runtime. The dashed path is not an automatic
+live-data connector: minimized evidence reaches a chat only through an approved,
+authorized transfer. Raw PCAP, logs, flow records, accounts, chats, model data,
+and case evidence remain in their separate persistent volumes.
+
+## Model installation and replacement
+
+```mermaid
+flowchart TB
+    G["Reviewed GitHub release"] --> T["Temporary install-only egress"]
+    T --> Q["Pull and verify one Qwen base"]
+    T --> R["Cache and pin one RAG embedding model"]
+    Q --> C["Create nettap-ai:0.3.0-rc.4"]
+    C --> P["Provision both Open WebUI profiles"]
+    R --> P
+    P --> V["Verify model identity and offline retrieval"]
+    V --> X["Retire older NetTAP container tags"]
+    X --> F["Offline runtime with one NetTAP model tag"]
+```
+
+The Qwen base remains in the Ollama store because it supplies the model weights;
+it is not a second NetTAP assistant. The MiniLM embedding dependency remains in
+Open WebUI storage because it provides offline RAG and is not a chat LLM.
 
 ## Runtime components
 
@@ -46,9 +72,9 @@ The Compose project name and existing volume names remain `nettap-packet-expert`
 | `http://127.0.0.1:3100` | Shared Open WebUI application |
 | `http://127.0.0.1:3200` | Evidence Workspace evaluation UI and API |
 
-The launchers submit only documented Open WebUI `model` and `q` URL parameters. Port 3000 selects `nettap-network-visibility`; port 3001 selects `nettap-packet-expert`. Both profiles resolve to `nettap-ai:0.3.0-rc.3`. The launchers do not hold accounts, chats, model weights, tools, or knowledge.
+The launchers submit only documented Open WebUI `model` and `q` URL parameters. Port 3000 selects `nettap-network-visibility`; port 3001 selects `nettap-packet-expert`. Both profiles resolve to `nettap-ai:0.3.0-rc.4`. The launchers do not hold accounts, chats, model weights, tools, or knowledge.
 
-During initialization only, the bootstrap overlay supplies egress to Ollama and the embedding-cache job. Normal runtime has internal Docker networks, `OFFLINE_MODE=True`, `HF_HUB_OFFLINE=1`, a pinned local embedding path, automatic model updates disabled, and no remote-code trust. The assistant provisioner starts only after Open WebUI is healthy, authenticates as the administrator, reconciles knowledge and Skills, proves local retrieval, attaches the matching Skill and knowledge collections to each profile, writes a state record, and exits.
+During initialization only, the bootstrap overlay supplies egress to Ollama and the embedding-cache job. Normal runtime has internal Docker networks, `OFFLINE_MODE=True`, `HF_HUB_OFFLINE=1`, a pinned local embedding path, automatic model updates disabled, and no remote-code trust. The assistant provisioner starts only after Open WebUI is healthy, authenticates as the administrator, reconciles knowledge and Skills, proves local retrieval, attaches the matching Skill and knowledge collections to each profile, writes a state record, and exits. The default RC4 lifecycle then removes recognized older NetTAP tags from the containerized Ollama store; it never removes the current model, approved base, non-NetTAP models, or application volumes.
 
 The raw Ollama model is inclusive of both experiences. The Open WebUI layers do not create separate models: they narrow the starting mode, suggestions, knowledge and permissions for a particular job. RAG content and Skills are intentionally not described as fine-tuned weights.
 

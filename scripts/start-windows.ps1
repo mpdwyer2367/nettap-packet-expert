@@ -39,15 +39,16 @@ if ($content -match '(?m)^WEBUI_SECRET_KEY=GENERATE_ON_FIRST_START$') {
 }
 
 $defaults = [ordered]@{
-    RELEASE_VERSION = '0.3.0-rc.3'
+    RELEASE_VERSION = '0.3.0-rc.4'
     OLLAMA_IMAGE = 'ollama/ollama:0.32.5'
     OPEN_WEBUI_IMAGE = 'ghcr.io/open-webui/open-webui:v0.11.0'
     CADDY_IMAGE = 'caddy:2.11.4-alpine'
     BACKUP_IMAGE = 'alpine:3.24.1'
     BASE_MODEL = 'qwen2.5:7b-instruct-q4_K_M'
-    NETTAP_AI_MODEL = 'nettap-ai:0.3.0-rc.3'
-    MODEL_NAME = 'nettap-ai:0.3.0-rc.3'
+    NETTAP_AI_MODEL = 'nettap-ai:0.3.0-rc.4'
+    MODEL_NAME = 'nettap-ai:0.3.0-rc.4'
     EXPECTED_BASE_MODEL_ID = '845dbda0ea48'
+    RETIRE_LEGACY_NETTAP_MODELS = 'true'
     NETTAP_VISIBILITY_PROFILE = 'nettap-network-visibility'
     NETTAP_PACKET_EXPERT_PROFILE = 'nettap-packet-expert'
     RAG_EMBEDDING_MODEL_ID = 'sentence-transformers/all-MiniLM-L6-v2'
@@ -79,9 +80,9 @@ $defaults = [ordered]@{
     DEPLOYMENT_MODE = 'local'
 }
 
-$content = $content -replace '(?m)^RELEASE_VERSION=(0\.2\.0-rc\.1|0\.3\.0-rc\.[12])$', 'RELEASE_VERSION=0.3.0-rc.3'
-$content = $content -replace '(?m)^MODEL_NAME=(nettap-packet-expert:(0\.1\.0-rc\.8|0\.2\.0-rc\.1|0\.3\.0-rc\.1)|nettap-ai:0\.3\.0-rc\.2)$', 'MODEL_NAME=nettap-ai:0.3.0-rc.3'
-$content = $content -replace '(?m)^NETTAP_AI_MODEL=nettap-ai:0\.3\.0-rc\.2$', 'NETTAP_AI_MODEL=nettap-ai:0.3.0-rc.3'
+$content = $content -replace '(?m)^RELEASE_VERSION=(0\.2\.0-rc\.1|0\.3\.0-rc\.[123])$', 'RELEASE_VERSION=0.3.0-rc.4'
+$content = $content -replace '(?m)^MODEL_NAME=(nettap-packet-expert:(0\.1\.0-rc\.8|0\.2\.0-rc\.1|0\.3\.0-rc\.1)|nettap-ai:(latest|0\.3\.0-rc\.[123]))$', 'MODEL_NAME=nettap-ai:0.3.0-rc.4'
+$content = $content -replace '(?m)^NETTAP_AI_MODEL=(nettap-packet-expert:[^\s]+|nettap-ai:(latest|0\.3\.0-rc\.[123]))$', 'NETTAP_AI_MODEL=nettap-ai:0.3.0-rc.4'
 $content = $content -replace '(?m)^RAG_EMBEDDING_MODEL=/app/backend/data/nettap-models/all-MiniLM-L6-v2$', 'RAG_EMBEDDING_MODEL=/app/backend/data/nettap-models/all-MiniLM-L6-v2/1110a243fdf4706b3f48f1d95db1a4f5529b4d41'
 $content = $content -replace '(?m)^APPLIANCE_HOSTNAME=packet-expert\.local$', 'APPLIANCE_HOSTNAME=nettap-ai.local'
 $content = $content -replace '(?m)^WEB_PORT=3001$', 'WEB_PORT=3100'
@@ -220,6 +221,16 @@ if ($actualFingerprint -ne $desiredFingerprint) {
 docker @compose up -d assistant-launcher evidence-service
 if ($LASTEXITCODE -ne 0) {
     throw 'Assistant launcher or Evidence Workspace failed to start.'
+}
+
+$retireLegacy = 'true'
+foreach ($line in [System.IO.File]::ReadAllLines($envPath)) {
+    if ($line -match '^RETIRE_LEGACY_NETTAP_MODELS=(.+)$') { $retireLegacy = $Matches[1] }
+}
+if ($retireLegacy -match '^(?i:true|1|yes)$') {
+    & (Join-Path $PSScriptRoot 'retire-legacy-models.ps1') -Confirm
+} elseif ($retireLegacy -notmatch '^(?i:false|0|no)$') {
+    throw "RETIRE_LEGACY_NETTAP_MODELS must be true or false; received: $retireLegacy"
 }
 docker @compose ps
 

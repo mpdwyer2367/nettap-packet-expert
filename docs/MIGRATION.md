@@ -47,29 +47,29 @@ For Windows:
 
 Initialization performs these bounded changes:
 
-1. Updates recognized 0.2, 0.3-rc.1, and 0.3-rc.2 environment defaults to the 0.3-rc.3 suite values.
+1. Updates recognized 0.2 and 0.3 release-candidate environment defaults to the 0.3.0-rc.4 suite values.
 2. Retains the Compose project name so existing volumes remain attached.
 3. Pulls the same approved Qwen2.5 7B base model and verifies its expected ID.
-4. Creates one combined `nettap-ai:0.3.0-rc.3` model.
+4. Creates one combined `nettap-ai:0.3.0-rc.4` model.
 5. Caches the exact approved embedding-model revision during temporary egress, then removes that egress.
 6. Starts Open WebUI in offline mode, reconciles three managed knowledge collections and two Workspace Models through supported APIs, and proves local retrieval.
 7. Starts the two stateless launcher pages only after provisioning succeeds.
+8. Verifies the new model is installed, then removes older recognized NetTAP tags from the containerized appliance store when `RETIRE_LEGACY_NETTAP_MODELS=true`.
 
-It does not automatically remove old Packet Expert or Network & Visibility model tags, modify Open WebUI tables directly, or delete retired environment variables. Old tags remain available for rollback until an administrator removes them after acceptance. The provisioner adopts only recognized NetTAP RC1/RC2 profiles, preserves their access grants, and refuses unmanaged naming or file conflicts.
+It does not modify Open WebUI tables directly, delete non-NetTAP models, or touch a separate native Ollama store. The provisioner adopts only recognized NetTAP profiles, preserves their access grants, and refuses unmanaged naming or file conflicts. Because the default one-model lifecycle removes prior container tags only after the new model and profile provisioning pass, a protected pre-upgrade backup is mandatory for rollback.
 
-After backup, restart, both-experience and rollback acceptance, run
-`./scripts/nettap-ai retire-old-models` to preview the exact appliance tags that
-would be removed. Rerun with `--confirm` to retain only the current NetTAP model
-tag in the containerized Ollama store. Add `--include-native` only after
-reviewing a separate host-native Ollama store. This retirement does not delete
-the shared base model, non-NetTAP models, accounts, chats, knowledge, evidence
-or Docker volumes.
+Set `RETIRE_LEGACY_NETTAP_MODELS=false` in `.env` only for a controlled rollback
+exercise. The supported default is `true`, which leaves one current NetTAP tag
+after successful initialization. Run `./scripts/nettap-ai retire-old-models` to
+audit the result. Add `--include-native` only after reviewing a separate
+host-native Ollama store. Retirement never deletes the shared base model,
+non-NetTAP models, accounts, chats, knowledge, evidence, or Docker volumes.
 
 ## Application migration
 
 1. Sign in with the existing administrator account. A populated Open WebUI volume keeps its existing accounts and passwords; the bootstrap credential is not reapplied.
 2. Confirm existing chats are present.
-3. Confirm `nettap-ai:0.3.0-rc.3` appears in the model selector and that the retired assistant tags are not selected by default.
+3. Confirm `nettap-ai:0.3.0-rc.4` appears in the model selector and that retired NetTAP tags are absent from the appliance store.
 4. Confirm the installation reported `Offline RAG verification: PASS` and created the shared, Network & Visibility, and Packet Expert managed collections.
 5. Confirm both managed Workspace Models use the same `nettap-ai` base, shared knowledge is attached to both, and each specialist collection is attached only to its matching profile.
 6. Keep legacy or customer-created collections outside the managed NetTAP collection names; review and migrate them separately.
@@ -98,7 +98,7 @@ Manually verify:
 - port 3200 is the separate authenticated Evidence Workspace;
 - assistant switching does not require a second login;
 - existing chats and accounts remain available;
-- both profiles use the same `nettap-ai:0.3.0-rc.3` runtime model;
+- both profiles use the same `nettap-ai:0.3.0-rc.4` runtime model;
 - each profile retains its intended name, prompts, specialist knowledge, and permissions;
 - no assistant claims unavailable live data; and
 - a new backup and non-overwriting restore pass.

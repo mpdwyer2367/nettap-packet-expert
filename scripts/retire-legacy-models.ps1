@@ -9,6 +9,7 @@ Set-StrictMode -Version Latest
 
 $projectDir = (Resolve-Path (Join-Path $PSScriptRoot '..')).Path
 $envPath = Join-Path $projectDir '.env'
+$envExamplePath = Join-Path $projectDir '.env.example'
 $composeFile = Join-Path $projectDir 'compose.yaml'
 $localComposeFile = Join-Path $projectDir 'compose.local.yaml'
 $productionComposeFile = Join-Path $projectDir 'compose.production.yaml'
@@ -62,6 +63,12 @@ if (-not $containerId) { throw 'The canonical containerized Ollama service is no
 
 $currentModel = Get-EnvValue 'NETTAP_AI_MODEL'
 $baseModel = Get-EnvValue 'BASE_MODEL'
+$approvedLine = Get-Content $envExamplePath | Where-Object { $_ -like 'NETTAP_AI_MODEL=*' } | Select-Object -Last 1
+if (-not $approvedLine) { throw 'The release model identity is missing from .env.example.' }
+$approvedModel = $approvedLine.Substring('NETTAP_AI_MODEL='.Length)
+if ($currentModel -ne $approvedModel) {
+    throw ".env selects $currentModel but this release approves $approvedModel; no tags were changed."
+}
 $containerRows = @(docker @compose exec -T ollama ollama list)
 if ($LASTEXITCODE -ne 0) { throw 'Unable to list appliance Ollama models.' }
 $containerModels = @(ConvertFrom-OllamaList $containerRows)

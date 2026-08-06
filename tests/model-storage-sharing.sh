@@ -17,9 +17,15 @@ fi
 
 nettap_modelfile="$("${active_compose[@]}" exec -T ollama ollama show --modelfile "$nettap_model")"
 nettap_from="$(printf '%s\n' "$nettap_modelfile" | awk '$1 == "FROM" {print $2; exit}')"
+model_rows="$("${active_compose[@]}" exec -T ollama ollama list)"
+legacy_models="$(printf '%s\n' "$model_rows" | awk -v current="$nettap_model" 'NR > 1 && $1 != current && ($1 ~ /^nettap-ai:/ || $1 ~ /^nettap-ai-backup-/ || $1 ~ /^nettap-packet-expert:/ || $1 ~ /^nettap-network-visibility:/) {print $1}')"
 
 [[ -n "$nettap_from" ]] || {
   echo "FAIL: Unable to determine the shared Network Intelligence base reference." >&2
+  exit 14
+}
+[[ -z "$legacy_models" ]] || {
+  echo "FAIL: Superseded NetTAP model tags remain: $legacy_models" >&2
   exit 14
 }
 
@@ -33,7 +39,7 @@ mkdir -p "$(dirname "$report")"
   printf 'Model store KiB: '
   "${active_compose[@]}" exec -T ollama sh -c "du -sk /root/.ollama/models | awk '{print \$1}'"
   printf 'Installed models:\n'
-  "${active_compose[@]}" exec -T ollama ollama list
+  printf '%s\n' "$model_rows"
 } > "$report"
 
 echo "PASS: the shared NetTAP Network Intelligence Model references one Ollama base blob."
