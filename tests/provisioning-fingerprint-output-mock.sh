@@ -27,4 +27,21 @@ if printf '%s\n' "$expected" "$other" | extract_provisioning_fingerprint >/dev/n
   exit 1
 fi
 
+failure_dir="$(mktemp -d "${project_dir}/.tmp-provision-test.XXXXXX")"
+trap 'rm -f "$failure_dir/stderr"; rmdir "$failure_dir"' EXIT
+provisioning_fingerprint() { printf '%s\n' "$expected"; }
+installed_provisioning_fingerprint() { printf '\n'; }
+load_env_value() { printf '%s\n' 'test-password'; }
+compose_local=(bash -c 'exit 42' provisioner-mock)
+if provision_assistants local 2>"$failure_dir/stderr"; then
+  echo 'ERROR: A failed assistant provisioner was accepted.' >&2
+  exit 1
+fi
+grep -Fq 'Automatic assistant and offline RAG provisioning failed' "$failure_dir/stderr"
+if grep -Fq 'state does not match the release fingerprint' "$failure_dir/stderr"; then
+  echo 'ERROR: Provisioner failure was masked as a fingerprint mismatch.' >&2
+  exit 1
+fi
+
 echo 'PASS: provisioning fingerprint extraction ignores helper output and rejects ambiguous values.'
+echo 'PASS: assistant provisioner failures retain their actionable error instead of becoming fingerprint mismatches.'
