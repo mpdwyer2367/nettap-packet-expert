@@ -37,10 +37,14 @@ The legacy `scripts/nettap-packet-expert` command remains as a compatibility wra
 
 ## Data locations
 
-The Compose project retains two persistent volumes:
+The canonical `nettap-network-intelligence` Compose project retains these persistent volumes:
 
-- `nettap-packet-expert_packet-expert-open-webui-data`: accounts, chats, application settings, managed/customer knowledge, exact-revision embedding cache, provisioning state, and audit log.
-- `nettap-packet-expert_packet-expert-ollama-data`: base model, shared Network Intelligence model manifest, and any retained rollback tags.
+- `nettap-network-intelligence_packet-expert-open-webui-data`: accounts, chats, application settings, managed/customer knowledge, exact-revision embedding cache, provisioning state, and audit log.
+- `nettap-network-intelligence_packet-expert-ollama-data`: base model, shared Network Intelligence model manifest, and any retained rollback tags.
+
+Legacy `nettap-packet-expert_*` volumes are never attached automatically. The
+startup workflow stops legacy containers without deleting their volumes. Move
+legacy data only through a reviewed backup, restore, and migration procedure.
 
 The launchers are stateless. Removing or recreating the launcher container does not remove chats or models.
 

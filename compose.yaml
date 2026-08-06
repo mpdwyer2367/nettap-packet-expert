@@ -1,6 +1,7 @@
-# The project name remains stable for the 0.3 migration so an approved in-place
-# upgrade can retain the existing Open WebUI and Ollama volumes.
-name: nettap-packet-expert
+# The canonical product uses its own Compose identity. Legacy Packet Expert
+# volumes remain offline and are migrated only through an explicit backup and
+# restore procedure; they are never attached to a fresh production install.
+name: nettap-network-intelligence
 
 services:
   ollama:

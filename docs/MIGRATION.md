@@ -1,6 +1,10 @@
 # Migration from standalone Packet Expert to NetTAP Network Intelligence
 
-This migration preserves the existing Open WebUI and Ollama volumes. It does not merge SQLite databases, copy password hashes, or attach one data volume to concurrent Open WebUI containers.
+The canonical product starts in a separate `nettap-network-intelligence`
+Compose project. It does not automatically attach legacy Open WebUI or Ollama
+volumes, merge SQLite databases, copy password hashes, or attach one data
+volume to concurrent Open WebUI containers. Startup stops legacy containers
+without deleting their volumes.
 
 ## Supported source
 
@@ -48,7 +52,7 @@ For Windows:
 Initialization performs these bounded changes:
 
 1. Updates recognized 0.2 and 0.3 release-candidate environment defaults to the 0.3.0-rc.5 suite values.
-2. Retains the Compose project name so existing volumes remain attached.
+2. Uses the canonical `nettap-network-intelligence` project and clean product volumes.
 3. Pulls the same approved Qwen2.5 7B base model and verifies its expected ID.
 4. Creates one combined `nettap-ai:0.3.0-rc.5` model.
 5. Caches the exact approved embedding-model revision during temporary egress, then removes that egress.
@@ -56,7 +60,11 @@ Initialization performs these bounded changes:
 7. Starts the two stateless launcher pages only after provisioning succeeds.
 8. Verifies the new model is installed, then removes older recognized NetTAP tags from the containerized appliance store when `RETIRE_LEGACY_NETTAP_MODELS=true`.
 
-It does not modify Open WebUI tables directly, delete non-NetTAP models, or touch a separate native Ollama store. The provisioner adopts only recognized NetTAP profiles, preserves their access grants, and refuses unmanaged naming or file conflicts. Because the default one-model lifecycle removes prior container tags only after the new model and profile provisioning pass, a protected pre-upgrade backup is mandatory for rollback.
+It does not modify legacy Open WebUI tables, delete legacy volumes, delete
+non-NetTAP models, or touch a separate native Ollama store. Importing legacy
+accounts, chats, knowledge, or model data is a separate reviewed migration and
+requires a protected backup. This boundary prevents stale credentials and
+experimental configuration from entering a fresh production instance.
 
 Set `RETIRE_LEGACY_NETTAP_MODELS=false` in `.env` only for a controlled rollback
 exercise. The supported default is `true`, which leaves one current NetTAP tag

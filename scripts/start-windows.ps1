@@ -9,6 +9,7 @@ $localComposeFile = Join-Path $projectDir 'compose.local.yaml'
 $bootstrapComposeFile = Join-Path $projectDir 'compose.bootstrap.yaml'
 $bootstrapPasswordPath = Join-Path $projectDir '.bootstrap-admin-password'
 $evidenceTokenPath = Join-Path $projectDir '.evidence-api-token'
+$adminFinalizedPath = Join-Path $projectDir '.admin-bootstrap-finalized'
 
 function Select-ProvisioningFingerprint {
     param(
@@ -155,6 +156,43 @@ $compose = @(
 )
 
 $bootstrapCompose = $compose + @('-f', $bootstrapComposeFile)
+$legacyCompose = @(
+    'compose',
+    '--project-name', 'nettap-packet-expert',
+    '--project-directory', $projectDir,
+    '--env-file', $envPath,
+    '-f', $composeFile,
+    '-f', $localComposeFile
+)
+
+$legacyContainerIds = @(docker ps -aq --filter 'label=com.docker.compose.project=nettap-packet-expert')
+if ($legacyContainerIds.Count -gt 0 -and -not [string]::IsNullOrWhiteSpace(($legacyContainerIds -join ''))) {
+    Write-Host 'Stopping legacy nettap-packet-expert containers; legacy volumes are preserved for controlled migration.'
+    docker @legacyCompose down --remove-orphans
+    if ($LASTEXITCODE -ne 0) { throw 'Unable to stop the legacy NetTAP Compose runtime.' }
+}
+
+docker volume inspect 'nettap-network-intelligence_packet-expert-open-webui-data' 2>$null | Out-Null
+if ($LASTEXITCODE -ne 0) {
+    $content = [System.IO.File]::ReadAllText($envPath)
+    $content = $content -replace '(?m)^WEBUI_ADMIN_NAME=.*$', 'WEBUI_ADMIN_NAME=NetTAP Administrator'
+    $content = $content -replace '(?m)^WEBUI_ADMIN_EMAIL=.*$', 'WEBUI_ADMIN_EMAIL=admin@nettap.local'
+    $credentialMatchesProject = (Test-Path $bootstrapPasswordPath) -and
+        ([System.IO.File]::ReadAllText($bootstrapPasswordPath) -match '(?m)^Compose project: nettap-network-intelligence$')
+    if ($content -match '(?m)^WEBUI_ADMIN_PASSWORD=(BOOTSTRAP_RETIRED|GENERATE_ON_FIRST_START)?$' -or -not $credentialMatchesProject) {
+        $passwordBytes = New-Object byte[] 12
+        $passwordRng = [System.Security.Cryptography.RandomNumberGenerator]::Create()
+        $passwordRng.GetBytes($passwordBytes)
+        $passwordRng.Dispose()
+        $adminPassword = "Ntp!9$(($passwordBytes | ForEach-Object { $_.ToString('x2') }) -join '')"
+        $content = $content -replace '(?m)^WEBUI_ADMIN_PASSWORD=.*$', "WEBUI_ADMIN_PASSWORD=$adminPassword"
+        $credentialText = "Login: admin@nettap.local`r`nBootstrap password: $adminPassword`r`nGenerated UTC: $([DateTime]::UtcNow.ToString('o'))`r`nCompose project: nettap-network-intelligence`r`n"
+        [System.IO.File]::WriteAllText($bootstrapPasswordPath, $credentialText, [System.Text.UTF8Encoding]::new($false))
+        $adminPassword = $null
+    }
+    [System.IO.File]::WriteAllText($envPath, $content, [System.Text.UTF8Encoding]::new($false))
+    if (Test-Path $adminFinalizedPath) { Remove-Item $adminFinalizedPath -Force }
+}
 
 docker @compose config --quiet
 if ($LASTEXITCODE -ne 0) {

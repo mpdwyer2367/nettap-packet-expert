@@ -39,7 +39,8 @@ echo "Commit: $commit"
 for port in 3000 3001 3100 3200; do
   if command -v lsof >/dev/null 2>&1 && lsof -nP -iTCP:"$port" -sTCP:LISTEN >/dev/null 2>&1; then
     existing_project="$(docker ps --filter "publish=$port" --format '{{.Label "com.docker.compose.project"}}' | head -n 1)"
-    [[ "$existing_project" == "nettap-packet-expert" ]] || \
+    [[ "$existing_project" == "nettap-network-intelligence" || \
+      "$existing_project" == "nettap-packet-expert" ]] || \
       fail "Port $port is already used by another process. Run ./scripts/inventory-macos.sh before testing."
   fi
 done

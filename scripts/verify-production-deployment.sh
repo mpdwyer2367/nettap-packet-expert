@@ -8,11 +8,26 @@ require_runtime
 initialize_env
 require_digest_pins
 [[ "$(load_env_value DEPLOYMENT_MODE)" == production ]] || { echo "FAIL: DEPLOYMENT_MODE is not production." >&2; exit 12; }
-[[ -f "$admin_finalized_file" ]] || { echo "FAIL: Administrator activation is incomplete." >&2; exit 12; }
+effective_project="$(deployment_project_name)"
+if [[ ! -f "$admin_finalized_file" ]] || \
+  ! grep -Fqx "Compose project: $effective_project" "$admin_finalized_file"; then
+  echo "FAIL: Administrator activation is incomplete for $effective_project." >&2
+  exit 12
+fi
+legacy_running="$(docker ps -q --filter "label=com.docker.compose.project=${legacy_project_name}")"
+[[ -z "$legacy_running" || "$effective_project" != "$canonical_project_name" ]] || {
+  echo "FAIL: Legacy ${legacy_project_name} containers are still running beside the canonical product." >&2
+  exit 12
+}
 "${compose_production[@]}" config >/dev/null
 
 verify_container_control() {
-  local container_id="$1" service="$2" expected_image="$3" actual_image security_options cap_drop
+  local container_id="$1" service="$2" expected_image="$3" project_label actual_image security_options cap_drop
+  project_label="$(docker inspect --format '{{index .Config.Labels "com.docker.compose.project"}}' "$container_id")"
+  [[ "$project_label" == "$effective_project" ]] || {
+    echo "FAIL: $service belongs to Compose project $project_label; expected $effective_project." >&2
+    exit 12
+  }
   actual_image="$(docker inspect --format '{{.Config.Image}}' "$container_id")"
   [[ "$actual_image" == "$expected_image" ]] || {
     echo "FAIL: $service runs $actual_image instead of approved image $expected_image." >&2

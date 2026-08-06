@@ -11,6 +11,18 @@ An empty Open WebUI data volume creates one local administrator:
 
 There is no shared default password. The ignored file `.bootstrap-admin-password` is created with restricted local permissions and contains the one-time value. Open WebUI creates the account only when its user database is empty; existing volumes keep their existing accounts.
 
+The canonical Compose project is `nettap-network-intelligence`. A fresh product
+installation never attaches the older `nettap-packet-expert` account database.
+Startup stops legacy containers but preserves their volumes for an explicit,
+reviewed migration. This prevents an experimental or personal account from
+silently becoming the administrator of a new customer installation.
+
+Static shared credentials are prohibited in the production profile. They are
+publicly guessable, conflict with the enforced password policy, and would place
+every appliance behind the same credential.
+The fixed, non-personal login is `admin@nettap.local`; its initial password is
+unique per installation and must be replaced before production activation.
+
 ## User-facing sign-in path
 
 The product welcome pages on local ports 3000 and 3001, and the production
@@ -35,6 +47,9 @@ access rules remain authoritative.
 5. Run `./scripts/finalize-admin.sh --confirm` and type `FINALIZE`.
 
 Finalization removes the local credential file, marks the bootstrap value retired in `.env`, and creates an ignored activation record. Production startup refuses to enable the TLS gateway until this record exists.
+
+The activation record is bound to the effective Compose project. An activation
+record from a legacy or different deployment cannot authorize production.
 
 ## Enforcement boundary
 
