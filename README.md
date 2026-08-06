@@ -32,7 +32,7 @@ flowchart TB
     X -. "authorized transfer" .-> W
 ```
 
-The local launchers are stateless pages. Each selects its automatically managed Open WebUI Workspace Model through documented `model` and `q` URL parameters. Both Workspace Models use the same combined Ollama model, while retaining separate prompts, suggestions, and specialist knowledge bindings. Accounts, chats, model weights, and administration remain shared.
+The local launchers are stateless pages. The shared browser application is named **NetTAP Network Intelligence** through Open WebUI's supported `WEBUI_NAME` setting. Each launcher selects its automatically managed Open WebUI Workspace Model through documented `model` and `q` URL parameters. Both Workspace Models use the same combined Ollama model, while retaining separate prompts, suggestions, and specialist knowledge bindings. Accounts, chats, model weights, and administration remain shared.
 
 ## Download or create the shared model
 

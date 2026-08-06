@@ -98,6 +98,7 @@ for key in (
 ):
     assert env[key] == "False", f"{key} must be False"
 assert env["WEBUI_AUTH"] == "True"
+assert env["WEBUI_NAME"] == "NetTAP Network Intelligence"
 assert env["JWT_EXPIRES_IN"] == "${JWT_EXPIRES_IN}"
 assert env["ENABLE_PERSISTENT_CONFIG"] == "False"
 assert env["OFFLINE_MODE"] == "True"

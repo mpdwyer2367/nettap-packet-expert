@@ -24,6 +24,7 @@ Recommended descriptor:
 | Workspace | NetTAP Network Intelligence — Evidence Workspace | Local case creation, evidence ingestion and deterministic analysis |
 | Appliance | NetTAP Network Intelligence Appliance | Customer-isolated physical or virtual deployment |
 | Administration | NetTAP Network Intelligence Administration | Installation, configuration, backup, update and support functions |
+| Shared Open WebUI title | NetTAP Network Intelligence | Browser-visible application name |
 
 Use an em dash between the product and an experience or workspace name in prose
 and UI labels. The shorter names **Network & Visibility**, **Packet Expert** and
