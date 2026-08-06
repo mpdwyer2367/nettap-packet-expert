@@ -49,6 +49,12 @@ grep -Fq 'Historical naming:' "$project_dir/reports/RELEASE_ACCEPTANCE_0.2.0-rc.
 grep -q 'retire-old-models)' "$project_dir/scripts/nettap-ai"
 grep -q 'nettap-ai-backup-\*' "$project_dir/scripts/retire-legacy-models.sh"
 grep -q '^WEBUI_ADMIN_PASSWORD=GENERATE_ON_FIRST_START$' "$project_dir/.env.example"
+grep -q '^WEBUI_ADMIN_EMAIL=admin@nettap.local$' "$project_dir/.env.example"
+grep -q '^name: nettap-network-intelligence$' "$project_dir/compose.yaml"
+grep -q 'canonical_project_name="nettap-network-intelligence"' "$project_dir/scripts/common.sh"
+grep -q 'deployment_project_name()' "$project_dir/scripts/common.sh"
+grep -q 'stop_legacy_runtime_preserving_data' "$project_dir/scripts/start-macos.sh"
+grep -q 'prepare_canonical_admin_bootstrap' "$project_dir/scripts/start-macos.sh"
 grep -q 'ENABLE_SIGNUP: "False"' "$project_dir/compose.yaml"
 grep -q 'WEBUI_NAME: "NetTAP Network Intelligence"' "$project_dir/compose.yaml"
 grep -q 'nettap-network-intelligence-admin-activation-rc5' "$project_dir/compose.yaml"
@@ -108,6 +114,7 @@ required_files=(
   tests/clean-package-acceptance.sh tests/compare-platform-acceptance.sh
   tests/native-model-installer-mock.sh
   tests/retire-legacy-models-mock.sh
+  tests/auth-bootstrap-mock.sh
   tests/provisioning-fingerprint-output-mock.sh
   tests/fixtures/normalized-pcap.json tests/fixtures/normalized-logs.jsonl
   tests/fixtures/normalized-ipfix.jsonl

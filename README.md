@@ -114,7 +114,15 @@ Startup uses temporary registry egress to retrieve the verified base model, pinn
 
 Startup also generates `.evidence-api-token` and starts the loopback-only Evidence Workspace. Use it to create a case, upload authorized evidence, review provenance and quality, run deterministic analysis, and export the minimized case context. Raw evidence is never automatically submitted to the model. The service remains an evaluation feature and does not change the RC5 production-certification status.
 
-The startup script also generates a unique bootstrap password and prints the protected local file containing it. Open either experience page, select **Sign in and open this experience**, sign in as `admin@nettap.local`, change the password immediately, verify the generated password no longer works, and complete administrator finalization. There is no shared or committed default password.
+The startup script uses the canonical `nettap-network-intelligence` Compose
+project, stops any legacy `nettap-packet-expert` containers without deleting
+their volumes, and creates a clean account database for the product. It
+generates a unique bootstrap password and prints the protected local file
+containing it. Open either experience page, select **Sign in and open this
+experience**, sign in as `admin@nettap.local`, change the password immediately,
+verify the generated password no longer works, and complete administrator
+finalization. Shared or predictable default credentials are deliberately
+rejected by the production profile.
 
 A populated Open WebUI volume retains its existing accounts and passwords; startup does not reset them.
 

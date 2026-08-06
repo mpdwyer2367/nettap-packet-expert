@@ -39,6 +39,10 @@ fi
 require_runtime
 [[ -f "$env_file" ]] || fail "Missing .env. Run ./scripts/start-macos.sh first."
 docker info >/dev/null 2>&1 || fail "Docker Desktop engine is not running."
+effective_project="$(deployment_project_name)"
+legacy_running="$(docker ps -q --filter "label=com.docker.compose.project=${legacy_project_name}")"
+[[ -z "$legacy_running" || "$effective_project" != "$canonical_project_name" ]] || \
+  fail "Legacy ${legacy_project_name} containers are still running beside the canonical product."
 
 nettap_model="$(load_env_value NETTAP_AI_MODEL)"
 web_port="$(load_env_value WEB_PORT)"
@@ -68,16 +72,18 @@ evidence_id="$("${compose[@]}" ps -q evidence-service)"
 
 verify_provenance() {
   local container_id="$1" service="$2" expected_image="$3"
-  local working_dir config_files actual_image state
+  local project_label working_dir config_files actual_image state
+  project_label="$(docker inspect --format '{{index .Config.Labels "com.docker.compose.project"}}' "$container_id")"
   working_dir="$(docker inspect --format '{{index .Config.Labels "com.docker.compose.project.working_dir"}}' "$container_id")"
   config_files="$(docker inspect --format '{{index .Config.Labels "com.docker.compose.project.config_files"}}' "$container_id")"
   actual_image="$(docker inspect --format '{{.Config.Image}}' "$container_id")"
   state="$(docker inspect --format '{{.State.Status}}' "$container_id")"
+  [[ "$project_label" == "$effective_project" ]] || fail "$service belongs to Compose project $project_label; expected $effective_project."
   [[ "$working_dir" == "$project_dir" ]] || fail "$service was created from $working_dir, not $project_dir. Recreate the project from the canonical directory."
   [[ "$config_files" == *"${project_dir}/compose.yaml"* && "$config_files" == *"${project_dir}/compose.local.yaml"* ]] || fail "$service uses unexpected Compose files: $config_files"
   [[ "$actual_image" == "$expected_image" ]] || fail "$service image is $actual_image; expected $expected_image."
   [[ "$state" == "running" ]] || fail "$service state is $state, not running."
-  echo "PASS: $service provenance, image, and running state"
+  echo "PASS: $service project, provenance, image, and running state"
 }
 
 verify_provenance "$ollama_id" ollama "$ollama_image"

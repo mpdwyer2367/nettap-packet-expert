@@ -61,7 +61,12 @@ Open WebUI storage because it provides offline RAG and is not a chat LLM.
 | Production gateway | 1 Caddy container | Gateway operational data | TLS entry point on port 8443 by default |
 | Evidence Workspace | 1 | Cases, source hashes, raw evidence, normalized observations, findings and reports | Generated bearer token; loopback-only locally and TLS-gateway-only in the production profile |
 
-The Compose project name and existing volume names remain `nettap-packet-expert` for the 0.3 migration. This is deliberate compatibility behavior so an approved in-place upgrade can retain existing accounts and chats.
+The canonical Compose project name is `nettap-network-intelligence`. Fresh
+installs use new canonical volumes and a non-personal administrator bootstrap.
+Startup stops any legacy `nettap-packet-expert` containers without deleting
+their volumes. Legacy accounts, chats, models, and knowledge enter the product
+only through an explicit backup, restore, and migration review; stale account
+state is never attached implicitly.
 
 ## Local addresses
 

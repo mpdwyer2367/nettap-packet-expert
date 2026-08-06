@@ -14,6 +14,8 @@ local = load("compose.local.yaml")
 bootstrap = load("compose.bootstrap.yaml")
 production = load("compose.production.yaml")
 
+assert base["name"] == "nettap-network-intelligence"
+
 assert set(base["services"]) == {
     "ollama", "model-init", "rag-cache-init", "open-webui", "assistant-provisioner",
     "evidence-service"
@@ -133,6 +135,7 @@ assert "NETTAP_PACKET_EXPERT_PROFILE=nettap-packet-expert" in env_example
 assert "RAG_EMBEDDING_MODEL_REVISION=1110a243fdf4706b3f48f1d95db1a4f5529b4d41" in env_example
 assert "WEBUI_ADMIN_PASSWORD=GENERATE_ON_FIRST_START" in env_example
 assert "WEBUI_ADMIN_PASSWORD=admin" not in env_example
+assert "WEBUI_ADMIN_EMAIL=admin@nettap.local" in env_example
 assert "BIND_ADDRESS=127.0.0.1" in env_example
 assert "EVIDENCE_PORT=3200" in env_example
 assert "EVIDENCE_API_TOKEN=GENERATE_ON_FIRST_START" in env_example
@@ -181,6 +184,7 @@ assert "shellcheck scripts/*.sh scripts/nettap-ai scripts/nettap-packet-expert t
 assert "tests/test_case_service.py" in workflow
 assert "case_service/*.py" in workflow
 assert "retire-legacy-models-mock.sh" in workflow
+assert "auth-bootstrap-mock.sh" in workflow
 assert "retire-legacy-models.ps1" in workflow
 assert "package-model-bundle.sh" in workflow
 assert "verify-model-bundle.sh" in workflow
@@ -188,9 +192,13 @@ assert "verify-model-bundle.sh" in workflow
 common = (root / "scripts/common.sh").read_text(encoding="utf-8")
 assert "retire_legacy_models_if_enabled" in common
 assert 'RETIRE_LEGACY_NETTAP_MODELS "true"' in common
+assert 'canonical_project_name="nettap-network-intelligence"' in common
+assert 'printf \'%s\\n\' "${COMPOSE_PROJECT_NAME:-$canonical_project_name}"' in common
+assert "stop_legacy_runtime_preserving_data" in common
+assert "prepare_canonical_admin_bootstrap" in common
 
 runtime_verifier = (root / "scripts/verify-production-deployment.sh").read_text(encoding="utf-8")
-for control in (".Config.Image", "no-new-privileges:true", "EXPECTED_BASE_MODEL_ID", "NetTAP AI model ID", "strict-transport-security"):
+for control in ("com.docker.compose.project", ".Config.Image", "no-new-privileges:true", "EXPECTED_BASE_MODEL_ID", "NetTAP AI model ID", "strict-transport-security"):
     assert control in runtime_verifier
 assert "evidence-runtime-e2e.sh" in runtime_verifier
 

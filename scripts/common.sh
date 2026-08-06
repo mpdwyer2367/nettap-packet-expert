@@ -7,6 +7,12 @@ bootstrap_password_file="${project_dir}/.bootstrap-admin-password"
 evidence_token_file="${project_dir}/.evidence-api-token"
 # shellcheck disable=SC2034 # exported to scripts that source this library
 admin_finalized_file="${project_dir}/.admin-bootstrap-finalized"
+canonical_project_name="nettap-network-intelligence"
+legacy_project_name="nettap-packet-expert"
+
+deployment_project_name() {
+  printf '%s\n' "${COMPOSE_PROJECT_NAME:-$canonical_project_name}"
+}
 
 require_command() {
   command -v "$1" >/dev/null 2>&1 || {
@@ -159,8 +165,52 @@ compose_local=("${compose_base[@]}" -f "${project_dir}/compose.local.yaml")
 compose_local_bootstrap=("${compose_local[@]}" -f "${project_dir}/compose.bootstrap.yaml")
 compose_production=("${compose_base[@]}" -f "${project_dir}/compose.production.yaml")
 compose_production_bootstrap=("${compose_production[@]}" -f "${project_dir}/compose.bootstrap.yaml")
+compose_legacy_local=(docker compose --project-name "$legacy_project_name" --project-directory "$project_dir" \
+  --env-file "$env_file" -f "${project_dir}/compose.yaml" -f "${project_dir}/compose.local.yaml")
 # shellcheck disable=SC2034 # compatibility alias consumed by local test entry points
 compose=("${compose_local[@]}")
+
+stop_legacy_runtime_preserving_data() {
+  local effective_project legacy_ids
+  effective_project="$(deployment_project_name)"
+  if [[ "$effective_project" != "$canonical_project_name" ]]; then
+    return 0
+  fi
+  legacy_ids="$(docker ps -aq --filter "label=com.docker.compose.project=${legacy_project_name}")"
+  if [[ -n "$legacy_ids" ]]; then
+    echo "Stopping legacy ${legacy_project_name} containers; legacy volumes are preserved for controlled migration."
+    "${compose_legacy_local[@]}" down --remove-orphans
+  fi
+}
+
+prepare_canonical_admin_bootstrap() {
+  local effective_project canonical_volume password admin_password
+  effective_project="$(deployment_project_name)"
+  canonical_volume="${effective_project}_packet-expert-open-webui-data"
+  if docker volume inspect "$canonical_volume" >/dev/null 2>&1; then
+    return 0
+  fi
+
+  set_env_value WEBUI_ADMIN_NAME "NetTAP Administrator"
+  set_env_value WEBUI_ADMIN_EMAIL "admin@nettap.local"
+  password="$(load_env_value WEBUI_ADMIN_PASSWORD)"
+  if [[ -z "$password" || "$password" == BOOTSTRAP_RETIRED || \
+    "$password" == GENERATE_ON_FIRST_START || ! -s "$bootstrap_password_file" ]] || \
+    ! grep -Fqx "Compose project: $effective_project" "$bootstrap_password_file"; then
+    admin_password="Ntp!9$(openssl rand -hex 12)"
+    set_env_value WEBUI_ADMIN_PASSWORD "$admin_password"
+    umask 077
+    {
+      printf 'Login: admin@nettap.local\n'
+      printf 'Bootstrap password: %s\n' "$admin_password"
+      printf 'Generated UTC: %s\n' "$(date -u +%FT%TZ)"
+      printf 'Compose project: %s\n' "$effective_project"
+    } > "$bootstrap_password_file"
+    chmod 0600 "$bootstrap_password_file"
+    unset admin_password
+  fi
+  rm -f "$admin_finalized_file"
+}
 
 wait_for_ollama_local_bootstrap() {
   local ready=false
