@@ -310,9 +310,56 @@ if ($actualFingerprint -ne $desiredFingerprint) {
     }
 }
 
-docker @compose up -d assistant-launcher evidence-service
+docker @compose up -d --force-recreate open-webui assistant-launcher evidence-service
 if ($LASTEXITCODE -ne 0) {
     throw 'Assistant launcher or Evidence Workspace failed to start.'
+}
+
+$requiredBindings = @(
+    @{ Service = 'open-webui'; ContainerPort = '8080'; HostPort = '3100' },
+    @{ Service = 'evidence-service'; ContainerPort = '8081'; HostPort = '3200' },
+    @{ Service = 'assistant-launcher'; ContainerPort = '3000'; HostPort = '3000' },
+    @{ Service = 'assistant-launcher'; ContainerPort = '3001'; HostPort = '3001' }
+)
+foreach ($binding in $requiredBindings) {
+    $containerId = ((docker @compose ps -q $binding.Service) -join '').Trim()
+    if ([string]::IsNullOrWhiteSpace($containerId)) {
+        docker @compose ps
+        throw "$($binding.Service) has no container after recreation."
+    }
+    $actualBinding = ((docker port $containerId "$($binding.ContainerPort)/tcp" 2>$null) -join "`n").Trim()
+    $expectedBinding = "127.0.0.1:$($binding.HostPort)"
+    if ($actualBinding -ne $expectedBinding) {
+        docker @compose ps
+        docker @compose logs --no-color --tail 40 $binding.Service
+        throw "$($binding.Service) port $($binding.ContainerPort)/tcp is '$actualBinding'; expected '$expectedBinding'."
+    }
+}
+
+$requiredEndpoints = @(
+    @{ Name = 'Open WebUI'; Url = 'http://127.0.0.1:3100/health' },
+    @{ Name = 'Evidence Workspace'; Url = 'http://127.0.0.1:3200/health' },
+    @{ Name = 'Network & Visibility'; Url = 'http://127.0.0.1:3000/system/health' },
+    @{ Name = 'Packet Expert'; Url = 'http://127.0.0.1:3001/system/health' }
+)
+foreach ($endpoint in $requiredEndpoints) {
+    $ready = $false
+    foreach ($attempt in 1..60) {
+        try {
+            Invoke-WebRequest -Uri $endpoint.Url -UseBasicParsing -TimeoutSec 5 | Out-Null
+            $ready = $true
+            break
+        }
+        catch {
+            Start-Sleep -Seconds 2
+        }
+    }
+    if (-not $ready) {
+        docker @compose ps
+        docker @compose logs --no-color --tail 40 open-webui evidence-service assistant-launcher
+        throw "$($endpoint.Name) did not become reachable at $($endpoint.Url)."
+    }
+    Write-Host "PASS: $($endpoint.Name) is reachable at $($endpoint.Url)"
 }
 
 $retireLegacy = 'true'

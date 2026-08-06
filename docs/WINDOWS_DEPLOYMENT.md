@@ -17,6 +17,11 @@ Set-Location .\nettap-packet-expert
 .\scripts\start-windows.ps1
 ```
 
+The installer force-recreates the browser-facing services after provisioning
+and does not report success until ports 3000, 3001, 3100, and 3200 are bound to
+`127.0.0.1` and all four health endpoints respond. Persistent model, account,
+chat, knowledge, and case volumes are not removed.
+
 The first start downloads the approved Qwen2.5 7B base and exact offline embedding revision, verifies them, builds one combined `nettap-ai:0.3.0-rc.5` model, removes temporary egress, provisions three knowledge collections and two Workspace Models, proves offline retrieval, retires older NetTAP container tags, and then starts one Open WebUI with two stateless experience launchers.
 
 Open:

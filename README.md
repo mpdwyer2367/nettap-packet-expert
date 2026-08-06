@@ -100,6 +100,12 @@ chmod +x scripts/* tests/*.sh
 ./scripts/start-macos.sh
 ```
 
+The installer does not declare success until ports 3000, 3001, 3100, and 3200
+are published on `127.0.0.1` and all four HTTP health checks respond. It
+force-recreates only the stateless/browser-facing services when their runtime
+configuration changes; named volumes containing the model, accounts, chats,
+knowledge, and cases are preserved.
+
 ### Windows PowerShell
 
 Run Docker Desktop with WSL 2 and Linux containers:
@@ -125,6 +131,20 @@ finalization. Shared or predictable default credentials are deliberately
 rejected by the production profile.
 
 A populated Open WebUI volume retains its existing accounts and passwords; startup does not reset them.
+
+If an interrupted or older RC5 install has running containers but inaccessible
+loopback ports, repair the interface layer without downloading the model again
+or deleting persistent data:
+
+```bash
+./scripts/nettap-ai repair-local
+```
+
+The repair command validates the merged Compose configuration, recreates only
+Open WebUI, Evidence Workspace, and the stateless launchers, verifies every
+host-port binding and endpoint, and then runs the canonical macOS deployment
+verification. On failure it prints bounded service logs instead of reporting a
+successful installation.
 
 ## Upgrade from Packet Expert 0.2
 

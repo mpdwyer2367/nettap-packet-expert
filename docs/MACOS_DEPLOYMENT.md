@@ -12,6 +12,12 @@ chmod +x scripts/* tests/*.sh
 ./scripts/start-macos.sh
 ```
 
+Installation succeeds only after the four loopback port bindings and their
+health endpoints are reachable. For an interrupted upgrade or an older RC5
+runtime with missing ports, run `./scripts/nettap-ai repair-local`. This
+recreates only the browser-facing services, preserves all named volumes, and
+runs the canonical deployment verifier. It does not redownload the Ollama model.
+
 The first start downloads the approved Qwen2.5 7B base and exact offline embedding revision, verifies them, builds one combined `nettap-ai:0.3.0-rc.5` model, removes temporary egress, provisions three knowledge collections and two Workspace Models, proves offline retrieval, retires older NetTAP container tags, and then starts one Open WebUI with two stateless experience launchers.
 
 Open:

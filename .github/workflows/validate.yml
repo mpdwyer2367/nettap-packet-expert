@@ -29,6 +29,8 @@ jobs:
         run: ./tests/auth-bootstrap-mock.sh
       - name: Test administrator recovery safeguards
         run: ./tests/admin-recovery-mock.sh
+      - name: Test local runtime recreation and port verification
+        run: ./tests/local-runtime-repair-mock.sh
       - name: Test Open WebUI provisioning contract
         run: python3 -m unittest -v tests/test_provision_open_webui.py tests/test_verify_archive_tree.py tests/test_case_service.py tests/test_recover_open_webui_admin.py
       - name: Compile provisioning code

@@ -108,8 +108,10 @@ The local profile intentionally drops all Linux capabilities and adds back only
 without it in the bounding set, Linux rejects `exec caddy` with `Operation not
 permitted` before the Caddyfile is loaded. Do not remove
 `no-new-privileges:true`, grant broader capabilities, or delete application
-volumes. Recreate only the stateless launcher after installing the corrected
-Compose profile.
+volumes. After installing the corrected Compose profile, run
+`./scripts/nettap-ai repair-local`. It recreates the browser-facing services,
+checks all four loopback bindings and endpoints, prints bounded diagnostics on
+failure, and runs canonical macOS verification without redownloading the model.
 
 ### Live telemetry appears unavailable
 

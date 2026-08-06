@@ -22,6 +22,7 @@ case "$command_name" in
     echo "Bearer token file: $evidence_token_file"
     ;;
   recover-admin) exec "${script_dir}/recover-admin.sh" "$@" ;;
+  repair-local) exec "${script_dir}/repair-macos-runtime.sh" "$@" ;;
   stop) exec "${script_dir}/stop.sh" "$@" ;;
   update-models) exec "${script_dir}/update-model.sh" "$@" ;;
   retire-old-models) exec "${script_dir}/retire-legacy-models.sh" "$@" ;;
@@ -36,6 +37,6 @@ case "$command_name" in
   certify) exec "${script_dir}/certify-production.sh" "$@" ;;
   help|*)
     echo "NetTAP Network Intelligence administration"
-    echo "Commands: start-local, start-wsl2, configure-production, start-production, status, health, evidence, recover-admin, stop, update-models, retire-old-models, install-native-model, package-model-bundle, provision-assistants, lock-images, scan, backup, restore, verify-production, certify"
+    echo "Commands: start-local, start-wsl2, repair-local, configure-production, start-production, status, health, evidence, recover-admin, stop, update-models, retire-old-models, install-native-model, package-model-bundle, provision-assistants, lock-images, scan, backup, restore, verify-production, certify"
     ;;
 esac

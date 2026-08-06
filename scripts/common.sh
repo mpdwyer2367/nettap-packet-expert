@@ -170,6 +170,80 @@ compose_legacy_local=(docker compose --project-name "$legacy_project_name" --pro
 # shellcheck disable=SC2034 # compatibility alias consumed by local test entry points
 compose=("${compose_local[@]}")
 
+local_runtime_diagnostics() {
+  echo "NetTAP local runtime diagnostics:" >&2
+  "${compose_local[@]}" ps >&2 || true
+  for service in open-webui evidence-service assistant-launcher; do
+    echo "--- ${service} logs ---" >&2
+    "${compose_local[@]}" logs --no-color --tail=40 "$service" >&2 || true
+  done
+}
+
+require_local_port_binding() {
+  local service="$1" container_port="$2" expected="$3" container_id actual
+  container_id="$("${compose_local[@]}" ps -q "$service")"
+  [[ -n "$container_id" ]] || {
+    echo "ERROR: ${service} has no container after recreation." >&2
+    return 1
+  }
+  actual="$(docker port "$container_id" "${container_port}/tcp" 2>/dev/null || true)"
+  [[ "$actual" == "$expected" ]] || {
+    echo "ERROR: ${service} port ${container_port}/tcp is '${actual:-unpublished}'; expected ${expected}." >&2
+    return 1
+  }
+}
+
+wait_for_local_endpoint() {
+  local label="$1" url="$2"
+  local attempt
+  for attempt in $(seq 1 60); do
+    if curl --fail --silent --show-error "$url" >/dev/null 2>&1; then
+      echo "PASS: ${label} is reachable at ${url}"
+      return 0
+    fi
+    sleep 2
+  done
+  echo "ERROR: ${label} did not become reachable at ${url} within 120 seconds." >&2
+  return 1
+}
+
+verify_local_runtime_access() {
+  local bind_address web_port visibility_port packet_port evidence_port
+  require_command curl
+  bind_address="$(load_env_value BIND_ADDRESS)"
+  web_port="$(load_env_value WEB_PORT)"
+  visibility_port="$(load_env_value VISIBILITY_LAUNCHER_PORT)"
+  packet_port="$(load_env_value PACKET_EXPERT_LAUNCHER_PORT)"
+  evidence_port="$(load_env_value EVIDENCE_PORT)"
+  [[ "$bind_address" == "127.0.0.1" ]] || {
+    echo "ERROR: Local deployment requires BIND_ADDRESS=127.0.0.1; received ${bind_address}." >&2
+    return 1
+  }
+  require_local_port_binding open-webui 8080 "${bind_address}:${web_port}" || return 1
+  require_local_port_binding evidence-service 8081 "${bind_address}:${evidence_port}" || return 1
+  require_local_port_binding assistant-launcher 3000 "${bind_address}:${visibility_port}" || return 1
+  require_local_port_binding assistant-launcher 3001 "${bind_address}:${packet_port}" || return 1
+  wait_for_local_endpoint "Open WebUI" "http://${bind_address}:${web_port}/health" || return 1
+  wait_for_local_endpoint "Evidence Workspace" "http://${bind_address}:${evidence_port}/health" || return 1
+  wait_for_local_endpoint "Network & Visibility" "http://${bind_address}:${visibility_port}/system/health" || return 1
+  wait_for_local_endpoint "Packet Expert" "http://${bind_address}:${packet_port}/system/health" || return 1
+}
+
+recreate_local_interfaces() {
+  "${compose_local[@]}" config >/dev/null || {
+    echo "ERROR: The merged local Compose configuration is invalid." >&2
+    return 1
+  }
+  "${compose_local[@]}" up -d --force-recreate open-webui evidence-service assistant-launcher || {
+    local_runtime_diagnostics
+    return 1
+  }
+  verify_local_runtime_access || {
+    local_runtime_diagnostics
+    return 1
+  }
+}
+
 stop_legacy_runtime_preserving_data() {
   local effective_project legacy_ids
   effective_project="$(deployment_project_name)"
@@ -447,7 +521,7 @@ initialize_model_with_temporary_egress() {
       "${compose_local[@]}" up -d ollama open-webui
       record_model_identity local
       provision_assistants local || recover_failed_assistant_provisioning local
-      "${compose_local[@]}" up -d assistant-launcher evidence-service
+      recreate_local_interfaces || recover_failed_assistant_provisioning local
       retire_legacy_models_if_enabled || recover_failed_model_initialization local "$was_running"
       ;;
     production)
