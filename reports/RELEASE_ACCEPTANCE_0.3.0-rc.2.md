@@ -1,5 +1,8 @@
 # Release acceptance record — NetTAP AI Suite 0.3.0-rc.2
 
+> Historical naming: this record preserves the candidate name assessed at the
+> time. The current product name is **NetTAP Network Intelligence**.
+
 Recorded date: 2026-08-05
 
 Record type: combined-model integration-candidate baseline

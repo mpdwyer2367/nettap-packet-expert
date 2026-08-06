@@ -1,5 +1,8 @@
 # Historical RC7 static validation report — 2026-08-04
 
+> Historical naming: this record covers an earlier standalone Packet Expert
+> candidate. Packet Expert is now an experience within **NetTAP Network Intelligence**.
+
 > This is a historical record for `0.1.0-rc.7`. It is not the current RC8 validation status. See `docs/VALIDATION_STATUS.md` and `reports/PUBLIC_COLLEAGUE_READINESS_2026-08-04.md`.
 
 ## Scope

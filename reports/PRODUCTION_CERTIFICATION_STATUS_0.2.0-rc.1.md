@@ -1,5 +1,8 @@
 # Production certification status — 0.2.0-rc.1
 
+> Historical naming: this record covers the earlier standalone Packet Expert
+> candidate. Packet Expert is now an experience within **NetTAP Network Intelligence**.
+
 Assessment date: 2026-08-04  
 Assessor role: application architecture and source-control review  
 Candidate decision: **VALID PRODUCTION CANDIDATE for controlled runtime qualification**

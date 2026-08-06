@@ -2,6 +2,8 @@
 
 ## Unreleased — local evidence and case-analysis workspace
 
+- Added dry-run-first model retirement for macOS/Linux/WSL2 and Windows PowerShell so accepted upgrades can remove retired NetTAP tags while preserving the one current model, shared base, non-NetTAP models and application data.
+- Clarified that both product experiences are Open WebUI profiles over one downloaded Qwen weight set and one NetTAP model manifest, not separate LLM downloads.
 - Adopted **NetTAP Network Intelligence** as the canonical product name, standardized the two experience and Evidence Workspace display names, and documented the unchanged legacy compatibility identifiers.
 - Added an authenticated, offline-first Evidence Workspace with persistent cases, source hashing, provenance, quality warnings and audit events.
 - Added deterministic classic-PCAP metadata parsing and normalized PCAP, syslog, IPFIX, NetFlow, sFlow, cloud-flow and JSON/JSONL ingestion without sending raw evidence to Ollama.

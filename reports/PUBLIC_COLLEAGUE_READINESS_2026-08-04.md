@@ -1,5 +1,8 @@
 # NetTAP Packet Expert public colleague-readiness audit
 
+> Historical naming: this record covers an earlier standalone Packet Expert
+> candidate. Packet Expert is now an experience within **NetTAP Network Intelligence**.
+
 Date: 2026-08-04  
 Release: `0.1.0-rc.8`  
 Repository: `https://github.com/mpdwyer2367/nettap-packet-expert`

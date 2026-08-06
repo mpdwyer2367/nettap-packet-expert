@@ -21,6 +21,8 @@ jobs:
         run: ./tests/static-checks.sh
       - name: Test native model installer verification
         run: ./tests/native-model-installer-mock.sh
+      - name: Test legacy model retirement safeguards
+        run: ./tests/retire-legacy-models-mock.sh
       - name: Test Open WebUI provisioning contract
         run: python3 -m unittest -v tests/test_provision_open_webui.py tests/test_verify_archive_tree.py tests/test_case_service.py
       - name: Compile provisioning code
@@ -41,6 +43,14 @@ jobs:
           $errors = $null
           [System.Management.Automation.Language.Parser]::ParseFile(
             (Resolve-Path './scripts/start-windows.ps1'),
+            [ref]$tokens,
+            [ref]$errors
+          ) | Out-Null
+          if ($errors.Count -gt 0) { throw ($errors | Out-String) }
+          $tokens = $null
+          $errors = $null
+          [System.Management.Automation.Language.Parser]::ParseFile(
+            (Resolve-Path './scripts/retire-legacy-models.ps1'),
             [ref]$tokens,
             [ref]$errors
           ) | Out-Null

@@ -66,7 +66,7 @@ nettap_id="$(printf '%s\n' "$model_rows" | awk -v name="$nettap_name" '$1 == nam
   echo "FAIL: Runtime base-model identity does not match the approved manifest." >&2
   exit 12
 }
-[[ -n "$nettap_id" ]] || { echo "FAIL: NetTAP AI model identity is unavailable." >&2; exit 12; }
+[[ -n "$nettap_id" ]] || { echo "FAIL: NetTAP Network Intelligence Model identity is unavailable." >&2; exit 12; }
 model_lock="${project_dir}/reports/generated/model-lock.txt"
 [[ -f "$model_lock" ]] || { echo "FAIL: Model identity record is missing." >&2; exit 12; }
 grep -Fqx "NetTAP AI model ID: $nettap_id" "$model_lock" || {

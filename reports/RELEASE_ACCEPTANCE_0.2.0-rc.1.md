@@ -1,5 +1,8 @@
 # Release acceptance record — NetTAP Packet Expert 0.2.0-rc.1
 
+> Historical naming: this record covers the earlier standalone Packet Expert
+> candidate. Packet Expert is now an experience within **NetTAP Network Intelligence**.
+
 Record completed: 2026-08-05T04:42:05Z
 
 Evidence cutoff: 2026-08-05T04:42:05Z

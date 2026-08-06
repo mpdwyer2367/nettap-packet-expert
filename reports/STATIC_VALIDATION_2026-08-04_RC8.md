@@ -1,5 +1,8 @@
 # NetTAP Packet Expert RC8 static validation
 
+> Historical naming: this record covers an earlier standalone Packet Expert
+> candidate. Packet Expert is now an experience within **NetTAP Network Intelligence**.
+
 Date: 2026-08-04  
 Scope: `0.1.0-rc.8` source package and administrator-bootstrap change
 

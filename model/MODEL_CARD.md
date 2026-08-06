@@ -24,6 +24,24 @@ The NetTAP Network Intelligence Model uses the technical tag `nettap-ai:0.3.0-rc
 
 The two Open WebUI Workspace Models are lightweight product profiles over the same Ollama model. They do not copy the 7B weights. Specialist Markdown knowledge and [Open WebUI Skills](https://docs.openwebui.com/features/workspace/skills/) remain versioned outside the weights so they can be reviewed, hashed, tested, and updated without pretending a RAG update is fine-tuning.
 
+## Download and storage behavior
+
+A clean appliance downloads the approved Qwen2.5 7B base once into one
+containerized Ollama volume. `ollama create` adds the versioned NetTAP policy
+manifest while reusing the base model's content-addressed weight blobs. Network
+& Visibility and Packet Expert are Open WebUI profiles, not separately
+downloaded Ollama models. The offline embedding model is a smaller, separate RAG
+dependency and is not another chat LLM.
+
+Ollama model names and tags are independent manifests. Creating
+`nettap-ai:0.3.0-rc.3` does not overwrite differently named or tagged older
+models. The migration retains those tags for rollback until acceptance. An
+administrator can preview and then retire only legacy NetTAP tags with
+`./scripts/nettap-ai retire-old-models` and
+`./scripts/nettap-ai retire-old-models --confirm`. A reviewed host-native store
+can be included explicitly with `--include-native`; it is never modified by
+default.
+
 ## Installation options
 
 For the full supported evaluation deployment—including the two assistants, offline RAG, accounts, chat history, launchers and automatic provisioning—follow the repository `README.md`.

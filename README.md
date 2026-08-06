@@ -5,7 +5,7 @@ NetTAP Network Intelligence is a private, customer-isolated network visibility a
 - **NetTAP Network Intelligence — Network & Visibility** for architecture, device planning, TAP/SPAN/NPB deployment, telemetry acquisition, and visibility operations.
 - **NetTAP Network Intelligence — Packet Expert** for authorized packet evidence, capture planning, performance investigation, cyber visibility, and forensic analysis.
 
-The two experiences select the same technical Ollama model tag, `nettap-ai:0.3.0-rc.3`, built once from `qwen2.5:7b-instruct-q4_K_M`. Thin Open WebUI Workspace Model profiles retain separate names, specialist knowledge, suggested starting points, and future tool allowlists without duplicating model weights. The shared model also supports unified cross-domain workflows. One Open WebUI instance provides one account, chat history, administration, audit, backup, and update surface.
+The two experiences select the same technical Ollama model tag, `nettap-ai:0.3.0-rc.3`, built once from `qwen2.5:7b-instruct-q4_K_M`. A fresh appliance downloads one Qwen weight set and creates one NetTAP model manifest over those shared blobs. Thin Open WebUI Workspace Model profiles retain separate names, specialist knowledge, suggested starting points, and future tool allowlists without downloading or duplicating a second 7B model. The shared model also supports unified cross-domain workflows. One Open WebUI instance provides one account, chat history, administration, audit, backup, and update surface.
 
 The repository contains the combined model definition, both experience Skills, reviewed RAG knowledge, automatic provisioning, and the evaluation **NetTAP Network Intelligence — Evidence Workspace** for uploaded PCAP metadata, normalized logs and flow records. It does **not** contain separately fine-tuned weights, customer telemetry, packet captures, credentials, or a live NetTAP connector. See the [combined model card](model/MODEL_CARD.md), [Evidence Workspace guide](docs/EVIDENCE_CASE_SERVICE.md), and [naming conventions](docs/NAMING_CONVENTIONS.md).
 
@@ -138,10 +138,19 @@ Never merge Open WebUI SQLite files or mount one SQLite volume into multiple run
 ./scripts/nettap-ai status
 ./scripts/nettap-ai health
 ./scripts/nettap-ai update-models --confirm
+./scripts/nettap-ai retire-old-models
+./scripts/nettap-ai retire-old-models --confirm
 ./scripts/nettap-ai provision-assistants --confirm
 ./scripts/nettap-ai backup /secure/backup/path --confirm-stop
 ./scripts/nettap-ai stop
 ```
+
+Model retirement is deliberately separate from installation. The dry run lists
+retired NetTAP tags without changing them. After backup and acceptance,
+`--confirm` removes only older NetTAP tags from the appliance Ollama store while
+retaining the current model, Qwen base, non-NetTAP models, accounts, chats,
+knowledge, evidence and Docker volumes. Add `--include-native` only when an old
+host-native NetTAP model store has also been reviewed and should be retired.
 
 The old `scripts/nettap-packet-expert` entry point remains as a compatibility wrapper for the 0.3 migration. See [administration](docs/ADMINISTRATION.md), [backup and restore](docs/COMPLETE_OPERATIONS_MANUAL.md), and [authentication](docs/AUTHENTICATION.md).
 
