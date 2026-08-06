@@ -95,6 +95,22 @@ rotates sessions, and produces a new one-time credential. Then rerun the
 platform start command and complete normal password replacement and
 finalization. Follow [authentication](AUTHENTICATION.md) for the full boundary.
 
+### Assistant launcher repeatedly restarts
+
+Inspect the launcher logs before changing persistent state:
+
+```bash
+docker compose --env-file .env -f compose.yaml -f compose.local.yaml logs --tail=100 assistant-launcher
+```
+
+The local profile intentionally drops all Linux capabilities and adds back only
+`NET_BIND_SERVICE`. The official Caddy executable carries that file capability;
+without it in the bounding set, Linux rejects `exec caddy` with `Operation not
+permitted` before the Caddyfile is loaded. Do not remove
+`no-new-privileges:true`, grant broader capabilities, or delete application
+volumes. Recreate only the stateless launcher after installing the corrected
+Compose profile.
+
 ### Live telemetry appears unavailable
 
 That is the correct default. The release does not include a live NetTAP connector. A separate approved integration must supply current evidence and its provenance.

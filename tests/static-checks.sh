@@ -37,6 +37,7 @@ grep -q '^VISIBILITY_LAUNCHER_PORT=3000$' "$project_dir/.env.example"
 grep -q '^PACKET_EXPERT_LAUNCHER_PORT=3001$' "$project_dir/.env.example"
 grep -q '^EVIDENCE_PORT=3200$' "$project_dir/.env.example"
 grep -q '^EVIDENCE_API_TOKEN=GENERATE_ON_FIRST_START$' "$project_dir/.env.example"
+grep -A35 '^  assistant-launcher:' "$project_dir/compose.local.yaml" | grep -Fq 'cap_add: [NET_BIND_SERVICE]'
 grep -Fqx '# NetTAP Network Intelligence' "$project_dir/README.md"
 grep -Fq 'NetTAP Network Intelligence — Network & Visibility' "$project_dir/README.md"
 grep -Fq 'NetTAP Network Intelligence — Packet Expert' "$project_dir/README.md"

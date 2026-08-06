@@ -33,6 +33,7 @@ assert local["services"]["assistant-launcher"]["ports"] == [
 assert local["services"]["assistant-launcher"]["networks"] == ["user-access"]
 assert local["services"]["assistant-launcher"]["security_opt"] == ["no-new-privileges:true"]
 assert local["services"]["assistant-launcher"]["cap_drop"] == ["ALL"]
+assert local["services"]["assistant-launcher"]["cap_add"] == ["NET_BIND_SERVICE"]
 assert bootstrap["services"]["ollama"]["networks"] == ["backend", "model-egress"]
 assert bootstrap["services"]["rag-cache-init"]["networks"] == ["backend", "model-egress"]
 
