@@ -234,8 +234,26 @@ if ($actualFingerprint -ne $desiredFingerprint) {
         }
     }
     $adminPassword | docker @compose --profile provision run --rm -T assistant-provisioner
+    $provisionExitCode = $LASTEXITCODE
+    if ($provisionExitCode -eq 11) {
+        $adminPassword = $null
+        Write-Host 'The existing Open WebUI volume retained a different administrator password.'
+        $securePassword = Read-Host 'Current Open WebUI administrator password' -AsSecureString
+        $passwordPointer = [Runtime.InteropServices.Marshal]::SecureStringToBSTR($securePassword)
+        try {
+            $adminPassword = [Runtime.InteropServices.Marshal]::PtrToStringBSTR($passwordPointer)
+        }
+        finally {
+            [Runtime.InteropServices.Marshal]::ZeroFreeBSTR($passwordPointer)
+        }
+        $adminPassword | docker @compose --profile provision run --rm -T assistant-provisioner
+        $provisionExitCode = $LASTEXITCODE
+    }
     $adminPassword = $null
-    if ($LASTEXITCODE -ne 0) {
+    if ($provisionExitCode -eq 11) {
+        throw 'Open WebUI rejected the current administrator password.'
+    }
+    if ($provisionExitCode -ne 0) {
         throw 'Automatic assistant and offline RAG provisioning failed.'
     }
     $actualFingerprintOutput = @(docker @compose exec -T open-webui python -c "import json; from pathlib import Path; print(json.loads(Path('/app/backend/data/nettap-provisioning-state.json').read_text(encoding='utf-8')).get('fingerprint',''))" 2>&1)
