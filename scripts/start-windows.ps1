@@ -8,6 +8,7 @@ $composeFile = Join-Path $projectDir 'compose.yaml'
 $localComposeFile = Join-Path $projectDir 'compose.local.yaml'
 $bootstrapComposeFile = Join-Path $projectDir 'compose.bootstrap.yaml'
 $bootstrapPasswordPath = Join-Path $projectDir '.bootstrap-admin-password'
+$evidenceTokenPath = Join-Path $projectDir '.evidence-api-token'
 
 if (-not (Get-Command docker -ErrorAction SilentlyContinue)) {
     throw 'Docker Desktop is required and docker was not found in PATH.'
@@ -56,6 +57,7 @@ $defaults = [ordered]@{
     WEB_PORT = '3100'
     VISIBILITY_LAUNCHER_PORT = '3000'
     PACKET_EXPERT_LAUNCHER_PORT = '3001'
+    EVIDENCE_PORT = '3200'
     HTTPS_BIND_ADDRESS = '0.0.0.0'
     HTTPS_PORT = '8443'
     APPLIANCE_HOSTNAME = 'nettap-ai.local'
@@ -64,11 +66,16 @@ $defaults = [ordered]@{
     OLLAMA_MEMORY = '8g'
     WEBUI_CPUS = '2'
     WEBUI_MEMORY = '3g'
+    EVIDENCE_CPUS = '1'
+    EVIDENCE_MEMORY = '512m'
+    EVIDENCE_MAX_UPLOAD_BYTES = '52428800'
+    EVIDENCE_MAX_RECORDS = '100000'
     GATEWAY_CPUS = '1'
     GATEWAY_MEMORY = '512m'
     WEBUI_ADMIN_NAME = 'NetTAP Administrator'
     WEBUI_ADMIN_EMAIL = 'admin@nettap.local'
     WEBUI_ADMIN_PASSWORD = 'GENERATE_ON_FIRST_START'
+    EVIDENCE_API_TOKEN = 'GENERATE_ON_FIRST_START'
     DEPLOYMENT_MODE = 'local'
 }
 
@@ -85,6 +92,7 @@ foreach ($entry in $defaults.GetEnumerator()) {
         $content = $content.TrimEnd() + "`r`n$($entry.Key)=$($entry.Value)`r`n"
     }
 }
+$content = $content -replace '(?m)^DEPLOYMENT_MODE=production$', 'DEPLOYMENT_MODE=local'
 
 if ($content -match '(?m)^WEBUI_ADMIN_PASSWORD=GENERATE_ON_FIRST_START$') {
     $passwordBytes = New-Object byte[] 12
@@ -96,6 +104,18 @@ if ($content -match '(?m)^WEBUI_ADMIN_PASSWORD=GENERATE_ON_FIRST_START$') {
     $content = $content -replace '(?m)^WEBUI_ADMIN_PASSWORD=GENERATE_ON_FIRST_START$', "WEBUI_ADMIN_PASSWORD=$adminPassword"
     $credentialText = "Login: admin@nettap.local`r`nBootstrap password: $adminPassword`r`nGenerated UTC: $([DateTime]::UtcNow.ToString('o'))`r`n"
     [System.IO.File]::WriteAllText($bootstrapPasswordPath, $credentialText, [System.Text.UTF8Encoding]::new($false))
+}
+
+if ($content -match '(?m)^EVIDENCE_API_TOKEN=GENERATE_ON_FIRST_START$') {
+    $tokenBytes = New-Object byte[] 32
+    $tokenRng = [System.Security.Cryptography.RandomNumberGenerator]::Create()
+    $tokenRng.GetBytes($tokenBytes)
+    $tokenRng.Dispose()
+    $evidenceToken = ($tokenBytes | ForEach-Object { $_.ToString('x2') }) -join ''
+    $content = $content -replace '(?m)^EVIDENCE_API_TOKEN=GENERATE_ON_FIRST_START$', "EVIDENCE_API_TOKEN=$evidenceToken"
+    $tokenText = "Bearer token: $evidenceToken`r`nGenerated UTC: $([DateTime]::UtcNow.ToString('o'))`r`n"
+    [System.IO.File]::WriteAllText($evidenceTokenPath, $tokenText, [System.Text.UTF8Encoding]::new($false))
+    $evidenceToken = $null
 }
 
 [System.IO.File]::WriteAllText(
@@ -197,15 +217,16 @@ if ($actualFingerprint -ne $desiredFingerprint) {
     }
 }
 
-docker @compose up -d assistant-launcher
+docker @compose up -d assistant-launcher evidence-service
 if ($LASTEXITCODE -ne 0) {
-    throw 'Assistant launcher failed to start.'
+    throw 'Assistant launcher or Evidence Workspace failed to start.'
 }
 docker @compose ps
 
 $webPort = '3100'
 $visibilityPort = '3000'
 $packetPort = '3001'
+$evidencePort = '3200'
 foreach ($line in [System.IO.File]::ReadAllLines($envPath)) {
     if ($line -match '^WEB_PORT=(.+)$') {
         $webPort = $Matches[1]
@@ -216,11 +237,16 @@ foreach ($line in [System.IO.File]::ReadAllLines($envPath)) {
     if ($line -match '^PACKET_EXPERT_LAUNCHER_PORT=(.+)$') {
         $packetPort = $Matches[1]
     }
+    if ($line -match '^EVIDENCE_PORT=(.+)$') {
+        $evidencePort = $Matches[1]
+    }
 }
 
-Write-Host "NetTAP AI Suite: http://127.0.0.1:$webPort"
+Write-Host "NetTAP Network Intelligence: http://127.0.0.1:$webPort"
 Write-Host "Network & Visibility: http://127.0.0.1:$visibilityPort"
 Write-Host "Packet Expert: http://127.0.0.1:$packetPort"
+Write-Host "Evidence Workspace: http://127.0.0.1:$evidencePort"
+Write-Host "Evidence API token file: $evidenceTokenPath"
 Write-Host "Bootstrap credential file: $bootstrapPasswordPath"
 Write-Host 'Immediately change the generated password in Settings > Account.'
 Write-Host 'Then run finalize-admin.sh from WSL/Git Bash, or follow docs/AUTHENTICATION.md.'

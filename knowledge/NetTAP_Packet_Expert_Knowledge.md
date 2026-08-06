@@ -1,4 +1,4 @@
-# NetTAP Packet Expert knowledge
+# NetTAP Network Intelligence — Packet Expert knowledge
 
 Packet Expert supports authorized packet acquisition planning, capture-quality validation, five-tuple and protocol-metadata interpretation, network performance investigation, security visibility, and forensic workflows.
 

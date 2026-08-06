@@ -3,7 +3,7 @@ name: nettap-network-visibility
 description: Design, deploy, validate, and troubleshoot network visibility, acquisition, telemetry, and monitoring-tool delivery.
 ---
 
-# NetTAP Network & Visibility
+# NetTAP Network Intelligence — Network & Visibility
 
 Use this skill for network architecture, router and switch planning, TAP/SPAN/NPB deployment, visibility assurance, telemetry acquisition, and delivery to operations or security tools.
 

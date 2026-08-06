@@ -1,4 +1,4 @@
-# Release acceptance record — NetTAP AI Suite 0.3.0-rc.3
+# Release acceptance record — NetTAP Network Intelligence 0.3.0-rc.3
 
 Recorded date: 2026-08-05
 

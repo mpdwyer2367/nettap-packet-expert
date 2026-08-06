@@ -24,6 +24,7 @@ Open:
 - <http://127.0.0.1:3000> — Network & Visibility
 - <http://127.0.0.1:3001> — Packet Expert
 - <http://127.0.0.1:3100> — shared Open WebUI
+- <http://127.0.0.1:3200> — authenticated local Evidence Workspace; token in `.evidence-api-token`
 
 Use `admin@nettap.local` with the locally generated password file printed by the script. Change it immediately and verify the generated value fails. Complete administrator finalization from WSL or Git Bash as described in [authentication](AUTHENTICATION.md).
 
@@ -33,6 +34,7 @@ Use `admin@nettap.local` with the locally generated password file printed by the
 docker compose --env-file .env -f compose.yaml -f compose.local.yaml ps
 docker compose --env-file .env -f compose.yaml -f compose.local.yaml exec -T ollama ollama show nettap-ai:0.3.0-rc.3
 Invoke-WebRequest http://127.0.0.1:3100/health -UseBasicParsing
+Invoke-WebRequest http://127.0.0.1:3200/health -UseBasicParsing
 Invoke-WebRequest http://127.0.0.1:3000/ -UseBasicParsing
 Invoke-WebRequest http://127.0.0.1:3001/ -UseBasicParsing
 docker compose --env-file .env -f compose.yaml -f compose.local.yaml exec -T open-webui python -c "import json; from pathlib import Path; print(json.loads(Path('/app/backend/data/nettap-provisioning-state.json').read_text())['offline_rag']['result'])"

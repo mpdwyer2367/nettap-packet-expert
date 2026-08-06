@@ -40,7 +40,7 @@ Open WebUI administrators can access and control the application instance. They 
 | Caddy | TLS termination and security headers | Customer identity provider |
 | Open WebUI | Authentication, chat, model and knowledge access | Strong tenant isolation inside one instance |
 | Ollama | Local model serving and model storage | Network capture or telemetry collector |
-| Combined NetTAP AI model | Architecture, visibility, telemetry, packet, performance and forensic advisory reasoning | Live collection, autonomous remediation or forensic proof |
+| Shared NetTAP Network Intelligence Model | Architecture, visibility, telemetry, packet, performance and forensic advisory reasoning | Live collection, autonomous remediation or forensic proof |
 | Open WebUI profiles | Separate names, suggestions, specialist knowledge, permissions and optional tools over one model | Cryptographic or process isolation from the shared administrator |
 | Offline RAG cache and provisioner | Exact-revision local embeddings, managed collection/profile reconciliation and retrieval proof | General-purpose evidence store or customer-document lifecycle |
 | NetTAP TAP/NPB | Separately supplied traffic visibility | Included by this software repository |
@@ -51,4 +51,4 @@ This is a single-node design. A host or volume failure causes service interrupti
 
 ## Sizing
 
-Production preflight enforces at least 8 CPUs, 16 GiB Docker memory, and 40 GiB free disk. One combined NetTAP AI manifest reuses one base-model store, but the exact release must measure disk consumption. For more than a small number of concurrent users, performance must be benchmarked with representative prompt length, retrieval context, and concurrency before sale. GPU acceleration is not part of the certified candidate profile.
+Production preflight enforces at least 8 CPUs, 16 GiB Docker memory, and 40 GiB free disk. One shared model manifest reuses one base-model store, but the exact release must measure disk consumption. For more than a small number of concurrent users, performance must be benchmarked with representative prompt length, retrieval context, and concurrency before sale. GPU acceleration is not part of the certified candidate profile.

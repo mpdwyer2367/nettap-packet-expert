@@ -1,0 +1,133 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark">
+  <title>NetTAP Network Intelligence — Evidence Workspace</title>
+  <link rel="stylesheet" href="app.css">
+</head>
+<body>
+  <header class="topbar">
+    <div>
+      <p class="eyebrow">NETTAP NETWORK INTELLIGENCE</p>
+      <h1>Evidence Workspace</h1>
+    </div>
+    <div class="status"><span id="health-dot"></span><span id="health">Checking service</span></div>
+  </header>
+
+  <main>
+    <section class="hero">
+      <div>
+        <p class="eyebrow">PRIVATE NETWORK OPERATIONS</p>
+        <h2>Turn network evidence into a reviewable case.</h2>
+        <p>Upload approved evidence, preserve provenance, run deterministic analysis and prepare a minimized context for the NetTAP Network Intelligence Model.</p>
+      </div>
+      <div class="truth-card">
+        <strong>Evidence state</strong>
+        <span>Uploaded, local and offline</span>
+        <strong>Live telemetry</strong>
+        <span>Not connected</span>
+        <strong>LLM access</strong>
+        <span>Normalized context only</span>
+      </div>
+    </section>
+
+    <section class="auth-panel panel">
+      <div>
+        <label for="token">Local evidence API token</label>
+        <input id="token" type="password" autocomplete="off" placeholder="Paste the generated token">
+        <small>The token is kept only in this browser tab.</small>
+      </div>
+      <button id="connect" class="primary">Connect</button>
+    </section>
+
+    <div id="message" role="status" aria-live="polite"></div>
+
+    <section class="workspace">
+      <aside class="panel cases-panel">
+        <div class="section-title">
+          <div><p class="eyebrow">CASES</p><h3>Investigations</h3></div>
+          <button id="refresh-cases" class="icon-button" title="Refresh cases">↻</button>
+        </div>
+        <form id="case-form">
+          <label for="case-title">Case title</label>
+          <input id="case-title" required maxlength="160" placeholder="Investigate service instability">
+          <label for="case-objective">Objective</label>
+          <textarea id="case-objective" maxlength="4096" placeholder="What decision should this evidence support?"></textarea>
+          <label for="case-environment">Environment</label>
+          <input id="case-environment" maxlength="4096" placeholder="On-prem, cloud, segment or application">
+          <button class="primary" type="submit">Create case</button>
+        </form>
+        <div id="case-list" class="case-list"></div>
+      </aside>
+
+      <section class="panel case-panel">
+        <div id="empty-state" class="empty-state">
+          <h3>Select or create a case</h3>
+          <p>Each case keeps its objective, source inventory, provenance, deterministic findings and report together.</p>
+        </div>
+
+        <div id="case-content" hidden>
+          <div class="section-title case-heading">
+            <div><p class="eyebrow">ACTIVE CASE</p><h3 id="active-title"></h3><p id="active-objective"></p></div>
+            <button id="analyze" class="primary">Run analysis</button>
+          </div>
+
+          <div class="metric-grid">
+            <article><span id="metric-sources">0</span><small>Evidence sources</small></article>
+            <article><span id="metric-records">0</span><small>Normalized records</small></article>
+            <article><span id="metric-findings">0</span><small>Findings</small></article>
+            <article><span>Offline</span><small>Data boundary</small></article>
+          </div>
+
+          <div class="ingest-grid">
+            <form id="upload-form" class="subpanel">
+              <div class="section-title"><div><p class="eyebrow">INGEST</p><h4>Add evidence</h4></div></div>
+              <label for="source-type">Source type</label>
+              <select id="source-type">
+                <option value="pcap">PCAP</option>
+                <option value="normalized-pcap">Normalized PCAP JSON/JSONL</option>
+                <option value="ipfix">IPFIX JSON/JSONL</option>
+                <option value="netflow">NetFlow JSON/JSONL</option>
+                <option value="sflow">sFlow JSON/JSONL</option>
+                <option value="syslog">Syslog text</option>
+                <option value="cloud-flow">Cloud flow JSON/JSONL</option>
+                <option value="jsonl">Generic JSON/JSONL</option>
+              </select>
+              <label for="evidence-file">Evidence file</label>
+              <input id="evidence-file" type="file" required>
+              <div class="two-column">
+                <div><label for="observation-point">Observation point</label><input id="observation-point" placeholder="NPB tool port 1"></div>
+                <div><label for="timezone">Source timezone</label><input id="timezone" value="UTC"></div>
+                <div><label for="exporter">Exporter identity</label><input id="exporter" placeholder="router-01"></div>
+                <div><label for="schema-version">Schema version</label><input id="schema-version" placeholder="vendor/version"></div>
+                <div><label for="clock-status">Clock status</label><select id="clock-status"><option value="unknown">Unknown</option><option value="synchronized">Synchronized</option><option value="not-synchronized">Not synchronized</option></select></div>
+                <div><label for="chain">Chain of custody</label><input id="chain" placeholder="ticket or collection reference"></div>
+              </div>
+              <button class="primary" type="submit">Upload and normalize</button>
+            </form>
+
+            <div class="subpanel">
+              <div class="section-title"><div><p class="eyebrow">EVIDENCE</p><h4>Source inventory</h4></div></div>
+              <div id="evidence-list" class="evidence-list"></div>
+            </div>
+          </div>
+
+          <div class="analysis-grid">
+            <div class="subpanel"><p class="eyebrow">DETERMINISTIC FINDINGS</p><div id="findings"></div></div>
+            <div class="subpanel"><p class="eyebrow">CASE OUTPUT</p><div id="summary"></div><button id="report" class="secondary">Open Markdown report</button><button id="context" class="secondary">View LLM-safe context</button><button id="copy-context" class="secondary">Copy for Network Intelligence</button></div>
+          </div>
+        </div>
+      </section>
+    </section>
+  </main>
+
+  <dialog id="output-dialog">
+    <div class="dialog-header"><h3 id="dialog-title">Case output</h3><button id="close-dialog" class="icon-button">×</button></div>
+    <pre id="dialog-content"></pre>
+  </dialog>
+
+  <script src="app.js" defer></script>
+</body>
+</html>

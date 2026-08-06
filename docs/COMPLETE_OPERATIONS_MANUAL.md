@@ -1,4 +1,4 @@
-# NetTAP AI Suite operations manual
+# NetTAP Network Intelligence operations manual
 
 Release `0.3.0-rc.3` is an integration candidate for one single-node, single-customer Docker deployment. It is not a certified GA appliance until every commercial release gate passes.
 
@@ -7,10 +7,11 @@ Release `0.3.0-rc.3` is an integration candidate for one single-node, single-cus
 | Component | Identity |
 |---|---|
 | Shared base | `qwen2.5:7b-instruct-q4_K_M` |
-| Combined NetTAP AI model | `nettap-ai:0.3.0-rc.3` |
+| Shared NetTAP Network Intelligence Model | `nettap-ai:0.3.0-rc.3` |
 | Network profile | Workspace Model ID `nettap-network-visibility` over the combined model |
 | Packet profile | Workspace Model ID `nettap-packet-expert` over the combined model |
 | Local UI | `127.0.0.1:3100` |
+| Evidence Workspace | `127.0.0.1:3200` with generated bearer token |
 | Network launcher | `127.0.0.1:3000` |
 | Packet launcher | `127.0.0.1:3001` |
 | Production gateway | HTTPS port `8443` by default |
@@ -21,7 +22,7 @@ Use [macOS deployment](MACOS_DEPLOYMENT.md) or [Windows deployment](WINDOWS_DEPL
 
 ## Administrator activation
 
-The first start generates a unique local credential. Change it, prove the old value fails, and run `./scripts/finalize-admin.sh --confirm`. A populated Open WebUI volume keeps its existing users and passwords. The suite never restores a shared default password.
+The first start generates a unique local credential. Change it, prove the old value fails, and run `./scripts/finalize-admin.sh --confirm`. A populated Open WebUI volume keeps its existing users and passwords. The platform never restores a shared default password.
 
 ## Routine commands
 
@@ -65,7 +66,7 @@ The restored volumes remain unconnected until an administrator reviews the manif
 1. Back up the current release and `.env`.
 2. Record the commit, image digests, model IDs, assistant manifests, and knowledge hashes.
 3. Apply only an approved release.
-4. Rebuild the one combined NetTAP AI model.
+4. Rebuild the one shared NetTAP Network Intelligence Model.
 5. Run static, behavioral, runtime, storage, launcher, profile/knowledge-isolation, backup, restore, and rollback checks.
 6. Preserve the prior release and volumes until acceptance is signed.
 
@@ -75,7 +76,7 @@ Changing the base model requires a separate model-evaluation release. Do not com
 
 ### Port already in use
 
-Run `./scripts/inventory-macos.sh` on macOS. Identify the owning process before stopping anything. The suite requires local ports 3000, 3001, and 3100 unless `.env` is deliberately changed.
+Run `./scripts/inventory-macos.sh` on macOS. Identify the owning process before stopping anything. The platform requires local ports 3000, 3001, 3100, and 3200 unless `.env` is deliberately changed.
 
 ### Old suggestions remain
 

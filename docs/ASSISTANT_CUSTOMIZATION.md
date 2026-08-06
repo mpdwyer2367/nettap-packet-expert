@@ -4,7 +4,7 @@
 
 | Layer | Network & Visibility | Packet Expert | Update method |
 |---|---|---|---|
-| Base weights | Shared Qwen2.5 7B | Shared Qwen2.5 7B | Approved suite release only |
+| Base weights | Shared Qwen2.5 7B | Shared Qwen2.5 7B | Approved product release only |
 | Ollama policy | `model/nettap-ai.Modelfile` | Same combined model | Reviewed source change and one model rebuild |
 | Manifest | `assistants/network-visibility/assistant.yaml` | `assistants/packet-expert/assistant.yaml` | Reviewed source change |
 | Shared knowledge | `knowledge/NetTAP_AI_Knowledge.md` | Same reviewed shared collection | Version, review, hash, automatic reconciliation |
@@ -28,22 +28,22 @@ The `assistant-provisioner` creates or updates both Skills and both profiles thr
 
 ### Network & Visibility
 
-- Name: `NetTAP Network & Visibility`
+- Name: `NetTAP Network Intelligence — Network & Visibility`
 - ID: `nettap-network-visibility`
 - Base: `nettap-ai:0.3.0-rc.3`
 - System prompt addition: begin in Network & Visibility mode and keep initial guidance broad
-- Knowledge: approved shared NetTAP AI collection plus Network & Visibility collection
+- Knowledge: approved shared Network Intelligence collection plus Network & Visibility collection
 - Skill: `nettap-network-visibility`
 - Tools: none by default
 - Suggestions: Start here; Design or configure; Connect visibility and data
 
 ### Packet Expert
 
-- Name: `NetTAP Packet Expert`
+- Name: `NetTAP Network Intelligence — Packet Expert`
 - ID: `nettap-packet-expert`
 - Base: `nettap-ai:0.3.0-rc.3`
 - System prompt addition: begin in Packet Expert mode and use evidence-first analysis
-- Knowledge: approved shared NetTAP AI collection plus Packet Expert collection
+- Knowledge: approved shared Network Intelligence collection plus Packet Expert collection
 - Skill: `nettap-packet-expert`
 - Tools: none by default
 - Suggestions: Start an investigation; Understand my evidence; Plan data collection

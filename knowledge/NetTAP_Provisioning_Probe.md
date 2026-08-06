@@ -1,4 +1,4 @@
-# NetTAP managed-knowledge verification
+# NetTAP Network Intelligence managed-knowledge verification
 
 The NetTAP offline RAG verification marker is **NETTAP-RAG-OFFLINE-PROBE-RC3**.
 

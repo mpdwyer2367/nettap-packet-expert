@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-echo "NetTAP Packet Expert read-only deployment inventory"
+echo "NetTAP Network Intelligence read-only deployment inventory"
 echo "UTC: $(date -u +%FT%TZ)"
 echo "Host: $(uname -a)"
 echo "NOTE: This script does not stop, remove, or modify containers, volumes, models, or files."
@@ -62,7 +62,7 @@ fi
 echo
 echo "[Listening application ports]"
 if command -v lsof >/dev/null 2>&1; then
-  for port in 3000 3001 11434; do
+  for port in 3000 3001 3100 3200 11434; do
     echo "Port $port"
     lsof -nP -iTCP:"$port" -sTCP:LISTEN 2>/dev/null || echo "not listening"
   done

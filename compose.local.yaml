@@ -3,6 +3,10 @@ services:
     ports:
       - "${BIND_ADDRESS}:${WEB_PORT}:8080"
 
+  evidence-service:
+    ports:
+      - "${BIND_ADDRESS}:${EVIDENCE_PORT}:8081"
+
   assistant-launcher:
     image: ${CADDY_IMAGE}
     init: true

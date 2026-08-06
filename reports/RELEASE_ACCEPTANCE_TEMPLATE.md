@@ -1,4 +1,4 @@
-# Release acceptance: NetTAP AI Suite
+# Release acceptance: NetTAP Network Intelligence
 
 Do not enter passwords, secrets, private keys, customer evidence, packet payload, personal data, or vulnerability exploit details in this record.
 
@@ -8,7 +8,7 @@ Do not enter passwords, secrets, private keys, customer evidence, packet payload
 - Git commit/tag:
 - Signed package, checksum and signed provenance:
 - Signature verification:
-- Image, base-model and combined NetTAP AI model names and immutable identities:
+- Image, base-model and NetTAP Network Intelligence Model names and immutable identities:
 - Network & Visibility manifest and knowledge hashes:
 - Packet Expert manifest and knowledge hashes:
 - SBOM identifiers:

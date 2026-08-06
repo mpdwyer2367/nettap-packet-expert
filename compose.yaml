@@ -208,6 +208,48 @@ services:
       - no-new-privileges:true
     cap_drop: [ALL]
 
+  evidence-service:
+    image: ${OPEN_WEBUI_IMAGE}
+    init: true
+    restart: unless-stopped
+    cpus: ${EVIDENCE_CPUS}
+    mem_limit: ${EVIDENCE_MEMORY}
+    pids_limit: 256
+    environment:
+      PYTHONPATH: /service
+      PYTHONDONTWRITEBYTECODE: "1"
+      PYTHONUNBUFFERED: "1"
+      EVIDENCE_API_TOKEN: ${EVIDENCE_API_TOKEN}
+      NETTAP_EVIDENCE_HOST: 0.0.0.0
+      NETTAP_EVIDENCE_PORT: 8081
+      NETTAP_EVIDENCE_DB: /data/nettap-evidence.db
+      NETTAP_EVIDENCE_DATA_DIR: /data/files
+      NETTAP_EVIDENCE_MAX_UPLOAD_BYTES: ${EVIDENCE_MAX_UPLOAD_BYTES}
+      NETTAP_EVIDENCE_MAX_RECORDS: ${EVIDENCE_MAX_RECORDS}
+    entrypoint: ["python", "-m", "case_service"]
+    volumes:
+      - ./case_service:/service/case_service:ro
+      - packet-expert-evidence-data:/data
+    expose: ["8081"]
+    networks: [backend, user-access]
+    read_only: true
+    tmpfs:
+      - /tmp:size=64m,mode=1777
+    security_opt:
+      - no-new-privileges:true
+    cap_drop: [ALL]
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8081/health', timeout=5)"]
+      interval: 15s
+      timeout: 10s
+      retries: 20
+      start_period: 10s
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "5"
+
 networks:
   backend:
     internal: true
@@ -217,5 +259,6 @@ networks:
 volumes:
   packet-expert-ollama-data: {}
   packet-expert-open-webui-data: {}
+  packet-expert-evidence-data: {}
   packet-expert-gateway-data: {}
   packet-expert-gateway-config: {}

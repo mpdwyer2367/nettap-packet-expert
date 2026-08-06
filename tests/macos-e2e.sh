@@ -7,7 +7,7 @@ mkdir -p "$report_dir"
 report_file="${report_dir}/macos-e2e-$(date -u +%Y%m%dT%H%M%SZ).txt"
 exec > >(tee "$report_file") 2>&1
 
-echo "NetTAP Packet Expert macOS E2E"
+echo "NetTAP Network Intelligence macOS E2E"
 echo "UTC start: $(date -u +%FT%TZ)"
 echo "Host: $(uname -a)"
 

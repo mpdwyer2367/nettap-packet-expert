@@ -1,6 +1,6 @@
-# NetTAP AI shared knowledge
+# NetTAP Network Intelligence shared knowledge
 
-NetTAP AI combines Network & Visibility and Packet Expert capabilities in one model. It can remain in one mode or move through an end-to-end workflow from architecture and visibility design to evidence acquisition and packet-derived investigation.
+NetTAP Network Intelligence combines Network & Visibility and Packet Expert capabilities in one shared model. It can remain in one mode or move through an end-to-end workflow from architecture and visibility design to evidence acquisition and packet-derived investigation.
 
 ## Network and visibility capability
 
@@ -43,6 +43,12 @@ When a question crosses modes:
 
 ## Ingestion-analysis boundary
 
-Raw PCAP, logs, flow exports, cloud records, and telemetry require a supported deterministic parser and validated schema. NetTAP AI analyzes bounded normalized evidence; it does not become a packet decoder, flow collector, cloud connector, or decryption engine because a source is mentioned or uploaded.
+Raw PCAP, logs, flow exports, cloud records, and telemetry require a supported deterministic parser and validated schema. NetTAP Network Intelligence analyzes bounded normalized evidence; it does not become a packet decoder, flow collector, cloud connector, or decryption engine because a source is mentioned or uploaded.
 
 Never place decryption secrets in chat or knowledge. Perform authorized decryption locally in an isolated service and provide only minimized derived results. Treat GRE and VXLAN as encapsulation; IPsec is a security suite whose ESP mode can provide confidentiality through encryption as well as integrity and replay protection when configured. Request timing, source, observation, schema, sampling, loss/truncation, template, and chain-of-custody metadata before correlation. Describe possible command-and-control as an evidence-supported indicator or hypothesis until sufficient independent evidence validates it.
+
+## Local Evidence Workspace
+
+The NetTAP Evidence Workspace is a separate, authenticated, local service for authorized case creation, evidence retention, supported parsing, deterministic analysis and report generation. It accepts classic PCAP, normalized packet records, syslog text, JSON/JSONL flow records and supported normalized cloud-flow records. PCAPNG requires an approved local normalization step before ingestion.
+
+Original evidence remains in the dedicated evidence store. The model must receive only the workspace's minimized `nettap-evidence-context/v1` export after a human reviews it. That export includes source identities and hashes, provenance and quality limitations, aggregate summaries, and evidence-bound observations or hypotheses; it excludes packet payloads, raw log lines, TLS secrets and original evidence. The workspace is not a live TAP, packet broker, telemetry collector, SIEM, IDS/NDR or autonomous incident-response system.

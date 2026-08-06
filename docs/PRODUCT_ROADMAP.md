@@ -19,6 +19,21 @@ Implemented in `0.3.0-rc.3` source:
 
 Exit: fresh and upgrade runtime reports on macOS and Windows, measured single-model storage, Workspace Model and knowledge-isolation acceptance, backup/restore/rollback, security review, and signed release decision.
 
+## Stage 0.4 — local evidence and case-analysis candidate
+
+Implemented on the next-release development branch:
+
+- authenticated loopback Evidence Workspace on port 3200;
+- persistent cases, source hashes, provenance and evidence-quality warnings;
+- classic PCAP metadata plus normalized JSON/JSONL, syslog, IPFIX, NetFlow, sFlow and cloud-flow inputs;
+- deterministic protocol, endpoint, conversation, reset, truncation, dominance and regular-timing analysis;
+- evidence-bound findings that distinguish observations from hypotheses;
+- minimized LLM-safe context and reviewable Markdown case reports;
+- dedicated evidence volume with backup-v3 and non-overwriting restore support; and
+- dependency-free parser, API, authentication, traversal, redaction and case-flow tests.
+
+Exit: clean macOS and Windows runtime evidence, browser workflow acceptance, parser fuzzing and isolation, retention/legal-hold design, enterprise user-to-case RBAC, Open WebUI read-only tool attachment, encrypted-storage policy, SBOM/CVE disposition and penetration testing.
+
 ## Stage 1 — hardened advisory candidate
 
 Implemented in `0.2.0-rc.1`:
@@ -57,7 +72,7 @@ flowchart LR
     C --> V["Normalize, validate, redact"]
     V --> S["Evidence store / search"]
     S --> A["Read-only retrieval API"]
-    A --> P["NetTAP AI in authorized evidence mode"]
+    A --> P["Network Intelligence in evidence mode"]
 ```
 
 Prioritized inputs:

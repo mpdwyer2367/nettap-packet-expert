@@ -1,4 +1,4 @@
-# NetTAP ingestion and analysis guidance
+# NetTAP Network Intelligence ingestion and analysis guidance
 
 Use this intake template for authorized analysis of packet-derived evidence, logs, flow telemetry, cloud flow records, and other network observations. It defines information the user should supply; it does not claim that a live collector, connector, parser, packet decoder, or decryption service is present.
 

@@ -27,8 +27,8 @@ run_case() {
   echo "PASS: $name"
 }
 
-echo "NetTAP AI combined-model behavioral smoke evaluation"
-echo "NetTAP AI model: $nettap_model"
+echo "NetTAP Network Intelligence Model behavioral smoke evaluation"
+echo "Technical model tag: $nettap_model"
 
 run_case \
   "$nettap_model" \

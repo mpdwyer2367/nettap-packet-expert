@@ -30,7 +30,7 @@ verify_container_control() {
   }
 }
 
-for service in ollama open-webui gateway; do
+for service in ollama open-webui evidence-service gateway; do
   container_id="$("${compose_production[@]}" ps -q "$service")"
   [[ -n "$container_id" ]] || { echo "FAIL: $service is not running." >&2; exit 12; }
   health="$(docker inspect --format '{{if .State.Health}}{{.State.Health.Status}}{{else}}{{.State.Status}}{{end}}' "$container_id")"
@@ -39,11 +39,14 @@ done
 ollama_id="$("${compose_production[@]}" ps -q ollama)"
 webui_id="$("${compose_production[@]}" ps -q open-webui)"
 gateway_id="$("${compose_production[@]}" ps -q gateway)"
+evidence_id="$("${compose_production[@]}" ps -q evidence-service)"
 verify_container_control "$ollama_id" ollama "$(load_env_value OLLAMA_IMAGE)"
 verify_container_control "$webui_id" open-webui "$(load_env_value OPEN_WEBUI_IMAGE)"
+verify_container_control "$evidence_id" evidence-service "$(load_env_value OPEN_WEBUI_IMAGE)"
 verify_container_control "$gateway_id" gateway "$(load_env_value CADDY_IMAGE)"
 [[ -z "$(docker port "$ollama_id")" ]] || { echo "FAIL: Ollama is published on the host." >&2; exit 12; }
 [[ -z "$(docker port "$webui_id")" ]] || { echo "FAIL: Open WebUI bypasses the TLS gateway." >&2; exit 12; }
+[[ -z "$(docker port "$evidence_id")" ]] || { echo "FAIL: Evidence Workspace bypasses the TLS gateway." >&2; exit 12; }
 published="$(docker inspect --format '{{range $port, $bindings := .HostConfig.PortBindings}}{{printf "%s=" $port}}{{range $bindings}}{{printf "%s:%s" .HostIp .HostPort}}{{end}}{{println}}{{end}}' "$gateway_id")"
 expected_binding="443/tcp=$(load_env_value HTTPS_BIND_ADDRESS):$(load_env_value HTTPS_PORT)"
 [[ "$published" == "$expected_binding" ]] || {
@@ -137,6 +140,10 @@ packet_redirect="$(curl --fail --silent --show-error --output /dev/null --write-
   echo "FAIL: Production Packet Expert route selected the wrong profile." >&2
   exit 12
 }
+"${project_dir}/tests/evidence-runtime-e2e.sh" --production || {
+  echo "FAIL: TLS-gateway Evidence Workspace runtime workflow failed." >&2
+  exit 12
+}
 rm -f "$headers_file"
 trap - EXIT
 output="${project_dir}/reports/generated/production-runtime-$(date -u +%Y%m%dT%H%M%SZ).txt"
@@ -152,6 +159,7 @@ mkdir -p "$(dirname "$output")"
   printf 'OPEN_WEBUI_IMAGE=%s\n' "$(load_env_value OPEN_WEBUI_IMAGE)"
   printf 'CADDY_IMAGE=%s\n' "$(load_env_value CADDY_IMAGE)"
   printf 'Endpoint: https://%s:%s\n' "$hostname" "$https_port"
-  printf 'Controls: exact images, TLS/HSTS gateway, least privilege, exact gateway binding, no direct Ollama/WebUI host ports, runtime model egress absent, locked shared base and combined NetTAP AI identities, pinned offline embedding cache, managed assistant profiles and knowledge, offline RAG proof, healthy services\n'
+  printf 'Evidence Workspace: https://%s:%s/evidence/\n' "$hostname" "$https_port"
+  printf 'Controls: exact images, TLS/HSTS gateway, least privilege, exact gateway binding, no direct Ollama/WebUI/Evidence host ports, runtime model egress absent, locked shared base and Network Intelligence model identities, pinned offline embedding cache, managed assistant profiles and knowledge, offline RAG proof, authenticated evidence ingestion and deterministic analysis, healthy services\n'
 } > "$output"
 echo "Production runtime verification passed: $output"

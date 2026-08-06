@@ -1,4 +1,4 @@
-# Production certification status — NetTAP AI Suite 0.3.0-rc.3
+# Production certification status — NetTAP Network Intelligence 0.3.0-rc.3
 
 Assessment date: 2026-08-05
 
@@ -39,6 +39,6 @@ The exact Open WebUI container, MiniLM files, vector index, Qwen/Ollama runtime,
 
 ## Authorized statement
 
-“NetTAP AI Suite 0.3.0-rc.3 is a valid source candidate for controlled qualification of automatic Open WebUI assistant provisioning and pinned offline RAG over one combined NetTAP AI model.”
+“NetTAP Network Intelligence 0.3.0-rc.3 is a valid source candidate for controlled qualification of automatic Open WebUI assistant provisioning and pinned offline RAG over one shared NetTAP Network Intelligence Model.”
 
 Do not use “production ready,” “production certified,” “commercially approved,” “fully validated,” “100 percent accurate,” or “100 percent secure” for this candidate.

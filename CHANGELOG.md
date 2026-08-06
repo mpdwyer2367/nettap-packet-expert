@@ -1,5 +1,14 @@
 # Changelog
 
+## Unreleased — local evidence and case-analysis workspace
+
+- Adopted **NetTAP Network Intelligence** as the canonical product name, standardized the two experience and Evidence Workspace display names, and documented the unchanged legacy compatibility identifiers.
+- Added an authenticated, offline-first Evidence Workspace with persistent cases, source hashing, provenance, quality warnings and audit events.
+- Added deterministic classic-PCAP metadata parsing and normalized PCAP, syslog, IPFIX, NetFlow, sFlow, cloud-flow and JSON/JSONL ingestion without sending raw evidence to Ollama.
+- Added evidence-bound summaries, observations and explicitly qualified hypotheses, plus Markdown reports and minimized `nettap-evidence-context/v1` exports.
+- Added a dedicated evidence volume, generated API token, loopback local endpoint, TLS-gateway production-candidate route, backup-v3 coverage and non-overwriting restore support.
+- Added service-level functional/security tests and extended deployment validation. Existing `nettap-ai:0.3.0-rc.3` model weights and policy identity are unchanged; this is an evaluation feature for the next release and requires target-host acceptance before release promotion.
+
 ## 0.3.0-rc.3 automatic assistants and offline RAG candidate — 2026-08-05
 
 - Added fail-closed, idempotent provisioning of two Open WebUI Workspace Models and three managed knowledge collections through pinned Open WebUI v0.11.0 APIs.
@@ -17,7 +26,7 @@
 - Kept retired 0.2 and 0.3-rc.1 model tags non-destructively for rollback; they are no longer selected by rc.2.
 - Kept production and commercial approval fail-closed pending exact-build target-host, security, legal, support, signing, and acceptance evidence.
 
-## 0.3.0-rc.1 unified NetTAP AI Suite candidate — 2026-08-05
+## 0.3.0-rc.1 unified NetTAP Network Intelligence candidate — 2026-08-05
 
 - Added Network & Visibility and retained Packet Expert as separate assistant policies over one Qwen2.5 7B base.
 - Consolidated both assistants into one Ollama service, one model volume, one Open WebUI, one account/chat database, and one administration lifecycle.

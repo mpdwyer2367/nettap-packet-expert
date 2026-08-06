@@ -1,4 +1,4 @@
-# Native model creation — NetTAP AI Suite 0.3.0-rc.3
+# Native model creation — NetTAP Network Intelligence 0.3.0-rc.3
 
 Date: 2026-08-05
 
@@ -15,7 +15,7 @@ Disposition: **MODEL CREATION PASS; TARGET-HOST ACCEPTANCE STILL REQUIRED**
 | Combined-model creation | PASS | Repository installer created `nettap-ai:0.3.0-rc.3` |
 | Combined-model identity | PASS | Ollama manifest SHA-256 `00a615ed09122e2af5195be67412ad3d585d39cd18829c79e441e68882c875b3` |
 | Weight format | PASS | Qwen2, 7.6B parameters, Q4_K_M, 4,683,073,952-byte shared model layer |
-| Combined policy | PASS | Rendered Modelfile contains the NetTAP AI identity plus Network & Visibility and Packet Expert modes |
+| Combined policy | PASS | Rendered Modelfile contains the retained `You are NetTAP AI` RC3 identity marker plus Network & Visibility and Packet Expert modes |
 | CPU model load | PASS | Packaged x64 CPU backend loaded the full model and initialized a 512-token context |
 | Token generation | ENVIRONMENT-LIMITED | Generation entered prompt evaluation, but the restricted workspace terminated the 4.7 GB runner workload; no generated answer was recorded |
 

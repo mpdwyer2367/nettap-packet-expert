@@ -140,16 +140,18 @@ fi
 # shellcheck source=scripts/common.sh
 source "${runtime_root}/scripts/common.sh"
 before_fingerprint="$(installed_provisioning_fingerprint local)"
-"${compose_local[@]}" restart ollama open-webui assistant-launcher
+"${compose_local[@]}" restart ollama open-webui assistant-launcher evidence-service
 restart_ready=false
 for _ in $(seq 1 90); do
   if curl --fail --silent --show-error "http://127.0.0.1:$(load_env_value WEB_PORT)/health" >/dev/null 2>&1; then
-    restart_ready=true
-    break
+    if curl --fail --silent --show-error "http://127.0.0.1:$(load_env_value EVIDENCE_PORT)/health" >/dev/null 2>&1; then
+      restart_ready=true
+      break
+    fi
   fi
   sleep 2
 done
-[[ "$restart_ready" == true ]] || { echo "ERROR: Open WebUI failed restart acceptance." >&2; exit 6; }
+[[ "$restart_ready" == true ]] || { echo "ERROR: Open WebUI or Evidence Workspace failed restart acceptance." >&2; exit 6; }
 [[ "$(installed_provisioning_fingerprint local)" == "$before_fingerprint" ]] || {
   echo "ERROR: Provisioning identity changed across restart." >&2
   exit 6
@@ -172,10 +174,11 @@ provisioning_identity="$(installed_provisioning_fingerprint local)"
 
 echo
 echo "Manual browser/profile checkpoint"
-echo "1. Port 3000 must open NetTAP Network & Visibility with its three broad suggestions."
-echo "2. Port 3001 must open NetTAP Packet Expert with its three evidence-focused suggestions."
+echo "1. Port 3000 must open NetTAP Network Intelligence — Network & Visibility with its three broad suggestions."
+echo "2. Port 3001 must open NetTAP Network Intelligence — Packet Expert with its three evidence-focused suggestions."
 echo "3. Both profiles must answer through the shared model and retrieve only their intended managed knowledge."
 echo "4. Port 3100 must retain the changed administrator password after restart."
+echo "5. Port 3200 must open Evidence Workspace, accept the generated token, and display the runtime acceptance case without exposing raw records in the LLM-safe context."
 printf 'Type BROWSER-CHECKS-PASS only after completing these checks: '
 read -r browser_confirmation
 [[ "$browser_confirmation" == BROWSER-CHECKS-PASS ]] || { echo "ERROR: Manual browser acceptance was not completed." >&2; exit 7; }
@@ -206,10 +209,11 @@ summary="${evidence_dir}/${platform}-acceptance-summary.txt"
   printf 'Provisioning fingerprint: %s\n' "$provisioning_identity"
   printf 'Compose project: %s\n' "$compose_project"
   printf 'Administrator credential replacement: PASS\n'
-  printf 'Ports 3000, 3001 and 3100: PASS\n'
+  printf 'Ports 3000, 3001, 3100 and 3200: PASS\n'
   printf 'Automatic assistants and offline RAG: PASS\n'
   printf 'Fourteen behavioral tests: PASS\n'
   printf 'Normalized PCAP, log and IPFIX examples: PASS\n'
+  printf 'Authenticated evidence ingestion, deterministic analysis and minimized context: PASS\n'
   printf 'Shared model storage: PASS\n'
   printf 'Restart: PASS\n'
   printf 'Backup and non-overwriting restore: PASS\n'

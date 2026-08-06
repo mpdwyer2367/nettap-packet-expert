@@ -11,7 +11,7 @@ fail() {
 }
 
 require_runtime
-[[ -f "$env_file" ]] || fail "Deploy NetTAP AI Suite before running rollback acceptance."
+[[ -f "$env_file" ]] || fail "Deploy NetTAP Network Intelligence before running rollback acceptance."
 [[ "$(load_env_value DEPLOYMENT_MODE)" == local ]] || fail "Failed-update rollback test requires the loopback local profile."
 
 environment_backup="$(mktemp "${TMPDIR:-/tmp}/nettap-env-rollback.XXXXXX")"

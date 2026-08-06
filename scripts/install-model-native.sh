@@ -34,7 +34,7 @@ actual_base_id="$(ollama list | awk -v name="$base_model" '$1 == name { print $2
   exit 5
 }
 
-echo "Creating combined NetTAP AI model: ${model_name}"
+echo "Creating NetTAP Network Intelligence Model: ${model_name}"
 ollama create "$model_name" -f "$modelfile"
 rendered="$(ollama show --modelfile "$model_name")"
 [[ "$rendered" == *"You are NetTAP AI"* ]] || {

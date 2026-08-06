@@ -34,7 +34,7 @@ if ($ActualBaseId -ne $ExpectedBaseId) {
     throw "Base-model identity mismatch: expected $ExpectedBaseId, received $ActualBaseId."
 }
 
-Write-Host "Creating combined NetTAP AI model: $ModelName"
+Write-Host "Creating NetTAP Network Intelligence Model: $ModelName"
 & ollama create $ModelName -f $Modelfile
 if ($LASTEXITCODE -ne 0) { throw "Ollama could not create $ModelName." }
 $Rendered = (& ollama show --modelfile $ModelName) -join "`n"

@@ -1,5 +1,6 @@
 .env
 .bootstrap-admin-password
+.evidence-api-token
 .admin-bootstrap-finalized
 config/tls/*
 !config/tls/.gitkeep

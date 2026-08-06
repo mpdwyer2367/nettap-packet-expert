@@ -281,7 +281,7 @@ class ProvisioningTest(unittest.TestCase):
     def test_refuses_unmanaged_collection_name_collision(self):
         Handler.state.knowledge["operator-1"] = {
             "id": "operator-1",
-            "name": "NetTAP AI Shared (Managed)",
+            "name": "NetTAP Network Intelligence Shared (Managed)",
             "description": "operator-owned content",
         }
         result = self.run_provisioner(check=False)
@@ -316,12 +316,12 @@ class ProvisioningTest(unittest.TestCase):
 
     def test_fails_closed_when_pinned_source_identity_changes(self):
         checksum_path = Path(self.tempdir.name) / "knowledge-sources.sha256"
+        pinned_sources = (ROOT / "provisioning/knowledge-sources.sha256").read_text(
+            encoding="utf-8"
+        )
+        first_hash = pinned_sources.split(None, 1)[0]
         checksum_path.write_text(
-            (ROOT / "provisioning/knowledge-sources.sha256").read_text(encoding="utf-8").replace(
-                "a9bf608d2965f2c9b69e63b8344cf6150a86c7511a3699b524f82eeb54373a91",
-                "0" * 64,
-                1,
-            ),
+            pinned_sources.replace(first_hash, "0" * 64, 1),
             encoding="utf-8",
         )
         self.env["NETTAP_PROVISIONING_CHECKSUMS"] = str(checksum_path)

@@ -60,4 +60,4 @@ else
 fi)
 grep -Fq 'Network & Visibility mode' "${bundle_root}/model/nettap-ai.Modelfile"
 grep -Fq 'Packet Expert mode' "${bundle_root}/model/nettap-ai.Modelfile"
-echo "PASS: combined NetTAP AI model bundle verified."
+echo "PASS: NetTAP Network Intelligence Model bundle verified."

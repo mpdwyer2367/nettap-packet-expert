@@ -10,6 +10,17 @@ case "$command_name" in
   start-production) exec "${script_dir}/start-production.sh" "$@" ;;
   status) exec "${script_dir}/status.sh" "$@" ;;
   health) exec "${script_dir}/healthcheck.sh" "$@" ;;
+  evidence)
+    # shellcheck source=scripts/common.sh
+    source "${script_dir}/common.sh"
+    initialize_env
+    if [[ "$(load_env_value DEPLOYMENT_MODE)" == production ]]; then
+      echo "Evidence Workspace: https://$(load_env_value APPLIANCE_HOSTNAME):$(load_env_value HTTPS_PORT)/evidence/"
+    else
+      echo "Evidence Workspace: http://127.0.0.1:$(load_env_value EVIDENCE_PORT)"
+    fi
+    echo "Bearer token file: $evidence_token_file"
+    ;;
   stop) exec "${script_dir}/stop.sh" "$@" ;;
   update-models) exec "${script_dir}/update-model.sh" "$@" ;;
   install-native-model) exec "${script_dir}/install-model-native.sh" "$@" ;;
@@ -22,7 +33,7 @@ case "$command_name" in
   verify-production) exec "${script_dir}/verify-production-deployment.sh" "$@" ;;
   certify) exec "${script_dir}/certify-production.sh" "$@" ;;
   help|*)
-    echo "NetTAP AI Suite administration"
-    echo "Commands: start-local, start-wsl2, configure-production, start-production, status, health, stop, update-models, install-native-model, package-model-bundle, provision-assistants, lock-images, scan, backup, restore, verify-production, certify"
+    echo "NetTAP Network Intelligence administration"
+    echo "Commands: start-local, start-wsl2, configure-production, start-production, status, health, evidence, stop, update-models, install-native-model, package-model-bundle, provision-assistants, lock-images, scan, backup, restore, verify-production, certify"
     ;;
 esac

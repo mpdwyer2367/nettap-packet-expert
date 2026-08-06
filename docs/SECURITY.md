@@ -1,6 +1,6 @@
 # Security and evidence boundary
 
-NetTAP AI Suite is advisory decision support. Neither assistant is a security enforcement control, live data source, or source of forensic truth.
+NetTAP Network Intelligence is advisory decision support. Neither assistant is a security enforcement control, live data source, or source of forensic truth.
 
 Implemented candidate controls include generated bootstrap credentials, explicit bootstrap retirement, disabled signup and risky WebUI features, an 8-hour session, secure production cookies, TLS termination, internal-only WebUI/Ollama networks, no host Ollama port, temporary-only model registry egress, dropped Linux capabilities, no-new-privileges, resource/PID limits, log rotation, immutable digest enforcement, SBOM/CVE tooling, protected backups, non-overwriting restore, and fail-closed certification gates.
 

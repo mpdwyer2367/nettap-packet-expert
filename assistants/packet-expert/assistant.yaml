@@ -1,6 +1,6 @@
 schema_version: 1
 id: nettap-packet-expert
-display_name: NetTAP Packet Expert
+display_name: NetTAP Network Intelligence — Packet Expert
 version: 0.3.0-rc.3
 base_model: qwen2.5:7b-instruct-q4_K_M
 runtime_model: nettap-ai:0.3.0-rc.3
