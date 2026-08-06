@@ -66,13 +66,13 @@ chmod +x "$test_root/bin/ollama"
 export NETTAP_RETIRE_TEST_LOG="$test_root/removed.log"
 export PATH="$test_root/bin:$PATH"
 
-dry_run="$($test_root/project/scripts/retire-legacy-models.sh --include-native)"
+dry_run="$("${test_root}/project/scripts/retire-legacy-models.sh" --include-native)"
 [[ "$dry_run" == *"Dry run only"* ]]
 [[ "$dry_run" == *"Legacy container tag: nettap-ai:latest"* ]]
 [[ "$dry_run" == *"Legacy native tag: nettap-packet-expert:latest"* ]]
 [[ ! -e "$NETTAP_RETIRE_TEST_LOG" ]]
 
-$test_root/project/scripts/retire-legacy-models.sh --confirm --include-native >/dev/null
+"${test_root}/project/scripts/retire-legacy-models.sh" --confirm --include-native >/dev/null
 
 grep -Fqx 'container:nettap-ai:latest' "$NETTAP_RETIRE_TEST_LOG"
 grep -Fqx 'container:nettap-ai-backup-20260730:latest' "$NETTAP_RETIRE_TEST_LOG"
