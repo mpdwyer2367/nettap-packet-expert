@@ -61,26 +61,22 @@ if ($content -match '(?m)^WEBUI_SECRET_KEY=GENERATE_ON_FIRST_START$') {
 }
 
 $defaults = [ordered]@{
-    RELEASE_VERSION = '0.3.0-rc.6'
+    RELEASE_VERSION = '0.3.0-rc.7'
     OLLAMA_IMAGE = 'ollama/ollama:0.32.5'
     OPEN_WEBUI_IMAGE = 'ghcr.io/open-webui/open-webui:v0.11.0'
     CADDY_IMAGE = 'caddy:2.11.4-alpine'
     BACKUP_IMAGE = 'alpine:3.24.1'
     BASE_MODEL = 'qwen2.5:7b-instruct-q4_K_M'
-    NETTAP_AI_MODEL = 'nettap-ai:0.3.0-rc.6'
-    MODEL_NAME = 'nettap-ai:0.3.0-rc.6'
+    NETTAP_AI_MODEL = 'nettap-ai:0.3.0-rc.7'
+    MODEL_NAME = 'nettap-ai:0.3.0-rc.7'
     EXPECTED_BASE_MODEL_ID = '845dbda0ea48'
     RETIRE_LEGACY_NETTAP_MODELS = 'true'
-    NETTAP_VISIBILITY_PROFILE = 'nettap-network-visibility'
-    NETTAP_PACKET_EXPERT_PROFILE = 'nettap-packet-expert'
+    NETTAP_OPERATIONS_PROFILE = 'nettap-network-operations'
     RAG_EMBEDDING_MODEL_ID = 'sentence-transformers/all-MiniLM-L6-v2'
     RAG_EMBEDDING_MODEL_REVISION = '1110a243fdf4706b3f48f1d95db1a4f5529b4d41'
     RAG_EMBEDDING_MODEL = '/app/backend/data/nettap-models/all-MiniLM-L6-v2/1110a243fdf4706b3f48f1d95db1a4f5529b4d41'
     BIND_ADDRESS = '127.0.0.1'
     WEB_PORT = '3100'
-    VISIBILITY_LAUNCHER_PORT = '3000'
-    PACKET_EXPERT_LAUNCHER_PORT = '3001'
-    EVIDENCE_PORT = '3200'
     HTTPS_BIND_ADDRESS = '0.0.0.0'
     HTTPS_PORT = '8443'
     APPLIANCE_HOSTNAME = 'nettap-ai.local'
@@ -102,9 +98,9 @@ $defaults = [ordered]@{
     DEPLOYMENT_MODE = 'local'
 }
 
-$content = $content -replace '(?m)^RELEASE_VERSION=(0\.2\.0-rc\.1|0\.3\.0-rc\.[12345])$', 'RELEASE_VERSION=0.3.0-rc.6'
-$content = $content -replace '(?m)^MODEL_NAME=(nettap-packet-expert:(0\.1\.0-rc\.8|0\.2\.0-rc\.1|0\.3\.0-rc\.1)|nettap-ai:(latest|0\.3\.0-rc\.[12345]))$', 'MODEL_NAME=nettap-ai:0.3.0-rc.6'
-$content = $content -replace '(?m)^NETTAP_AI_MODEL=(nettap-packet-expert:[^\s]+|nettap-ai:(latest|0\.3\.0-rc\.[12345]))$', 'NETTAP_AI_MODEL=nettap-ai:0.3.0-rc.6'
+$content = $content -replace '(?m)^RELEASE_VERSION=(0\.2\.0-rc\.1|0\.3\.0-rc\.[1-6])$', 'RELEASE_VERSION=0.3.0-rc.7'
+$content = $content -replace '(?m)^MODEL_NAME=(nettap-packet-expert:(0\.1\.0-rc\.8|0\.2\.0-rc\.1|0\.3\.0-rc\.1)|nettap-ai:(latest|0\.3\.0-rc\.[1-6]))$', 'MODEL_NAME=nettap-ai:0.3.0-rc.7'
+$content = $content -replace '(?m)^NETTAP_AI_MODEL=(nettap-packet-expert:[^\s]+|nettap-ai:(latest|0\.3\.0-rc\.[1-6]))$', 'NETTAP_AI_MODEL=nettap-ai:0.3.0-rc.7'
 $content = $content -replace '(?m)^RAG_EMBEDDING_MODEL=/app/backend/data/nettap-models/all-MiniLM-L6-v2$', 'RAG_EMBEDDING_MODEL=/app/backend/data/nettap-models/all-MiniLM-L6-v2/1110a243fdf4706b3f48f1d95db1a4f5529b4d41'
 $content = $content -replace '(?m)^APPLIANCE_HOSTNAME=packet-expert\.local$', 'APPLIANCE_HOSTNAME=nettap-ai.local'
 $content = $content -replace '(?m)^WEB_PORT=3001$', 'WEB_PORT=3100'
@@ -310,16 +306,13 @@ if ($actualFingerprint -ne $desiredFingerprint) {
     }
 }
 
-docker @compose up -d --force-recreate open-webui assistant-launcher evidence-service
+docker @compose up -d --force-recreate open-webui evidence-service
 if ($LASTEXITCODE -ne 0) {
-    throw 'Assistant launcher or Evidence Workspace failed to start.'
+    throw 'Open WebUI or the internal evidence service failed to start.'
 }
 
 $requiredBindings = @(
-    @{ Service = 'open-webui'; ContainerPort = '8080'; HostPort = '3100' },
-    @{ Service = 'evidence-service'; ContainerPort = '8081'; HostPort = '3200' },
-    @{ Service = 'assistant-launcher'; ContainerPort = '3000'; HostPort = '3000' },
-    @{ Service = 'assistant-launcher'; ContainerPort = '3001'; HostPort = '3001' }
+    @{ Service = 'open-webui'; ContainerPort = '8080'; HostPort = '3100' }
 )
 foreach ($binding in $requiredBindings) {
     $containerId = ((docker @compose ps -q $binding.Service) -join '').Trim()
@@ -337,10 +330,7 @@ foreach ($binding in $requiredBindings) {
 }
 
 $requiredEndpoints = @(
-    @{ Name = 'Open WebUI'; Url = 'http://127.0.0.1:3100/health' },
-    @{ Name = 'Evidence Workspace'; Url = 'http://127.0.0.1:3200/health' },
-    @{ Name = 'Network & Visibility'; Url = 'http://127.0.0.1:3000/system/health' },
-    @{ Name = 'Packet Expert'; Url = 'http://127.0.0.1:3001/system/health' }
+    @{ Name = 'NetTAP Network Observability & Packet Analysis'; Url = 'http://127.0.0.1:3100/health' }
 )
 foreach ($endpoint in $requiredEndpoints) {
     $ready = $false
@@ -356,7 +346,7 @@ foreach ($endpoint in $requiredEndpoints) {
     }
     if (-not $ready) {
         docker @compose ps
-        docker @compose logs --no-color --tail 40 open-webui evidence-service assistant-launcher
+        docker @compose logs --no-color --tail 40 open-webui evidence-service
         throw "$($endpoint.Name) did not become reachable at $($endpoint.Url)."
     }
     Write-Host "PASS: $($endpoint.Name) is reachable at $($endpoint.Url)"
@@ -374,29 +364,14 @@ if ($retireLegacy -match '^(?i:true|1|yes)$') {
 docker @compose ps
 
 $webPort = '3100'
-$visibilityPort = '3000'
-$packetPort = '3001'
-$evidencePort = '3200'
 foreach ($line in [System.IO.File]::ReadAllLines($envPath)) {
     if ($line -match '^WEB_PORT=(.+)$') {
         $webPort = $Matches[1]
     }
-    if ($line -match '^VISIBILITY_LAUNCHER_PORT=(.+)$') {
-        $visibilityPort = $Matches[1]
-    }
-    if ($line -match '^PACKET_EXPERT_LAUNCHER_PORT=(.+)$') {
-        $packetPort = $Matches[1]
-    }
-    if ($line -match '^EVIDENCE_PORT=(.+)$') {
-        $evidencePort = $Matches[1]
-    }
 }
 
-Write-Host "NetTAP Network Intelligence: http://127.0.0.1:$webPort"
-Write-Host "Network & Visibility: http://127.0.0.1:$visibilityPort"
-Write-Host "Packet Expert: http://127.0.0.1:$packetPort"
-Write-Host "Evidence Workspace: http://127.0.0.1:$evidencePort"
-Write-Host "Evidence API token file: $evidenceTokenPath"
+Write-Host "NetTAP Network Observability & Packet Analysis: http://127.0.0.1:$webPort"
+Write-Host 'Packet and telemetry evidence is attached in the authenticated chat; the parser has no public port.'
 Write-Host "Bootstrap credential file: $bootstrapPasswordPath"
 Write-Host 'Immediately change the generated password in Settings > Account.'
 Write-Host 'Then run finalize-admin.sh from WSL/Git Bash, or follow docs/AUTHENTICATION.md.'

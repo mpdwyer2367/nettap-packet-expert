@@ -35,27 +35,23 @@ initialize_env() {
     cp "${project_dir}/.env.example" "$env_file"
   fi
   chmod 0600 "$env_file"
-  ensure_env_default RELEASE_VERSION "0.3.0-rc.6"
+  ensure_env_default RELEASE_VERSION "0.3.0-rc.7"
   ensure_env_default OLLAMA_IMAGE "ollama/ollama:0.32.5"
   ensure_env_default OPEN_WEBUI_IMAGE "ghcr.io/open-webui/open-webui:v0.11.0"
   ensure_env_default CADDY_IMAGE "caddy:2.11.4-alpine"
   ensure_env_default BACKUP_IMAGE "alpine:3.24.1"
   ensure_env_default BASE_MODEL "qwen2.5:7b-instruct-q4_K_M"
-  ensure_env_default NETTAP_AI_MODEL "nettap-ai:0.3.0-rc.6"
-  ensure_env_default MODEL_NAME "nettap-ai:0.3.0-rc.6"
+  ensure_env_default NETTAP_AI_MODEL "nettap-ai:0.3.0-rc.7"
+  ensure_env_default MODEL_NAME "nettap-ai:0.3.0-rc.7"
   ensure_env_default EXPECTED_BASE_MODEL_ID "845dbda0ea48"
   ensure_env_default RETIRE_LEGACY_NETTAP_MODELS "true"
-  ensure_env_default NETTAP_VISIBILITY_PROFILE "nettap-network-visibility"
-  ensure_env_default NETTAP_PACKET_EXPERT_PROFILE "nettap-packet-expert"
+  ensure_env_default NETTAP_OPERATIONS_PROFILE "nettap-network-operations"
   ensure_env_default RAG_EMBEDDING_MODEL_ID "sentence-transformers/all-MiniLM-L6-v2"
   ensure_env_default RAG_EMBEDDING_MODEL_REVISION "1110a243fdf4706b3f48f1d95db1a4f5529b4d41"
   ensure_env_default RAG_EMBEDDING_MODEL "/app/backend/data/nettap-models/all-MiniLM-L6-v2/1110a243fdf4706b3f48f1d95db1a4f5529b4d41"
   ensure_env_default DEPLOYMENT_MODE "local"
   ensure_env_default BIND_ADDRESS "127.0.0.1"
   ensure_env_default WEB_PORT "3100"
-  ensure_env_default VISIBILITY_LAUNCHER_PORT "3000"
-  ensure_env_default PACKET_EXPERT_LAUNCHER_PORT "3001"
-  ensure_env_default EVIDENCE_PORT "3200"
   ensure_env_default HTTPS_BIND_ADDRESS "0.0.0.0"
   ensure_env_default HTTPS_PORT "8443"
   ensure_env_default APPLIANCE_HOSTNAME "nettap-ai.local"
@@ -71,18 +67,18 @@ initialize_env() {
   ensure_env_default EVIDENCE_MAX_RECORDS "100000"
   ensure_env_default GATEWAY_CPUS "1"
   ensure_env_default GATEWAY_MEMORY "512m"
-  if grep -Eq '^RELEASE_VERSION=(0\.2\.0-rc\.1|0\.3\.0-rc\.[12345])$' "$env_file"; then
-    set_env_value RELEASE_VERSION "0.3.0-rc.6"
+  if grep -Eq '^RELEASE_VERSION=(0\.2\.0-rc\.1|0\.3\.0-rc\.[1-6])$' "$env_file"; then
+    set_env_value RELEASE_VERSION "0.3.0-rc.7"
     if grep -q '^WEB_PORT=3001$' "$env_file"; then set_env_value WEB_PORT "3100"; fi
     if grep -q '^APPLIANCE_HOSTNAME=packet-expert.local$' "$env_file"; then
       set_env_value APPLIANCE_HOSTNAME "nettap-ai.local"
     fi
   fi
-  if grep -Eq '^MODEL_NAME=(nettap-packet-expert:(0\.1\.0-rc\.8|0\.2\.0-rc\.1|0\.3\.0-rc\.1)|nettap-ai:(latest|0\.3\.0-rc\.[12345]))$' "$env_file"; then
-    set_env_value MODEL_NAME "nettap-ai:0.3.0-rc.6"
+  if grep -Eq '^MODEL_NAME=(nettap-packet-expert:(0\.1\.0-rc\.8|0\.2\.0-rc\.1|0\.3\.0-rc\.1)|nettap-ai:(latest|0\.3\.0-rc\.[1-6]))$' "$env_file"; then
+    set_env_value MODEL_NAME "nettap-ai:0.3.0-rc.7"
   fi
-  if grep -Eq '^NETTAP_AI_MODEL=(nettap-packet-expert:[^[:space:]]+|nettap-ai:(latest|0\.3\.0-rc\.[12345]))$' "$env_file"; then
-    set_env_value NETTAP_AI_MODEL "nettap-ai:0.3.0-rc.6"
+  if grep -Eq '^NETTAP_AI_MODEL=(nettap-packet-expert:[^[:space:]]+|nettap-ai:(latest|0\.3\.0-rc\.[1-6]))$' "$env_file"; then
+    set_env_value NETTAP_AI_MODEL "nettap-ai:0.3.0-rc.7"
   fi
   if grep -q '^RAG_EMBEDDING_MODEL=/app/backend/data/nettap-models/all-MiniLM-L6-v2$' "$env_file"; then
     set_env_value RAG_EMBEDDING_MODEL "/app/backend/data/nettap-models/all-MiniLM-L6-v2/1110a243fdf4706b3f48f1d95db1a4f5529b4d41"
@@ -173,7 +169,7 @@ compose=("${compose_local[@]}")
 local_runtime_diagnostics() {
   echo "NetTAP local runtime diagnostics:" >&2
   "${compose_local[@]}" ps >&2 || true
-  for service in open-webui evidence-service assistant-launcher; do
+  for service in open-webui evidence-service; do
     echo "--- ${service} logs ---" >&2
     "${compose_local[@]}" logs --no-color --tail=40 "$service" >&2 || true
   done
@@ -208,25 +204,16 @@ wait_for_local_endpoint() {
 }
 
 verify_local_runtime_access() {
-  local bind_address web_port visibility_port packet_port evidence_port
+  local bind_address web_port
   require_command curl
   bind_address="$(load_env_value BIND_ADDRESS)"
   web_port="$(load_env_value WEB_PORT)"
-  visibility_port="$(load_env_value VISIBILITY_LAUNCHER_PORT)"
-  packet_port="$(load_env_value PACKET_EXPERT_LAUNCHER_PORT)"
-  evidence_port="$(load_env_value EVIDENCE_PORT)"
   [[ "$bind_address" == "127.0.0.1" ]] || {
     echo "ERROR: Local deployment requires BIND_ADDRESS=127.0.0.1; received ${bind_address}." >&2
     return 1
   }
   require_local_port_binding open-webui 8080 "${bind_address}:${web_port}" || return 1
-  require_local_port_binding evidence-service 8081 "${bind_address}:${evidence_port}" || return 1
-  require_local_port_binding assistant-launcher 3000 "${bind_address}:${visibility_port}" || return 1
-  require_local_port_binding assistant-launcher 3001 "${bind_address}:${packet_port}" || return 1
   wait_for_local_endpoint "Open WebUI" "http://${bind_address}:${web_port}/health" || return 1
-  wait_for_local_endpoint "Evidence Workspace" "http://${bind_address}:${evidence_port}/health" || return 1
-  wait_for_local_endpoint "Network & Visibility" "http://${bind_address}:${visibility_port}/system/health" || return 1
-  wait_for_local_endpoint "Packet Expert" "http://${bind_address}:${packet_port}/system/health" || return 1
 }
 
 recreate_local_interfaces() {
@@ -234,7 +221,7 @@ recreate_local_interfaces() {
     echo "ERROR: The merged local Compose configuration is invalid." >&2
     return 1
   }
-  "${compose_local[@]}" up -d --force-recreate open-webui evidence-service assistant-launcher || {
+  "${compose_local[@]}" up -d --force-recreate open-webui evidence-service || {
     local_runtime_diagnostics
     return 1
   }
@@ -326,7 +313,7 @@ recover_failed_model_initialization() {
   else
     "${compose_local_bootstrap[@]}" down >/dev/null 2>&1 || true
     if [[ "$was_running" == true ]]; then
-      "${compose_local[@]}" up -d ollama open-webui evidence-service assistant-launcher || true
+      "${compose_local[@]}" up -d ollama open-webui evidence-service || true
     fi
   fi
   echo "ERROR: Model initialization failed. Temporary registry egress was removed; any prior runtime restart was attempted." >&2
@@ -344,7 +331,7 @@ recover_failed_assistant_provisioning() {
     "${compose_local[@]}" up -d ollama open-webui || true
   fi
   echo "ERROR: Assistant provisioning failed. Temporary registry egress was removed." >&2
-  echo "Core Ollama and Open WebUI services were restarted for diagnosis; assistant launchers remain disabled." >&2
+  echo "Core Ollama and Open WebUI services were restarted for diagnosis; the managed assistant still requires provisioning." >&2
   echo "Correct the provisioning error shown above, then rerun the platform start command. Cached model downloads are reused." >&2
   exit 10
 }

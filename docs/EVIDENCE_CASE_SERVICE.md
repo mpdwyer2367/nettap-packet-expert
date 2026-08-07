@@ -1,198 +1,32 @@
-# NetTAP Network Intelligence — Evidence Workspace
+# Integrated evidence ingestion
 
-## Purpose and status
+There is no separate Evidence Workspace page or host port in RC7. Evidence ingestion is a private application service used from the authenticated Open WebUI chat.
 
-The Evidence Workspace is the first local evidence-ingestion and case-analysis
-service for NetTAP Network Intelligence. It turns approved PCAP metadata, normalized logs and flow
-records into a persistent case with source provenance, evidence-quality warnings,
-deterministic summaries, evidence-bound findings, a Markdown report and a
-minimized context available to the authorized Packet Expert assistant through a
-managed read-only OpenAPI tool.
+## User workflow
 
-This implementation is an **evaluation feature for the next suite release**. It
-does not make `0.3.0-rc.6` production-certified and is not a live NetTAP NPB,
-flow collector, SIEM, IDS/IPS, NDR or autonomous controller.
+1. Open the combined assistant at port 3100.
+2. Attach an authorized supported file.
+3. State the objective, environment and desired output.
+4. Review the response for source state, evidence IDs/hashes, quality warnings, observations, hypotheses, limitations and next actions.
 
-## Local access
+Supported attachments are `.pcap`, `.json`, `.jsonl`, `.ndjson`, `.log` and `.txt`. Classic PCAP supports Ethernet and raw-IP link types. PCAPNG and native binary flow telemetry require approved external normalization. The service enforces configured upload and record limits.
 
-After `start-macos.sh` or `start-windows.ps1` completes:
+## Security properties
 
-- Workspace: `http://127.0.0.1:3200`
-- Health: `http://127.0.0.1:3200/health`
-- Bearer token: generated locally in `.evidence-api-token`
+- The evidence service is reachable only over the private Docker backend.
+- Its bearer token is generated locally and is not a user-facing login.
+- The managed Filter is source-controlled, checksummed and provisioned by an authenticated administrator.
+- Original evidence is retained in a dedicated volume; only minimized context reaches the model.
+- The parser does not decrypt traffic, execute payloads, call threat-intelligence services or claim live telemetry.
+- Conclusions remain evidence-supported indicators or hypotheses unless sufficient evidence establishes a stronger finding.
 
-The service is bound to loopback by the local Compose profile. Every case and
-evidence API requires its generated bearer token. The health endpoint and static
-workspace shell do not disclose case data.
-
-Select **Assistant setup** in the workspace to review the effective assistant
-profile, tool binding, upload and record limits, supported parsers, and explicit
-format limitations. The page is informational for NetTAP-managed settings;
-release-controlled configuration remains the source of truth so UI edits cannot
-silently drift from the accepted package.
-
-The production Compose profile keeps the service off direct host ports and
-routes `https://<approved-hostname>:8443/evidence/` through the existing TLS
-gateway. The same independent bearer token is still required for every case and
-evidence API. The managed tool is attached only to Packet Expert and is granted
-to the provisioning administrator. Additional-user case RBAC remains a future
-production gate.
-
-## Workflow
-
-1. Create a case with a clear objective and environment.
-2. Select the source type and upload authorized evidence.
-3. Record the observation point, timezone, clock status, exporter, schema and
-   chain-of-custody reference.
-4. Review the computed SHA-256, parser identity, record count and quality gaps.
-5. Run deterministic analysis.
-6. Review findings as observations or hypotheses with exact, resolvable
-   citations and validation steps.
-7. Export the Markdown report or inspect the minimized LLM-safe context.
-8. Select **Analyze in Packet Expert**. The browser opens the managed Packet
-   Expert profile with only the case UUID; Packet Expert uses its read-only tool
-   to retrieve minimized context and produce a professional evidence-bound
-   assessment.
-
-The browser UI stores the bearer token only in the page's JavaScript memory;
-reloading the page requires the token again.
-
-## Supported evidence
-
-| Source type | Accepted input | Built-in behavior |
-|---|---|---|
-| `pcap` | Classic PCAP, Ethernet or raw IP link type | IPv4/IPv6 and basic TCP/UDP/ICMP/GRE/ESP metadata; no application payload extraction |
-| `normalized-pcap` | JSON object, JSON array or JSONL | Validates objects, maps common fields and redacts sensitive keys |
-| `ipfix` | Normalized JSON/JSONL | Preserves exporter/template/sampling metadata and common five-tuple fields |
-| `netflow` | Normalized JSON/JSONL | Maps common flow aliases and records schema limitations |
-| `sflow` | Normalized JSON/JSONL | Maps common flow aliases and records sampling limitations |
-| `cloud-flow` | Normalized JSON/JSONL | Maps common cloud-flow fields after external schema normalization |
-| `syslog` | UTF-8 lines | Extracts priority, facility, severity, host and bounded message text into the protected normalized store; raw lines remain excluded from LLM context |
-| `json` / `jsonl` | UTF-8 JSON objects | Generic schema-bounded import |
-
-PCAPNG is not parsed by the built-in dependency-free parser. Normalize it in an
-isolated, resource-limited TShark service and upload JSON/JSONL as
-`normalized-pcap`. The product must not claim PCAPNG support until that extractor
-is packaged, pinned and accepted.
-
-## API contract
-
-The machine-readable OpenAPI 3.1 contract is in [`api/openapi.json`](../api/openapi.json).
-
-Create a case:
+## Administrator checks
 
 ```bash
-curl --fail --silent \
-  -H "Authorization: Bearer $EVIDENCE_API_TOKEN" \
-  -H 'Content-Type: application/json' \
-  --data '{"title":"Investigate service latency","objective":"Identify evidence-supported causes","environment":"Authorized lab"}' \
-  http://127.0.0.1:3200/v1/cases
+docker compose --env-file .env -f compose.yaml -f compose.local.yaml ps evidence-service
+docker compose --env-file .env -f compose.yaml -f compose.local.yaml logs --tail=200 evidence-service
+docker compose --env-file .env -f compose.yaml -f compose.local.yaml exec -T evidence-service \
+  python -c "import urllib.request; print(urllib.request.urlopen('http://127.0.0.1:8081/health').read().decode())"
 ```
 
-Evidence upload uses an octet-stream body, required `source_type` and `filename`
-query parameters, optional `X-Content-SHA256`, and base64url-encoded JSON in
-`X-NetTAP-Metadata`. The UI constructs this request automatically.
-
-Principal endpoints:
-
-| Method and path | Result |
-|---|---|
-| `POST /v1/cases` | Create a case |
-| `GET /v1/cases` | List case summaries |
-| `GET /v1/cases/{id}` | Case, sources and latest analysis |
-| `POST /v1/cases/{id}/evidence` | Hash, retain and normalize one source |
-| `POST /v1/cases/{id}/analyze` | Run deterministic analysis |
-| `GET /v1/cases/{id}/observations/{observation_id}` | Resolve one normalized-observation citation within its owning case |
-| `GET /v1/cases/{id}/analyses/{analysis_id}` | Retrieve and verify the canonical deterministic artifact within its owning case |
-| `GET /v1/cases/{id}/context` | Return minimized LLM-safe context |
-| `GET /v1/cases/{id}/report.md` | Return a reviewable Markdown report |
-| `GET /v1/configuration` | Return non-secret managed setup and parser capabilities |
-| `GET /v1/tool/cases` | Read-only case inventory for the managed assistant tool |
-| `GET /openapi.json` | OpenAPI description containing only read-only minimized-context operations |
-
-## Evidence and LLM boundary
-
-Raw source bytes are stored under server-generated UUID paths in the dedicated
-evidence volume with restrictive permissions. Original filenames never determine
-storage paths. The API does not provide a raw-evidence download endpoint.
-
-The LLM context contains only:
-
-- case objective and environment;
-- evidence IDs, hashes, parser identities and bounded provenance metadata;
-- quality warnings;
-- deterministic aggregate metrics;
-- evidence-bound observations and hypotheses; and
-- explicit model handling instructions.
-
-It does not contain packet payloads, raw log lines, TLS secrets or raw evidence.
-Only reviewed scalar provenance fields are eligible for the context; arbitrary
-metadata is omitted. Sensitive structured keys such as passwords, tokens,
-private keys and session keys are redacted during normalization. The original
-source remains sensitive and must be protected according to customer retention
-and legal-hold requirements.
-
-Findings use typed citations to evidence manifests, exact normalized observations,
-and a SHA-256-bound deterministic analysis artifact. The browser resolves an
-observation only through the owning case path. Cross-case references return `404`,
-and successful resolution creates an audit event. The analysis hash is an integrity
-reference, not a digital signature.
-
-## Deterministic analysis in this increment
-
-- protocol, endpoint, destination-port and conversation counts;
-- bytes by conversation when present;
-- source timestamp range;
-- TCP reset and capture-truncation observations;
-- evidence-quality gaps;
-- dominant-conversation observation-point warning; and
-- regular connection timing as a medium-confidence investigation hypothesis.
-
-Regular timing is never reported as confirmed command-and-control. The report
-requires correlation with authorized asset, DNS, application, identity and
-longer-baseline evidence.
-
-## Security controls
-
-- generated 256-bit bearer token;
-- constant-time token comparison;
-- loopback-only local port;
-- internal Docker networks with no outbound route;
-- request-size and record-count limits;
-- strict source-type allowlist;
-- server-computed SHA-256 and optional supplied-hash verification;
-- UUID storage paths and filename traversal prevention;
-- SQLite foreign keys, transactions and per-case isolation;
-- read-only container filesystem, dropped capabilities and no-new-privileges;
-- no raw-evidence retrieval API;
-- no decryption, code execution, external lookup or autonomous change action; and
-- backup/restore coverage for the dedicated evidence volume.
-
-The current bearer token is an appliance-local evaluation control, not enterprise
-identity. Before customer production approval, add Open WebUI/enterprise identity
-integration, per-role case authorization, token rotation/revocation, encrypted
-storage requirements, retention/deletion/legal-hold workflows, malware/parser
-isolation, tamper-evident audit export and penetration-test evidence.
-
-## Backup and recovery
-
-Backup format v3 includes `evidence-data.tgz` in addition to Ollama and Open
-WebUI data. Treat it as highly sensitive because it contains cases and original
-evidence. Restore remains non-overwriting and accepts historical v2 backups
-without an evidence volume.
-
-## Assistant integration boundary
-
-Open WebUI v0.11.0 is provisioned through its authenticated configuration and
-Workspace Model APIs. The appliance registers `nettap_evidence` as a bearer-
-authenticated OpenAPI server, verifies that Open WebUI can discover it, and
-pins `server:nettap_evidence` to Packet Expert. Only case listing and minimized
-context retrieval are exposed as model tools. Upload, analysis execution,
-deletion, raw evidence, configuration changes and device actions are not tool
-operations.
-
-This provides a usable single-administrator appliance workflow. Before broader
-customer deployment, add per-user and per-case authorization, identity mapping,
-token rotation, retention controls and connector penetration testing. No write-
-capable NetTAP NPB or device connector should be added until read-only
-acquisition, audit, validation and rollback controls pass.
+Do not publish port 8081/3200 or expose its API directly to users. Back up and restore the evidence volume with the product scripts so hashes, case records and originals remain together.

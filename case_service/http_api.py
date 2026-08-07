@@ -1,4 +1,4 @@
-"""Authenticated HTTP and local case-workspace UI."""
+"""Authenticated internal evidence-analysis HTTP API."""
 
 from __future__ import annotations
 
@@ -7,7 +7,6 @@ from http import HTTPStatus
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 import hmac
 import json
-from pathlib import Path
 import re
 from typing import Any, Callable
 from urllib.parse import parse_qs, urlparse
@@ -92,15 +91,6 @@ def handler_factory(
                     {"status": "healthy", "service": "nettap-evidence", "version": SERVICE_VERSION},
                     authenticated=False,
                 )
-                return
-            if route == "/":
-                self.send_static("index.html", "text/html; charset=utf-8")
-                return
-            if route == "/app.css":
-                self.send_static("app.css", "text/css; charset=utf-8")
-                return
-            if route == "/app.js":
-                self.send_static("app.js", "application/javascript; charset=utf-8")
                 return
             if route == "/openapi.json":
                 self.send_json(HTTPStatus.OK, openapi_spec(), authenticated=False)
@@ -255,10 +245,6 @@ def handler_factory(
                 self.send_error_json(HTTPStatus.BAD_REQUEST, str(exc))
             else:
                 self.send_error_json(HTTPStatus.INTERNAL_SERVER_ERROR, "internal service error")
-
-        def send_static(self, filename: str, content_type: str) -> None:
-            path = Path(__file__).with_name("web") / filename
-            self.send_bytes(HTTPStatus.OK, path.read_bytes(), content_type, authenticated=False)
 
         def send_json(
             self, status: HTTPStatus, payload: Any, authenticated: bool = True

@@ -22,12 +22,7 @@ cat > "$test_root/bin/docker" <<'MOCK'
 set -euo pipefail
 printf '%s\n' "$*" >> "$NETTAP_LOCAL_REPAIR_TEST_LOG"
 if [[ "${1:-}" == compose && "$*" == *" ps -q open-webui"* ]]; then printf 'webui-id\n'; exit 0; fi
-if [[ "${1:-}" == compose && "$*" == *" ps -q evidence-service"* ]]; then printf 'evidence-id\n'; exit 0; fi
-if [[ "${1:-}" == compose && "$*" == *" ps -q assistant-launcher"* ]]; then printf 'launcher-id\n'; exit 0; fi
 if [[ "${1:-}" == port && "${2:-}" == webui-id ]]; then printf '127.0.0.1:3100\n'; exit 0; fi
-if [[ "${1:-}" == port && "${2:-}" == evidence-id ]]; then printf '127.0.0.1:3200\n'; exit 0; fi
-if [[ "${1:-}" == port && "${2:-}" == launcher-id && "${3:-}" == 3000/tcp ]]; then printf '127.0.0.1:3000\n'; exit 0; fi
-if [[ "${1:-}" == port && "${2:-}" == launcher-id && "${3:-}" == 3001/tcp ]]; then printf '127.0.0.1:3001\n'; exit 0; fi
 exit 0
 MOCK
 chmod +x "$test_root/bin/docker"
@@ -46,10 +41,8 @@ export PATH="$test_root/bin:$PATH"
 source "$test_root/scripts/common.sh"
 
 recreate_local_interfaces >/dev/null
-grep -Fq 'up -d --force-recreate open-webui evidence-service assistant-launcher' "$NETTAP_LOCAL_REPAIR_TEST_LOG"
+grep -Fq 'up -d --force-recreate open-webui evidence-service' "$NETTAP_LOCAL_REPAIR_TEST_LOG"
 grep -Fq 'port webui-id 8080/tcp' "$NETTAP_LOCAL_REPAIR_TEST_LOG"
-grep -Fq 'port launcher-id 3000/tcp' "$NETTAP_LOCAL_REPAIR_TEST_LOG"
 grep -Fq 'http://127.0.0.1:3100/health' "$NETTAP_LOCAL_REPAIR_TEST_LOG"
-grep -Fq 'http://127.0.0.1:3001/system/health' "$NETTAP_LOCAL_REPAIR_TEST_LOG"
 
 echo 'Local runtime recreation and port-verification regression test passed.'

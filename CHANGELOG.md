@@ -1,15 +1,13 @@
 # Changelog
 
-## 0.3.0-rc.6 validated evidence integration candidate — 2026-08-06
+## 0.3.0-rc.7 unified application candidate — 2026-08-07
 
-- Added an Evidence Workspace configuration page with explicit parser capabilities, limits, assistant integration status, and source-specific upload guidance.
-- Added authenticated deterministic case inventory and minimized-context APIs plus a read-only OpenAPI tool binding for Packet Expert.
-- Provisioned the evidence tool automatically for the administrator while keeping Network & Visibility isolated from it.
-- Added professional evidence-report instructions, provenance fields, parser validation tests, and an RC6-specific provisioning fingerprint.
-- Added evidence database schema v2 with additive migration from schema v1.
-- Added typed citations for evidence manifests, exact normalized observations, and SHA-256-bound deterministic analysis artifacts.
-- Added an audited, case-scoped read-only citation resolver and one-click citation inspection in the Evidence Workspace.
-- Added negative cross-case citation tests and documented the citation trust boundary and remaining release gates.
+- Replaced separate Network & Visibility and Packet Expert profiles with one combined managed assistant over one `nettap-ai` model.
+- Removed public launcher ports 3000/3001 and the separate Evidence Workspace UI/port 3200; one authenticated Open WebUI remains on port 3100 locally.
+- Added a reviewed Open WebUI attachment Filter that routes supported files to the internal deterministic evidence service and injects only minimized cited context.
+- Combined shared, visibility and packet-analysis knowledge and Skill capability while preserving one Qwen2.5 7B weight download.
+- Updated macOS, Windows/WSL2, production, backup, verification, administration and deployment workflows for the single-UI architecture.
+- Retained fail-closed production status pending exact-build platform, security, signing and commercial acceptance.
 
 ## 0.3.0-rc.5 unified product experience candidate — 2026-08-05
 

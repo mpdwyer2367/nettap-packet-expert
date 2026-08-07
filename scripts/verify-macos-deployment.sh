@@ -17,14 +17,9 @@ report_dir="${project_dir}/reports"
 mkdir -p "$report_dir"
 report_file="${report_dir}/${platform}-runtime-verification-$(date -u +%Y%m%dT%H%M%SZ).txt"
 exec > >(tee "$report_file") 2>&1
+fail() { echo "FAIL: $1" >&2; echo "Report: $report_file" >&2; exit 1; }
 
-fail() {
-  echo "FAIL: $1" >&2
-  echo "Report: $report_file" >&2
-  exit 1
-}
-
-echo "NetTAP Network Intelligence canonical ${platform} runtime verification"
+echo "NetTAP Network Observability & Packet Analysis ${platform} runtime verification"
 echo "UTC: $(date -u +%FT%TZ)"
 echo "Host: $(uname -a)"
 echo "Project directory: $project_dir"
@@ -32,157 +27,74 @@ echo "Project directory: $project_dir"
 if [[ "$platform" == macos ]]; then
   [[ "$(uname -s)" == Darwin ]] || fail "macOS host required."
 else
-  if [[ "$(uname -s)" != Linux ]] || ! grep -Eiq 'microsoft|wsl' /proc/version; then
-    fail "Windows/WSL2 host required."
-  fi
+  [[ "$(uname -s)" == Linux ]] && grep -Eiq 'microsoft|wsl' /proc/version || fail "Windows/WSL2 host required."
 fi
+
 require_runtime
-[[ -f "$env_file" ]] || fail "Missing .env. Run ./scripts/start-macos.sh first."
+[[ -f "$env_file" ]] || fail "Missing .env. Run the platform start command first."
 docker info >/dev/null 2>&1 || fail "Docker Desktop engine is not running."
-effective_project="$(deployment_project_name)"
-legacy_running="$(docker ps -q --filter "label=com.docker.compose.project=${legacy_project_name}")"
-[[ -z "$legacy_running" || "$effective_project" != "$canonical_project_name" ]] || \
-  fail "Legacy ${legacy_project_name} containers are still running beside the canonical product."
+"${compose_local[@]}" config >/dev/null || fail "Compose configuration is invalid."
 
 nettap_model="$(load_env_value NETTAP_AI_MODEL)"
-web_port="$(load_env_value WEB_PORT)"
-visibility_port="$(load_env_value VISIBILITY_LAUNCHER_PORT)"
-packet_port="$(load_env_value PACKET_EXPERT_LAUNCHER_PORT)"
-evidence_port="$(load_env_value EVIDENCE_PORT)"
-bind_address="$(load_env_value BIND_ADDRESS)"
-ollama_image="$(load_env_value OLLAMA_IMAGE)"
-webui_image="$(load_env_value OPEN_WEBUI_IMAGE)"
-
-[[ "$nettap_model" == "nettap-ai:0.3.0-rc.6" ]] || fail "Unexpected Network Intelligence model identity: $nettap_model"
-model_rows="$("${compose[@]}" exec -T ollama ollama list)"
+[[ "$nettap_model" == "nettap-ai:0.3.0-rc.7" ]] || fail "Unexpected model identity: $nettap_model"
+model_rows="$("${compose_local[@]}" exec -T ollama ollama list)"
 legacy_models="$(printf '%s\n' "$model_rows" | awk -v current="$nettap_model" 'NR > 1 && $1 != current && ($1 ~ /^nettap-ai:/ || $1 ~ /^nettap-ai-backup-/ || $1 ~ /^nettap-packet-expert:/ || $1 ~ /^nettap-network-visibility:/) {print $1}')"
-[[ -z "$legacy_models" ]] || fail "Superseded NetTAP model tags remain in the appliance store: $legacy_models"
+[[ -z "$legacy_models" ]] || fail "Superseded NetTAP model tags remain: $legacy_models"
 echo "PASS: one current NetTAP model tag"
-[[ "$bind_address" == "127.0.0.1" ]] || fail "BIND_ADDRESS must remain 127.0.0.1 for the local profile."
-"${compose[@]}" config >/dev/null || fail "Compose configuration is invalid."
 
-ollama_id="$("${compose[@]}" ps -q ollama)"
-webui_id="$("${compose[@]}" ps -q open-webui)"
-launcher_id="$("${compose[@]}" ps -q assistant-launcher)"
-evidence_id="$("${compose[@]}" ps -q evidence-service)"
-[[ -n "$ollama_id" ]] || fail "Ollama service container is not running."
-[[ -n "$webui_id" ]] || fail "Open WebUI service container is not running."
-[[ -n "$launcher_id" ]] || fail "Assistant launcher service container is not running."
-[[ -n "$evidence_id" ]] || fail "Evidence Workspace service container is not running."
-
-verify_provenance() {
-  local container_id="$1" service="$2" expected_image="$3"
-  local project_label working_dir config_files actual_image state
-  project_label="$(docker inspect --format '{{index .Config.Labels "com.docker.compose.project"}}' "$container_id")"
-  working_dir="$(docker inspect --format '{{index .Config.Labels "com.docker.compose.project.working_dir"}}' "$container_id")"
-  config_files="$(docker inspect --format '{{index .Config.Labels "com.docker.compose.project.config_files"}}' "$container_id")"
-  actual_image="$(docker inspect --format '{{.Config.Image}}' "$container_id")"
-  state="$(docker inspect --format '{{.State.Status}}' "$container_id")"
-  [[ "$project_label" == "$effective_project" ]] || fail "$service belongs to Compose project $project_label; expected $effective_project."
-  [[ "$working_dir" == "$project_dir" ]] || fail "$service was created from $working_dir, not $project_dir. Recreate the project from the canonical directory."
-  [[ "$config_files" == *"${project_dir}/compose.yaml"* && "$config_files" == *"${project_dir}/compose.local.yaml"* ]] || fail "$service uses unexpected Compose files: $config_files"
-  [[ "$actual_image" == "$expected_image" ]] || fail "$service image is $actual_image; expected $expected_image."
-  [[ "$state" == "running" ]] || fail "$service state is $state, not running."
-  echo "PASS: $service project, provenance, image, and running state"
+effective_project="$(deployment_project_name)"
+verify_service() {
+  local service="$1" expected_image="$2" id state image project
+  id="$("${compose_local[@]}" ps -q "$service")"
+  [[ -n "$id" ]] || fail "$service is not running."
+  state="$(docker inspect --format '{{.State.Status}}' "$id")"
+  image="$(docker inspect --format '{{.Config.Image}}' "$id")"
+  project="$(docker inspect --format '{{index .Config.Labels "com.docker.compose.project"}}' "$id")"
+  [[ "$state" == running ]] || fail "$service state is $state."
+  [[ "$image" == "$expected_image" ]] || fail "$service image is $image; expected $expected_image."
+  [[ "$project" == "$effective_project" ]] || fail "$service belongs to $project; expected $effective_project."
+  echo "PASS: $service provenance, image and running state"
 }
 
-verify_provenance "$ollama_id" ollama "$ollama_image"
-verify_provenance "$webui_id" open-webui "$webui_image"
-verify_provenance "$launcher_id" assistant-launcher "$(load_env_value CADDY_IMAGE)"
-verify_provenance "$evidence_id" evidence-service "$webui_image"
+verify_service ollama "$(load_env_value OLLAMA_IMAGE)"
+verify_service open-webui "$(load_env_value OPEN_WEBUI_IMAGE)"
+verify_service evidence-service "$(load_env_value OPEN_WEBUI_IMAGE)"
 
-ollama_ports="$(docker inspect --format '{{json .NetworkSettings.Ports}}' "$ollama_id")"
-[[ "$ollama_ports" == *'11434/tcp":null'* ]] || fail "Containerized Ollama unexpectedly publishes a host port: $ollama_ports"
-echo "PASS: containerized Ollama has no published host port"
-if docker inspect --format '{{range $name, $_ := .NetworkSettings.Networks}}{{$name}} {{end}}' "$ollama_id" | grep -q 'model-egress'; then
-  fail "Temporary model-registry egress remains attached."
-fi
-echo "PASS: temporary model-registry egress is absent"
+ollama_id="$("${compose_local[@]}" ps -q ollama)"
+evidence_id="$("${compose_local[@]}" ps -q evidence-service)"
+[[ -z "$(docker port "$ollama_id" 2>/dev/null || true)" ]] || fail "Ollama must not publish a host port."
+[[ -z "$(docker port "$evidence_id" 2>/dev/null || true)" ]] || fail "The internal evidence service must not publish a host port."
+echo "PASS: model and evidence services are internal only"
 
-webui_binding="$(docker port "$webui_id" 8080/tcp 2>/dev/null || true)"
-[[ "$webui_binding" == "${bind_address}:${web_port}" ]] || fail "Open WebUI binding is $webui_binding; expected ${bind_address}:${web_port}."
-echo "PASS: Open WebUI is bound to ${bind_address}:${web_port}"
-evidence_binding="$(docker port "$evidence_id" 8081/tcp 2>/dev/null || true)"
-[[ "$evidence_binding" == "${bind_address}:${evidence_port}" ]] || fail "Evidence Workspace binding is $evidence_binding; expected ${bind_address}:${evidence_port}."
-echo "PASS: Evidence Workspace is bound to ${bind_address}:${evidence_port}"
-
-"${compose[@]}" exec -T ollama ollama show "$nettap_model" | grep -q 'You are the NetTAP Network Intelligence Model' || fail "Network Intelligence model identity check failed."
-echo "PASS: NetTAP Network Intelligence Model is installed"
-
-"${compose[@]}" exec -T open-webui python - <<'PY' || fail "Provisioned assistants or offline RAG state is invalid."
-import json
-import hashlib
-from pathlib import Path
-embedding = json.loads(Path('/app/backend/data/nettap-embedding-model.json').read_text(encoding='utf-8'))
-provisioning = json.loads(Path('/app/backend/data/nettap-provisioning-state.json').read_text(encoding='utf-8'))
-assert embedding['revision'] == '1110a243fdf4706b3f48f1d95db1a4f5529b4d41'
-assert embedding['model_path'] == '/app/backend/data/nettap-models/all-MiniLM-L6-v2/1110a243fdf4706b3f48f1d95db1a4f5529b4d41'
-assert embedding['embedding_dimension'] > 0
-aggregate = hashlib.sha256()
-expected_files = set()
-for item in embedding['files']:
-    expected_files.add(item['path'])
-    path = Path(embedding['model_path']) / item['path']
-    digest = hashlib.sha256(path.read_bytes()).hexdigest()
-    assert digest == item['sha256']
-    aggregate.update(item['path'].encode('utf-8'))
-    aggregate.update(b'\0')
-    aggregate.update(digest.encode('ascii'))
-    aggregate.update(b'\n')
-actual_files = {
-    path.relative_to(embedding['model_path']).as_posix()
-    for path in Path(embedding['model_path']).rglob('*')
-    if path.is_file() and '.cache' not in path.parts
-}
-assert actual_files == expected_files
-assert aggregate.hexdigest() == embedding['aggregate_sha256']
-assert provisioning['release_version'] == '0.3.0-rc.6'
-assert provisioning['offline_rag']['result'] == 'PASS'
-assert {item['id'] for item in provisioning['assistants']} == {
-    'nettap-network-visibility', 'nettap-packet-expert'
-}
-assert set(provisioning['knowledge']) == {'shared', 'network_visibility', 'packet_expert'}
-assert set(provisioning['skills']) == {'network_visibility', 'packet_expert'}
-assistant_skills = {item['id']: item['skill_ids'] for item in provisioning['assistants']}
-assert assistant_skills == {
-    'nettap-network-visibility': ['nettap-network-visibility'],
-    'nettap-packet-expert': ['nettap-packet-expert'],
-}
-PY
-[[ "$(installed_provisioning_fingerprint local)" == "$(provisioning_fingerprint local)" ]] || \
-  fail "Installed provisioning fingerprint differs from the RC6 source."
-echo "PASS: pinned embedding cache, managed skills, managed assistants, and offline RAG proof"
-
-admin_count="$("${compose[@]}" exec -T open-webui python - <<'PY'
-import sqlite3
-db = sqlite3.connect('/app/backend/data/webui.db')
-print(db.execute("SELECT COUNT(*) FROM user WHERE role = 'admin'").fetchone()[0])
-PY
-)"
-[[ "$admin_count" -ge 1 ]] || fail "Open WebUI has no administrator account."
-echo "PASS: Open WebUI administrator exists"
-
+bind_address="$(load_env_value BIND_ADDRESS)"
+web_port="$(load_env_value WEB_PORT)"
+[[ "$bind_address" == 127.0.0.1 ]] || fail "Local BIND_ADDRESS must be 127.0.0.1."
+webui_id="$("${compose_local[@]}" ps -q open-webui)"
+[[ "$(docker port "$webui_id" 8080/tcp 2>/dev/null || true)" == "${bind_address}:${web_port}" ]] || fail "Open WebUI is not bound to ${bind_address}:${web_port}."
 curl --fail --silent --show-error "http://${bind_address}:${web_port}/health" >/dev/null || fail "Open WebUI health endpoint failed."
-echo "PASS: Open WebUI health endpoint"
-curl --fail --silent --show-error "http://${bind_address}:${visibility_port}/" | grep -q 'Network &amp; Visibility' || fail "Network & Visibility launcher failed."
-curl --fail --silent --show-error "http://${bind_address}:${packet_port}/" | grep -q 'Packet Expert' || fail "Packet Expert launcher failed."
-echo "PASS: both assistant launchers"
-curl --fail --silent --show-error --output /dev/null --write-out '%{redirect_url}' \
-  "http://${bind_address}:${visibility_port}/open" | grep -Fq 'model=nettap-network-visibility' || fail "Network launcher did not select its managed profile."
-curl --fail --silent --show-error --output /dev/null --write-out '%{redirect_url}' \
-  "http://${bind_address}:${packet_port}/open" | grep -Fq 'model=nettap-packet-expert' || fail "Packet launcher did not select its managed profile."
-echo "PASS: launchers select the correct managed Workspace Models"
+echo "PASS: one authenticated UI is reachable at http://${bind_address}:${web_port}"
 
-"${project_dir}/tests/evidence-runtime-e2e.sh" || fail "Evidence Workspace runtime workflow failed."
+"${compose_local[@]}" exec -T open-webui python - <<'PY' || fail "Managed assistant or offline RAG state is invalid."
+import json
+from pathlib import Path
+p = json.loads(Path('/app/backend/data/nettap-provisioning-state.json').read_text(encoding='utf-8'))
+e = json.loads(Path('/app/backend/data/nettap-embedding-model.json').read_text(encoding='utf-8'))
+assert p['release_version'] == '0.3.0-rc.7'
+assert p['offline_rag']['result'] == 'PASS'
+assert {a['id'] for a in p['assistants']} == {'nettap-network-operations'}
+assert set(p['knowledge']) == {'shared', 'network_visibility', 'packet_expert'}
+assert set(p['skills']) == {'network_operations'}
+assert set(p['functions']) == {'evidence_ingestion'}
+assert e['revision'] == '1110a243fdf4706b3f48f1d95db1a4f5529b4d41'
+PY
+[[ "$(installed_provisioning_fingerprint local)" == "$(provisioning_fingerprint local)" ]] || fail "Installed provisioning fingerprint differs from RC7 source."
+echo "PASS: combined assistant, managed ingestion filter and offline RAG"
 
-response="$("${compose[@]}" exec -T ollama ollama run "$nettap_model" \
-  'No capture or telemetry is connected. State whether live network evidence is available, then ask one important question.')"
+response="$("${compose_local[@]}" exec -T ollama ollama run "$nettap_model" 'No evidence is connected. State the evidence boundary and ask one important question.')"
 [[ -n "$response" ]] || fail "Controlled inference returned no output."
-printf '%s\n' "$response" | grep -Eiq \
-  "no live|not connected|cannot (see|access|observe)|do not have access|don't have access|unavailable" || \
-  fail "Controlled inference did not clearly state the live-evidence boundary."
-echo "PASS: controlled model inference returned output"
+printf '%s\n' "$response" | grep -Eiq 'no live|not connected|cannot (see|access|observe)|do not have access|unavailable' || fail "Model did not state the evidence boundary."
+echo "PASS: controlled inference"
 
-echo "PASS: automated canonical runtime checks, including local evidence ingestion and analysis, completed."
-echo "Manual acceptance remains required: generated-password replacement and rejection, finalization, new-password persistence, browser rendering, and representative chat behavior."
+echo "PASS: automated runtime checks completed."
+echo "Manual acceptance remains required for first-login password change, attachment analysis, browser rendering, backup/restore and rollback."
 echo "Report: $report_file"

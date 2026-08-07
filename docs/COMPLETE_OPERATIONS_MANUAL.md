@@ -1,122 +1,16 @@
-# NetTAP Network Intelligence operations manual
+# Complete operations manual
 
-Release `0.3.0-rc.6` is an integration candidate for one single-node, single-customer Docker deployment. It is not a certified GA appliance until every commercial release gate passes.
+NetTAP Network Intelligence delivers one customer application: NetTAP Network Observability & Packet Analysis. It runs at port 3100 locally and combines network design, visibility, troubleshooting, packet analysis and security/forensic workflows in one authenticated assistant.
 
-## Components
+## Operator sequence
 
-| Component | Identity |
-|---|---|
-| Shared base | `qwen2.5:7b-instruct-q4_K_M` |
-| Shared NetTAP Network Intelligence Model | `nettap-ai:0.3.0-rc.6` |
-| Network profile | Workspace Model ID `nettap-network-visibility` over the combined model |
-| Packet profile | Workspace Model ID `nettap-packet-expert` over the combined model |
-| Local UI | `127.0.0.1:3100` |
-| Evidence Workspace | `127.0.0.1:3200` with generated bearer token |
-| Network launcher | `127.0.0.1:3000` |
-| Packet launcher | `127.0.0.1:3001` |
-| Production gateway | HTTPS port `8443` by default |
+1. Start with the platform command in the macOS or Windows guide.
+2. Complete the generated administrator-password activation.
+3. Confirm `./scripts/nettap-ai health` and the platform verifier pass.
+4. Use chat for objectives and supported evidence attachments.
+5. Back up before every update; preserve reports and audit records.
+6. Apply only an approved release commit/package and test rollback.
 
-## Installation
+All supported lifecycle commands, logs, data locations, authentication recovery, backup/restore, GitHub maintenance and release evidence are in the [Administrator guide](ADMINISTRATION.md). Architecture and evidence limitations are in [Application architecture](ARCHITECTURE.md) and [Integrated evidence ingestion](EVIDENCE_CASE_SERVICE.md). Platform steps are in [macOS deployment](MACOS_DEPLOYMENT.md) and [Windows/WSL2 deployment](WINDOWS_DEPLOYMENT.md).
 
-Use [macOS deployment](MACOS_DEPLOYMENT.md) or [Windows deployment](WINDOWS_DEPLOYMENT.md). Existing Packet Expert users must use [the migration guide](MIGRATION.md).
-
-## Administrator activation
-
-The first start generates a unique local credential. Change it, prove the old value fails, and run `./scripts/finalize-admin.sh --confirm`. A populated Open WebUI volume keeps its existing users and passwords. The platform never restores a shared default password.
-
-## Routine commands
-
-```bash
-./scripts/nettap-ai status
-./scripts/nettap-ai health
-./scripts/nettap-ai update-models --confirm
-./scripts/nettap-ai provision-assistants --confirm
-./scripts/nettap-ai backup /secure/backup/path --confirm-stop
-./scripts/nettap-ai stop
-```
-
-The compatibility command `./scripts/nettap-packet-expert` delegates to the unified CLI.
-
-## Model and profile management
-
-The combined Ollama policy loads when `nettap-ai` is created. Startup then reconciles supplemental Markdown and matching Workspace Model attachments through supported Open WebUI APIs and proves offline retrieval before enabling the launchers. Both profiles use the same Ollama model. After a reviewed Git change, run `./scripts/nettap-ai provision-assistants --confirm`; the fingerprint prevents unnecessary repeated ingestion.
-
-Follow [assistant customization](ASSISTANT_CUSTOMIZATION.md) and [knowledge management](KNOWLEDGE_MANAGEMENT.md). Keep the global application suggestions broad; the launchers and Workspace Models provide assistant-specific starting points.
-
-## Backup
-
-```bash
-./scripts/backup.sh /secure/backup/path --confirm-stop
-```
-
-The command stops the application, archives the shared Open WebUI and Ollama volumes, records model and image identity, produces checksums, and restarts the prior mode. The backup contains accounts, chats, imported knowledge, settings, audit logs, and model data. Protect it as sensitive customer data.
-
-## Restore
-
-Restore never overwrites a volume:
-
-```bash
-./scripts/restore.sh /secure/backup/path --target-prefix customer-test
-```
-
-The restored volumes remain unconnected until an administrator reviews the manifest and explicitly attaches them through an approved recovery procedure.
-
-## Updates
-
-1. Back up the current release and `.env`.
-2. Record the commit, image digests, model IDs, assistant manifests, and knowledge hashes.
-3. Apply only an approved release.
-4. Rebuild the one shared NetTAP Network Intelligence Model.
-5. Run static, behavioral, runtime, storage, launcher, profile/knowledge-isolation, backup, restore, and rollback checks.
-6. Preserve the prior release and volumes until acceptance is signed.
-
-Changing the base model requires a separate model-evaluation release. Do not combine it with a repository or database migration.
-
-## Troubleshooting
-
-### Port already in use
-
-Run `./scripts/inventory-macos.sh` on macOS. Identify the owning process before stopping anything. The platform requires local ports 3000, 3001, 3100, and 3200 unless `.env` is deliberately changed.
-
-### Old suggestions remain
-
-Run `./scripts/nettap-ai provision-assistants --confirm`, then inspect the managed profile and provisioning state. The command reconciles reviewed suggestions and model defaults without deleting accounts or chats. Do not delete the Open WebUI volume to repair suggestions.
-
-### One profile is missing
-
-Run `./scripts/nettap-ai update-models --confirm` and inspect `ollama list` for `nettap-ai:0.3.0-rc.6`. The update also refreshes the pinned offline embedding cache, reconciles the managed profiles and evidence tool, and—after those checks pass—retires older NetTAP container tags. Review the provisioning state and rerun the behavior tests. Do not create an unversioned substitute model from the UI.
-
-### Existing login fails
-
-Do not expect the generated bootstrap credential to reset a populated volume.
-Run `./scripts/recover-admin.sh --confirm`; it preserves a database backup,
-recovers the single administrator under the canonical non-personal identity,
-rotates sessions, and produces a new one-time credential. Then rerun the
-platform start command and complete normal password replacement and
-finalization. Follow [authentication](AUTHENTICATION.md) for the full boundary.
-
-### Assistant launcher repeatedly restarts
-
-Inspect the launcher logs before changing persistent state:
-
-```bash
-docker compose --env-file .env -f compose.yaml -f compose.local.yaml logs --tail=100 assistant-launcher
-```
-
-The local profile intentionally drops all Linux capabilities and adds back only
-`NET_BIND_SERVICE`. The official Caddy executable carries that file capability;
-without it in the bounding set, Linux rejects `exec caddy` with `Operation not
-permitted` before the Caddyfile is loaded. Do not remove
-`no-new-privileges:true`, grant broader capabilities, or delete application
-volumes. After installing the corrected Compose profile, run
-`./scripts/nettap-ai repair-local`. It recreates the browser-facing services,
-checks all four loopback bindings and endpoints, prints bounded diagnostics on
-failure, and runs canonical macOS verification without redownloading the model.
-
-### Live telemetry appears unavailable
-
-That is the correct default. The release does not include a live NetTAP connector. A separate approved integration must supply current evidence and its provenance.
-
-## Production controls
-
-Production requires immutable image digests, matching security-scan evidence, customer TLS, finalized administrator activation, preflight, runtime verification, backup acceptance, external approvals, signed artifacts, and authorized release acceptance. See [commercial release gates](COMMERCIAL_RELEASE_GATES.md) and [tool security](TOOL_SECURITY.md).
+The retired ports 3000, 3001 and 3200 are not part of RC7. Do not restart `assistant-launcher`, expose the evidence service or create separate model downloads.

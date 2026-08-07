@@ -18,9 +18,7 @@ def main() -> None:
         repository,
         config.max_records,
         max_upload_bytes=config.max_upload_bytes,
-        open_webui_public_url=config.open_webui_public_url,
-        network_visibility_profile=config.network_visibility_profile,
-        packet_expert_profile=config.packet_expert_profile,
+        operations_profile=config.operations_profile,
     )
     serve(
         config.host,

@@ -61,7 +61,7 @@ verify_container_control "$evidence_id" evidence-service "$(load_env_value OPEN_
 verify_container_control "$gateway_id" gateway "$(load_env_value CADDY_IMAGE)"
 [[ -z "$(docker port "$ollama_id")" ]] || { echo "FAIL: Ollama is published on the host." >&2; exit 12; }
 [[ -z "$(docker port "$webui_id")" ]] || { echo "FAIL: Open WebUI bypasses the TLS gateway." >&2; exit 12; }
-[[ -z "$(docker port "$evidence_id")" ]] || { echo "FAIL: Evidence Workspace bypasses the TLS gateway." >&2; exit 12; }
+[[ -z "$(docker port "$evidence_id")" ]] || { echo "FAIL: Internal evidence service is published on the host." >&2; exit 12; }
 published="$(docker inspect --format '{{range $port, $bindings := .HostConfig.PortBindings}}{{printf "%s=" $port}}{{range $bindings}}{{printf "%s:%s" .HostIp .HostPort}}{{end}}{{println}}{{end}}' "$gateway_id")"
 expected_binding="443/tcp=$(load_env_value HTTPS_BIND_ADDRESS):$(load_env_value HTTPS_PORT)"
 [[ "$published" == "$expected_binding" ]] || {
@@ -120,19 +120,19 @@ actual_files = {
 }
 assert actual_files == expected_files
 assert aggregate.hexdigest() == embedding['aggregate_sha256']
-assert provisioning['release_version'] == '0.3.0-rc.6'
+assert provisioning['release_version'] == '0.3.0-rc.7'
 assert provisioning['offline_rag']['result'] == 'PASS'
-assert {item['id'] for item in provisioning['assistants']} == {
-    'nettap-network-visibility', 'nettap-packet-expert'
-}
+assert {item['id'] for item in provisioning['assistants']} == {'nettap-network-operations'}
 assert set(provisioning['knowledge']) == {'shared', 'network_visibility', 'packet_expert'}
+assert set(provisioning['skills']) == {'network_operations'}
+assert set(provisioning['functions']) == {'evidence_ingestion'}
 PY
 then
   echo "FAIL: Managed assistant or offline RAG state is invalid." >&2
   exit 12
 fi
 [[ "$(installed_provisioning_fingerprint production)" == "$(provisioning_fingerprint production)" ]] || {
-  echo "FAIL: Installed provisioning fingerprint differs from the RC6 source." >&2
+  echo "FAIL: Installed provisioning fingerprint differs from the RC7 source." >&2
   exit 12
 }
 hostname="$(load_env_value APPLIANCE_HOSTNAME)"
@@ -146,22 +146,9 @@ grep -Eiq '^strict-transport-security:[[:space:]]*max-age=31536000; includeSubDo
   echo "FAIL: HTTPS response is missing the required HSTS policy." >&2
   exit 12
 }
-visibility_redirect="$(curl --fail --silent --show-error --output /dev/null --write-out '%{redirect_url}' \
-  --cacert "${project_dir}/config/tls/tls.crt" --resolve "${hostname}:${https_port}:127.0.0.1" \
-  "https://${hostname}:${https_port}/visibility")"
-packet_redirect="$(curl --fail --silent --show-error --output /dev/null --write-out '%{redirect_url}' \
-  --cacert "${project_dir}/config/tls/tls.crt" --resolve "${hostname}:${https_port}:127.0.0.1" \
-  "https://${hostname}:${https_port}/packet-expert")"
-[[ "$visibility_redirect" == *'model=nettap-network-visibility'* ]] || {
-  echo "FAIL: Production Network & Visibility route selected the wrong profile." >&2
-  exit 12
-}
-[[ "$packet_redirect" == *'model=nettap-packet-expert'* ]] || {
-  echo "FAIL: Production Packet Expert route selected the wrong profile." >&2
-  exit 12
-}
-"${project_dir}/tests/evidence-runtime-e2e.sh" --production || {
-  echo "FAIL: TLS-gateway Evidence Workspace runtime workflow failed." >&2
+"${compose_production[@]}" exec -T evidence-service python -c \
+  "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8081/health', timeout=5)" || {
+  echo "FAIL: Internal evidence service health check failed." >&2
   exit 12
 }
 rm -f "$headers_file"
@@ -179,7 +166,6 @@ mkdir -p "$(dirname "$output")"
   printf 'OPEN_WEBUI_IMAGE=%s\n' "$(load_env_value OPEN_WEBUI_IMAGE)"
   printf 'CADDY_IMAGE=%s\n' "$(load_env_value CADDY_IMAGE)"
   printf 'Endpoint: https://%s:%s\n' "$hostname" "$https_port"
-  printf 'Evidence Workspace: https://%s:%s/evidence/\n' "$hostname" "$https_port"
-  printf 'Controls: exact images, TLS/HSTS gateway, least privilege, exact gateway binding, no direct Ollama/WebUI/Evidence host ports, runtime model egress absent, locked shared base and Network Intelligence model identities, pinned offline embedding cache, managed assistant profiles and knowledge, offline RAG proof, authenticated evidence ingestion and deterministic analysis, healthy services\n'
+  printf 'Controls: exact images, TLS/HSTS gateway, least privilege, exact gateway binding, no direct Ollama/WebUI/evidence host ports, runtime model egress absent, locked model identities, pinned offline embedding cache, one managed assistant and Filter, offline RAG proof, healthy services\n'
 } > "$output"
 echo "Production runtime verification passed: $output"

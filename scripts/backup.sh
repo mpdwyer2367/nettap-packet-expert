@@ -42,7 +42,7 @@ restart_application() {
     if [[ "$mode" == production ]]; then
       "${compose_production[@]}" up -d ollama open-webui evidence-service gateway
     else
-      "${compose_local[@]}" up -d ollama open-webui evidence-service assistant-launcher
+      "${compose_local[@]}" up -d ollama open-webui evidence-service
     fi
     restart_required=false
   fi

@@ -1,4 +1,4 @@
-# NetTAP Network Intelligence 0.3.0-rc.6 acceptance plan
+# NetTAP Network Intelligence 0.3.0-rc.7 acceptance plan
 
 RC6 is the validated-evidence integration candidate. It is eligible for
 controlled colleague evaluation only; it is not production-certified or
@@ -6,8 +6,8 @@ approved for commercial distribution.
 
 ## Candidate identity
 
-- Release: `0.3.0-rc.6`
-- Ollama model: `nettap-ai:0.3.0-rc.6`
+- Release: `0.3.0-rc.7`
+- Ollama model: `nettap-ai:0.3.0-rc.7`
 - One shared Qwen2.5 7B weight set
 - Open WebUI profiles: `nettap-network-visibility` and `nettap-packet-expert`
 - Evidence tool binding: `server:nettap_evidence`, Packet Expert only

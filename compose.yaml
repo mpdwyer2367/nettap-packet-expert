@@ -86,7 +86,9 @@ services:
         condition: service_healthy
     environment:
       OLLAMA_BASE_URL: http://ollama:11434
-      WEBUI_NAME: "NetTAP Network Intelligence"
+      WEBUI_NAME: "NetTAP Network Observability & Packet Analysis"
+      NETTAP_EVIDENCE_URL: http://evidence-service:8081
+      EVIDENCE_API_TOKEN: ${EVIDENCE_API_TOKEN}
       WEBUI_SECRET_KEY: ${WEBUI_SECRET_KEY}
       WEBUI_AUTH: "True"
       WEBUI_ADMIN_NAME: ${WEBUI_ADMIN_NAME}
@@ -114,7 +116,7 @@ services:
       ENABLE_DIRECT_CONNECTIONS: "False"
       ENABLE_RAG_LOCAL_WEB_FETCH: "False"
       ENABLE_SUBAGENTS: "False"
-      USER_PERMISSIONS_CHAT_FILE_UPLOAD: "False"
+      USER_PERMISSIONS_CHAT_FILE_UPLOAD: "True"
       USER_PERMISSIONS_CHAT_WEB_UPLOAD: "False"
       USER_PERMISSIONS_CHAT_EXPORT: "False"
       USER_PERMISSIONS_CHAT_IMPORT: "False"
@@ -154,11 +156,11 @@ services:
       ENABLE_USER_STATUS: "False"
       RESPONSE_WATERMARK: "AI-generated engineering guidance; verify before use."
       IFRAME_CSP: "default-src 'none'; style-src 'unsafe-inline'; img-src data: blob:; font-src data:; connect-src 'none'; script-src 'none'; frame-src 'none'"
-      DEFAULT_MODELS: ${NETTAP_VISIBILITY_PROFILE}
-      DEFAULT_PINNED_MODELS: ${NETTAP_VISIBILITY_PROFILE},${NETTAP_PACKET_EXPERT_PROFILE}
-      MODEL_ORDER_LIST: "[\"${NETTAP_VISIBILITY_PROFILE}\",\"${NETTAP_PACKET_EXPERT_PROFILE}\",\"${NETTAP_AI_MODEL}\"]"
+      DEFAULT_MODELS: ${NETTAP_OPERATIONS_PROFILE}
+      DEFAULT_PINNED_MODELS: ${NETTAP_OPERATIONS_PROFILE}
+      MODEL_ORDER_LIST: "[\"${NETTAP_OPERATIONS_PROFILE}\",\"${NETTAP_AI_MODEL}\"]"
       WEBUI_BANNERS: >-
-        [{"id":"nettap-network-intelligence-admin-activation-rc6","type":"warning","title":"Complete administrator activation","content":"This installation generated a unique bootstrap credential. Change it in Settings > Account, verify the old credential fails, then run the administrator finalization command before enabling production access.","dismissible":false,"timestamp":1785864000}]
+        [{"id":"nettap-network-intelligence-admin-activation-rc7","type":"warning","title":"Complete administrator activation","content":"This installation generated a unique bootstrap credential. Change it in Settings > Account, verify the old credential fails, then run the administrator finalization command before enabling production access.","dismissible":false,"timestamp":1785864000}]
       DEFAULT_PROMPT_SUGGESTIONS: >-
         [{"title":["Start with","my goal"],"content":"Ask me one simple question to understand what I want to accomplish."},{"title":["Explain this","assistant"],"content":"Briefly explain what this selected NetTAP assistant can help me do."},{"title":["Help me","decide"],"content":"I am not sure where to start. Ask me one important question at a time."}]
     expose: ["8080"]
@@ -203,6 +205,7 @@ services:
       - ./provisioning:/provision:ro
       - ./assistants:/source/assistants:ro
       - ./skills:/source/skills:ro
+      - ./functions:/source/functions:ro
       - ./knowledge:/source/knowledge:ro
       - packet-expert-open-webui-data:/app/backend/data
     networks: [backend]
@@ -233,14 +236,13 @@ services:
       NETTAP_EVIDENCE_DATA_DIR: /data/files
       NETTAP_EVIDENCE_MAX_UPLOAD_BYTES: ${EVIDENCE_MAX_UPLOAD_BYTES}
       NETTAP_EVIDENCE_MAX_RECORDS: ${EVIDENCE_MAX_RECORDS}
-      NETTAP_VISIBILITY_PROFILE: ${NETTAP_VISIBILITY_PROFILE}
-      NETTAP_PACKET_EXPERT_PROFILE: ${NETTAP_PACKET_EXPERT_PROFILE}
+      NETTAP_OPERATIONS_PROFILE: ${NETTAP_OPERATIONS_PROFILE}
     entrypoint: ["python", "-m", "case_service"]
     volumes:
       - ./case_service:/service/case_service:ro
       - packet-expert-evidence-data:/data
     expose: ["8081"]
-    networks: [backend, user-access]
+    networks: [backend]
     read_only: true
     tmpfs:
       - /tmp:size=64m,mode=1777
@@ -262,8 +264,13 @@ services:
 networks:
   backend:
     internal: true
+  # Host-facing services attach here so Docker Desktop can forward the
+  # localhost-only bindings declared by compose.local.yaml. Do not mark this
+  # network internal: internal networks have no connection to host interfaces.
+  # The backend remains isolated above, and no service port is published unless
+  # an explicit deployment overlay (local or production) declares it.
   user-access:
-    internal: true
+    driver: bridge
 
 volumes:
   packet-expert-ollama-data: {}

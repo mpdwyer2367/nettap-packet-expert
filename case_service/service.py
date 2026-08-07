@@ -27,16 +27,12 @@ class EvidenceService:
         repository: Repository,
         max_records: int,
         max_upload_bytes: int = 50 * 1024 * 1024,
-        open_webui_public_url: str = "http://127.0.0.1:3100",
-        network_visibility_profile: str = "nettap-network-visibility",
-        packet_expert_profile: str = "nettap-packet-expert",
+        operations_profile: str = "nettap-network-operations",
     ):
         self.repository = repository
         self.max_records = max_records
         self.max_upload_bytes = max_upload_bytes
-        self.open_webui_public_url = open_webui_public_url.rstrip("/")
-        self.network_visibility_profile = network_visibility_profile
-        self.packet_expert_profile = packet_expert_profile
+        self.operations_profile = operations_profile
 
     def configuration(self) -> dict[str, Any]:
         return {
@@ -47,13 +43,11 @@ class EvidenceService:
             "max_upload_bytes": self.max_upload_bytes,
             "max_records_per_source": self.max_records,
             "assistant_integration": {
-                "open_webui_url": self.open_webui_public_url,
-                "network_visibility_profile": self.network_visibility_profile,
-                "packet_expert_profile": self.packet_expert_profile,
+                "operations_profile": self.operations_profile,
                 "tool_server_id": "nettap_evidence",
                 "tool_binding": "server:nettap_evidence",
                 "raw_evidence_sent_to_model": False,
-                "handoff": "case-id-and-minimized-context",
+                "handoff": "automatic-chat-attachment-ingestion",
             },
             "source_types": [
                 {"id": "pcap", "label": "Classic PCAP", "accepted": ".pcap; Ethernet or raw IP", "parser": "built-in packet metadata", "limitations": "No PCAPNG, payload interpretation or decryption"},

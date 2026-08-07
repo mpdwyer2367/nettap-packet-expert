@@ -39,7 +39,7 @@ class ArchiveTreeTests(unittest.TestCase):
                 "git",
                 "archive",
                 "--format=tar.gz",
-                "--prefix=nettap-ai-suite-0.3.0-rc.6/",
+                "--prefix=nettap-ai-suite-0.3.0-rc.7/",
                 f"--output={self.archive}",
                 "HEAD",
             ],
@@ -57,7 +57,7 @@ class ArchiveTreeTests(unittest.TestCase):
                 str(VERIFIER),
                 str(archive),
                 "--expected-prefix",
-                "nettap-ai-suite-0.3.0-rc.6",
+                "nettap-ai-suite-0.3.0-rc.7",
                 "--expected-tree",
                 tree or self.tree,
             ],
@@ -79,7 +79,7 @@ class ArchiveTreeTests(unittest.TestCase):
         duplicate = self.root / "duplicate.tar.gz"
         with tarfile.open(duplicate, "w:gz") as archive:
             for content in (b"first\n", b"second\n"):
-                member = tarfile.TarInfo("nettap-ai-suite-0.3.0-rc.6/README.md")
+                member = tarfile.TarInfo("nettap-ai-suite-0.3.0-rc.7/README.md")
                 member.size = len(content)
                 member.mode = 0o644
                 archive.addfile(member, io.BytesIO(content))
