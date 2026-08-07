@@ -4,7 +4,7 @@
 
 - Apple Silicon or Intel macOS supported by current Docker Desktop
 - Docker Desktop with Compose v2 running
-- 16 GB RAM recommended, 6 CPU cores recommended and at least 15 GiB free disk
+- 16 GB host RAM minimum (24 GB recommended), 12 GB Docker memory, 6 CPU cores and at least 20 GiB free disk
 - Internet access during the first controlled installation only
 
 ## Clean installation
@@ -16,7 +16,7 @@ git rev-parse HEAD
 ./scripts/nettap-ai start-local
 ```
 
-The start command creates local secrets, downloads pinned container images and the approved Qwen2.5 7B base, caches the exact embedding revision, builds `nettap-ai:0.3.0-rc.7`, provisions the combined assistant and knowledge, removes temporary egress and starts the offline runtime. Cached downloads are reused after an interrupted installation.
+The start command creates local secrets, downloads pinned container images and the approved multimodal Qwen3.5 9B base, caches the exact embedding revision, builds `nettap-ai:0.3.0-rc.8`, provisions the combined assistant and knowledge, removes temporary egress and starts the offline runtime. Cached downloads are reused after an interrupted installation.
 
 Open <http://127.0.0.1:3100>. Use `admin@nettap.local` and the unique password in `.bootstrap-admin-password`. Change it immediately, sign out, verify the generated value fails, then run:
 
@@ -36,7 +36,7 @@ The automated verifier checks one current NetTAP tag, service provenance, one lo
 
 ## Evidence test
 
-In the chat, attach an authorized `.pcap`, `.json`, `.jsonl`, `.ndjson`, `.log` or `.txt` file and state the troubleshooting or investigation goal. Confirm the answer identifies data state, evidence hash/ID, quality limitations, observations, evidence-supported hypotheses and next actions. Do not upload secrets or unauthorized traffic.
+In the chat, attach an authorized `.pcap`, `.json`, `.jsonl`, `.ndjson`, `.log`, `.txt`, `.png`, `.jpg`, `.jpeg` or `.webp` file and state the troubleshooting or investigation goal. Confirm record analysis identifies evidence hash/ID and quality limitations; confirm image analysis distinguishes visible labels/topology from inference. Do not upload secrets or unauthorized traffic.
 
 ## Upgrade
 

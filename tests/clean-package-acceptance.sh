@@ -61,7 +61,7 @@ version="$(sed -n 's/^Version: //p' "$provenance")"
 source_commit="$(sed -n 's/^Commit: //p' "$provenance")"
 source_tree="$(sed -n 's/^Tree: //p' "$provenance")"
 package_sha256="$(sed -n 's/^SHA256: //p' "$provenance")"
-[[ "$version" == "0.3.0-rc.7" ]] || { echo "ERROR: Expected package version 0.3.0-rc.7; received $version." >&2; exit 4; }
+[[ "$version" == "0.3.0-rc.8" ]] || { echo "ERROR: Expected package version 0.3.0-rc.8; received $version." >&2; exit 4; }
 [[ "$source_commit" =~ ^[0-9a-f]{40}$ && "$source_tree" =~ ^[0-9a-f]{40}$ && "$package_sha256" =~ ^[0-9a-f]{64}$ ]] || {
   echo "ERROR: Candidate provenance is incomplete." >&2
   exit 4

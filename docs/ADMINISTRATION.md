@@ -45,7 +45,7 @@ Useful inspection commands:
 ```bash
 docker compose --env-file .env -f compose.yaml -f compose.local.yaml ps -a
 docker compose --env-file .env -f compose.yaml -f compose.local.yaml exec -T ollama ollama list
-docker compose --env-file .env -f compose.yaml -f compose.local.yaml exec -T ollama ollama show nettap-ai:0.3.0-rc.7
+docker compose --env-file .env -f compose.yaml -f compose.local.yaml exec -T ollama ollama show nettap-ai:0.3.0-rc.8
 docker volume ls --filter label=com.docker.compose.project=nettap-network-intelligence
 docker compose --env-file .env -f compose.yaml -f compose.local.yaml config
 curl -fsS http://127.0.0.1:3100/health
@@ -53,7 +53,7 @@ curl -fsS http://127.0.0.1:3100/health
 
 ## Backup and rollback
 
-Backups include Ollama, Open WebUI and evidence volumes plus a manifest and checksums. Keep `.env`, TLS keys and backup archives in an approved secrets/backup system, not Git. Restore creates disconnected volumes under a new prefix so an administrator can validate them before a planned cutover. Rollback means deploying the prior signed source/package with its matching images, model identity and schema-compatible backup; never relabel an RC7 model as an older release.
+Backups include Ollama, Open WebUI and evidence volumes plus a manifest and checksums. Keep `.env`, TLS keys and backup archives in an approved secrets/backup system, not Git. Restore creates disconnected volumes under a new prefix so an administrator can validate them before a planned cutover. Rollback means deploying the prior signed source/package with its matching images, model identity and schema-compatible backup; never relabel an RC8 model as an older release.
 
 ## GitHub maintenance
 

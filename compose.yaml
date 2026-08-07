@@ -84,6 +84,8 @@ services:
     depends_on:
       ollama:
         condition: service_healthy
+      evidence-service:
+        condition: service_healthy
     environment:
       OLLAMA_BASE_URL: http://ollama:11434
       WEBUI_NAME: "NetTAP Network Observability & Packet Analysis"
@@ -160,7 +162,7 @@ services:
       DEFAULT_PINNED_MODELS: ${NETTAP_OPERATIONS_PROFILE}
       MODEL_ORDER_LIST: "[\"${NETTAP_OPERATIONS_PROFILE}\",\"${NETTAP_AI_MODEL}\"]"
       WEBUI_BANNERS: >-
-        [{"id":"nettap-network-intelligence-admin-activation-rc7","type":"warning","title":"Complete administrator activation","content":"This installation generated a unique bootstrap credential. Change it in Settings > Account, verify the old credential fails, then run the administrator finalization command before enabling production access.","dismissible":false,"timestamp":1785864000}]
+        [{"id":"nettap-network-intelligence-admin-activation-rc8","type":"warning","title":"Complete administrator activation","content":"This installation generated a unique bootstrap credential. Change it in Settings > Account, verify the old credential fails, then run the administrator finalization command before enabling production access.","dismissible":false,"timestamp":1785864000}]
       DEFAULT_PROMPT_SUGGESTIONS: >-
         [{"title":["Start with","my goal"],"content":"Ask me one simple question to understand what I want to accomplish."},{"title":["Explain this","assistant"],"content":"Briefly explain what this selected NetTAP assistant can help me do."},{"title":["Help me","decide"],"content":"I am not sure where to start. Ask me one important question at a time."}]
     expose: ["8080"]
@@ -188,8 +190,6 @@ services:
     depends_on:
       open-webui:
         condition: service_healthy
-      evidence-service:
-        condition: service_healthy
     environment:
       OPEN_WEBUI_URL: http://open-webui:8080
       WEBUI_ADMIN_EMAIL: ${WEBUI_ADMIN_EMAIL}
@@ -199,8 +199,6 @@ services:
       NETTAP_PROVISIONING_CHECKSUMS: /provision/knowledge-sources.sha256
       NETTAP_PROVISIONING_SOURCE_ROOT: /source
       NETTAP_PROVISIONING_STATE: /app/backend/data/nettap-provisioning-state.json
-      NETTAP_EVIDENCE_TOOL_URL: http://evidence-service:8081
-      EVIDENCE_API_TOKEN: ${EVIDENCE_API_TOKEN}
     volumes:
       - ./provisioning:/provision:ro
       - ./assistants:/source/assistants:ro

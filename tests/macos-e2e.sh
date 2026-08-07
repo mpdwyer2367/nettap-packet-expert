@@ -21,7 +21,7 @@ source "${project_dir}/scripts/common.sh"
 nettap_model="$(load_env_value NETTAP_AI_MODEL)"
 web_port="$(load_env_value WEB_PORT)"
 
-"${compose[@]}" exec -T ollama ollama show "$nettap_model" | grep -q 'You are the NetTAP Network Intelligence Model'
+"${compose[@]}" exec -T ollama ollama show "$nettap_model" | grep -q 'You are the NetTAP Network Observability & Packet Analysis Model'
 
 admin_count="$("${compose[@]}" exec -T open-webui python - <<'PY'
 import sqlite3

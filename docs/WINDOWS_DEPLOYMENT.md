@@ -5,7 +5,7 @@
 - Supported 64-bit Windows with virtualization enabled
 - WSL2 and Docker Desktop using the WSL2 backend
 - Git inside the selected WSL2 distribution
-- 16 GB RAM recommended and at least 15 GiB free disk
+- 16 GB host RAM minimum (24 GB recommended), 12 GB Docker memory and at least 20 GiB free disk
 - Internet access during the first controlled installation only
 
 ## Recommended WSL2 installation
@@ -47,7 +47,7 @@ The recommended release-acceptance path is WSL2 because the same shell scripts a
 docker compose --env-file .env -f compose.yaml -f compose.local.yaml logs --tail=200 open-webui ollama evidence-service
 ```
 
-Attach the same representative normalized PCAP, log and flow fixtures used for macOS acceptance. Record Windows version, WSL distribution, Docker Desktop version, architecture, Git commit, package checksum, model ID and the generated verification report.
+Attach the same representative PCAP, log, normalized flow and network-image fixtures used for macOS acceptance. Record Windows version, WSL distribution, Docker Desktop version, architecture, Git commit, package checksum, model ID and the generated verification report.
 
 ## Troubleshooting
 

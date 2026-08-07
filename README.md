@@ -2,7 +2,7 @@
 
 NetTAP Network Observability & Packet Analysis is a private, locally hosted operations assistant for network engineering, network troubleshooting, security operations and packet-derived forensic analysis.
 
-Release candidate `0.3.0-rc.7` replaces the earlier multi-page RC6 design with one authenticated Open WebUI experience at `http://127.0.0.1:3100`. The public launcher pages and Evidence Workspace on ports 3000, 3001 and 3200 have been removed.
+Release candidate `0.3.0-rc.8` replaces the earlier multi-page RC6 design with one authenticated Open WebUI experience at `http://127.0.0.1:3100`. The public launcher pages and Evidence Workspace on ports 3000, 3001 and 3200 have been removed.
 
 ## One product workflow
 
@@ -24,13 +24,14 @@ The same assistant can:
 - plan TAP, bypass TAP, SPAN, NPB and telemetry acquisition;
 - troubleshoot availability, connectivity, latency and loss;
 - ingest supported packet captures, logs and normalized flow records from the chat attachment control;
+- interpret authorized PNG, JPEG and WebP network diagrams while separating visible facts from inference;
 - assess capture quality, provenance and collection gaps;
 - develop evidence-supported security and forensic hypotheses;
 - provide reviewable implementation, validation and rollback guidance.
 
 ## Evidence boundary
 
-Attached `.pcap`, `.json`, `.jsonl`, `.ndjson`, `.log` and `.txt` files are intercepted by a reviewed Open WebUI Filter. The Filter sends the file over the private Docker backend to the deterministic evidence service. The service validates, hashes, parses and analyzes it, retains original evidence in its dedicated volume and returns minimized context. Raw packet payloads, credentials and decryption secrets are not placed in the model prompt.
+Attached `.pcap`, `.json`, `.jsonl`, `.ndjson`, `.log` and `.txt` evidence files are intercepted by a reviewed Open WebUI Filter and sent over the private Docker backend to the deterministic evidence service. Authorized `.png`, `.jpg`, `.jpeg` and `.webp` network images are signature-validated and sent directly to the pinned multimodal model as in-memory image content. Raw packet payloads, credentials and decryption secrets are not placed in the model prompt.
 
 Classic PCAP with Ethernet or raw-IP link types is supported. PCAPNG and native binary IPFIX/NetFlow/sFlow are not silently guessed; normalize those sources with an approved external process before ingestion. The built-in service does not decrypt payloads, execute malware, query threat-intelligence services or claim live monitoring.
 
@@ -40,16 +41,18 @@ Classic PCAP with Ethernet or raw-IP link types is supported. PCAPNG and native 
 |---|---|---|
 | Open WebUI | Authentication, chat, attachments, history and administration | `127.0.0.1:3100` locally |
 | Managed assistant | Combined observability, packet, network and security workflow | Selected and pinned automatically |
-| `nettap-ai:0.3.0-rc.7` | One custom model manifest over the approved Qwen2.5 7B base blobs | Internal Ollama service |
+| `nettap-ai:0.3.0-rc.8` | One custom model manifest over the approved multimodal Qwen3.5 9B base blobs | Internal Ollama service |
 | Managed Filter | Routes supported chat attachments to deterministic ingestion | Transparent inside chat |
 | Evidence service | Parsing, hashes, provenance, normalized observations and deterministic findings | Internal Docker network only |
 | Offline RAG | Combined NetTAP shared, visibility and packet-analysis knowledge | Attached automatically |
 
 The repository contains the model definition, prompts, Skill, reviewed knowledge, Filter source, evidence service, provisioning logic, deployment scripts and tests. It does not contain separately fine-tuned weights, customer traffic, credentials, captures or a live NetTAP appliance connector.
 
+Qwen3.5 9B is the RC8 practical default because one 6.6 GB Q4_K_M download provides text reasoning and image understanding in the same local model. Larger variants may improve some tasks but materially increase appliance memory, storage and latency; they require a separately benchmarked product profile rather than an untracked substitution.
+
 ## macOS installation
 
-Requirements: macOS on Apple Silicon or Intel, Docker Desktop with Compose v2, at least 16 GB RAM recommended and 15 GiB free disk.
+Requirements: macOS on Apple Silicon or Intel, Docker Desktop with Compose v2, 16 GB host RAM minimum (24 GB recommended), at least 12 GB assigned to Docker and 20 GiB free disk.
 
 ```bash
 git clone https://github.com/mpdwyer2367/nettap-packet-expert.git
@@ -82,7 +85,7 @@ Start with a plain-language objective. Examples:
 - Help me understand this network problem.
 - Improve network observability for this environment.
 - Troubleshoot packet loss or latency.
-- Analyze the packet capture I attached.
+- Analyze the packet capture or network diagram I attached.
 - Review these logs or flow records for security concerns.
 - I am not sure where to start.
 
@@ -115,8 +118,8 @@ Never commit `.env`, `.bootstrap-admin-password`, `.evidence-api-token`, TLS pri
 
 ## Validation status
 
-Source-level unit and configuration tests can validate parsers, minimization, provisioning behavior and Compose policy. This candidate is not production-certified until the exact Git commit and package pass clean macOS and Windows/WSL2 runtime acceptance, attachment ingestion with representative PCAP/log/flow files, restart, backup, restore, rollback, SBOM/CVE policy, penetration-test disposition, signed-artifact verification and authorized commercial release gates.
+Source-level unit and configuration tests can validate parsers, minimization, image validation, provisioning behavior and Compose policy. This candidate is not production-certified until the exact Git commit and package pass clean macOS and Windows/WSL2 runtime acceptance, attachment ingestion with representative PCAP/log/flow/image files, restart, backup, restore, rollback, SBOM/CVE policy, penetration-test disposition, signed-artifact verification and authorized commercial release gates.
 
-See [architecture](docs/ARCHITECTURE.md), [administrator guide](docs/ADMINISTRATION.md), [authentication](docs/AUTHENTICATION.md), [evidence ingestion](docs/EVIDENCE_CASE_SERVICE.md), [macOS deployment](docs/MACOS_DEPLOYMENT.md), [Windows deployment](docs/WINDOWS_DEPLOYMENT.md), [RC7 acceptance](docs/RC7_ACCEPTANCE_PLAN.md) and [commercial release gates](docs/COMMERCIAL_RELEASE_GATES.md).
+See [architecture](docs/ARCHITECTURE.md), [administrator guide](docs/ADMINISTRATION.md), [authentication](docs/AUTHENTICATION.md), [evidence ingestion](docs/EVIDENCE_CASE_SERVICE.md), [macOS deployment](docs/MACOS_DEPLOYMENT.md), [Windows deployment](docs/WINDOWS_DEPLOYMENT.md), [RC8 acceptance](docs/RC8_ACCEPTANCE_PLAN.md) and [commercial release gates](docs/COMMERCIAL_RELEASE_GATES.md).
 
 Licensed under Apache License 2.0. Copyright NetTAP Technology Limited.

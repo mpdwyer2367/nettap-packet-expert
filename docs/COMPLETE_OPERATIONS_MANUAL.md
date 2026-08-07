@@ -13,4 +13,4 @@ NetTAP Network Intelligence delivers one customer application: NetTAP Network Ob
 
 All supported lifecycle commands, logs, data locations, authentication recovery, backup/restore, GitHub maintenance and release evidence are in the [Administrator guide](ADMINISTRATION.md). Architecture and evidence limitations are in [Application architecture](ARCHITECTURE.md) and [Integrated evidence ingestion](EVIDENCE_CASE_SERVICE.md). Platform steps are in [macOS deployment](MACOS_DEPLOYMENT.md) and [Windows/WSL2 deployment](WINDOWS_DEPLOYMENT.md).
 
-The retired ports 3000, 3001 and 3200 are not part of RC7. Do not restart `assistant-launcher`, expose the evidence service or create separate model downloads.
+The retired ports 3000, 3001 and 3200 are not part of RC8. Do not restart `assistant-launcher`, expose the evidence service or create separate model downloads.

@@ -120,7 +120,7 @@ actual_files = {
 }
 assert actual_files == expected_files
 assert aggregate.hexdigest() == embedding['aggregate_sha256']
-assert provisioning['release_version'] == '0.3.0-rc.7'
+assert provisioning['release_version'] == '0.3.0-rc.8'
 assert provisioning['offline_rag']['result'] == 'PASS'
 assert {item['id'] for item in provisioning['assistants']} == {'nettap-network-operations'}
 assert set(provisioning['knowledge']) == {'shared', 'network_visibility', 'packet_expert'}
@@ -132,7 +132,7 @@ then
   exit 12
 fi
 [[ "$(installed_provisioning_fingerprint production)" == "$(provisioning_fingerprint production)" ]] || {
-  echo "FAIL: Installed provisioning fingerprint differs from the RC7 source." >&2
+  echo "FAIL: Installed provisioning fingerprint differs from the RC8 source." >&2
   exit 12
 }
 hostname="$(load_env_value APPLIANCE_HOSTNAME)"

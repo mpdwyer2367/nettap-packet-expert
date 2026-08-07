@@ -61,15 +61,15 @@ if ($content -match '(?m)^WEBUI_SECRET_KEY=GENERATE_ON_FIRST_START$') {
 }
 
 $defaults = [ordered]@{
-    RELEASE_VERSION = '0.3.0-rc.7'
+    RELEASE_VERSION = '0.3.0-rc.8'
     OLLAMA_IMAGE = 'ollama/ollama:0.32.5'
     OPEN_WEBUI_IMAGE = 'ghcr.io/open-webui/open-webui:v0.11.0'
     CADDY_IMAGE = 'caddy:2.11.4-alpine'
     BACKUP_IMAGE = 'alpine:3.24.1'
-    BASE_MODEL = 'qwen2.5:7b-instruct-q4_K_M'
-    NETTAP_AI_MODEL = 'nettap-ai:0.3.0-rc.7'
-    MODEL_NAME = 'nettap-ai:0.3.0-rc.7'
-    EXPECTED_BASE_MODEL_ID = '845dbda0ea48'
+    BASE_MODEL = 'qwen3.5:9b'
+    NETTAP_AI_MODEL = 'nettap-ai:0.3.0-rc.8'
+    MODEL_NAME = 'nettap-ai:0.3.0-rc.8'
+    EXPECTED_BASE_MODEL_ID = '6488c96fa5fa'
     RETIRE_LEGACY_NETTAP_MODELS = 'true'
     NETTAP_OPERATIONS_PROFILE = 'nettap-network-operations'
     RAG_EMBEDDING_MODEL_ID = 'sentence-transformers/all-MiniLM-L6-v2'
@@ -82,7 +82,7 @@ $defaults = [ordered]@{
     APPLIANCE_HOSTNAME = 'nettap-ai.local'
     JWT_EXPIRES_IN = '8h'
     OLLAMA_CPUS = '6'
-    OLLAMA_MEMORY = '8g'
+        OLLAMA_MEMORY = '12g'
     WEBUI_CPUS = '2'
     WEBUI_MEMORY = '3g'
     EVIDENCE_CPUS = '1'
@@ -98,9 +98,9 @@ $defaults = [ordered]@{
     DEPLOYMENT_MODE = 'local'
 }
 
-$content = $content -replace '(?m)^RELEASE_VERSION=(0\.2\.0-rc\.1|0\.3\.0-rc\.[1-6])$', 'RELEASE_VERSION=0.3.0-rc.7'
-$content = $content -replace '(?m)^MODEL_NAME=(nettap-packet-expert:(0\.1\.0-rc\.8|0\.2\.0-rc\.1|0\.3\.0-rc\.1)|nettap-ai:(latest|0\.3\.0-rc\.[1-6]))$', 'MODEL_NAME=nettap-ai:0.3.0-rc.7'
-$content = $content -replace '(?m)^NETTAP_AI_MODEL=(nettap-packet-expert:[^\s]+|nettap-ai:(latest|0\.3\.0-rc\.[1-6]))$', 'NETTAP_AI_MODEL=nettap-ai:0.3.0-rc.7'
+$content = $content -replace '(?m)^RELEASE_VERSION=(0\.2\.0-rc\.1|0\.3\.0-rc\.[1-7])$', 'RELEASE_VERSION=0.3.0-rc.8'
+$content = $content -replace '(?m)^MODEL_NAME=(nettap-packet-expert:(0\.1\.0-rc\.8|0\.2\.0-rc\.1|0\.3\.0-rc\.1)|nettap-ai:(latest|0\.3\.0-rc\.[1-7]))$', 'MODEL_NAME=nettap-ai:0.3.0-rc.8'
+$content = $content -replace '(?m)^NETTAP_AI_MODEL=(nettap-packet-expert:[^\s]+|nettap-ai:(latest|0\.3\.0-rc\.[1-7]))$', 'NETTAP_AI_MODEL=nettap-ai:0.3.0-rc.8'
 $content = $content -replace '(?m)^RAG_EMBEDDING_MODEL=/app/backend/data/nettap-models/all-MiniLM-L6-v2$', 'RAG_EMBEDDING_MODEL=/app/backend/data/nettap-models/all-MiniLM-L6-v2/1110a243fdf4706b3f48f1d95db1a4f5529b4d41'
 $content = $content -replace '(?m)^APPLIANCE_HOSTNAME=packet-expert\.local$', 'APPLIANCE_HOSTNAME=nettap-ai.local'
 $content = $content -replace '(?m)^WEB_PORT=3001$', 'WEB_PORT=3100'

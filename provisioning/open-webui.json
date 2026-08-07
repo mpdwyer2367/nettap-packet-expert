@@ -1,23 +1,14 @@
 {
   "schema_version": 1,
-  "release_version": "0.3.0-rc.7",
+  "release_version": "0.3.0-rc.8",
   "embedding": {
     "engine": "",
     "model_path": "/app/backend/data/nettap-models/all-MiniLM-L6-v2/1110a243fdf4706b3f48f1d95db1a4f5529b4d41",
     "probe_collection": "shared",
     "probe_query": "What is the NetTAP offline RAG verification marker?",
-    "probe_expected": "NETTAP-RAG-OFFLINE-PROBE-RC7"
+    "probe_expected": "NETTAP-RAG-OFFLINE-PROBE-RC8"
   },
-  "tool_servers": [
-    {
-      "key": "evidence",
-      "id": "nettap_evidence",
-      "name": "NetTAP Internal Evidence Analysis",
-      "description": "Internal read-only access to validated, minimized evidence context. Raw evidence is never returned.",
-      "url_env": "NETTAP_EVIDENCE_TOOL_URL",
-      "openapi_path": "/openapi.json"
-    }
-  ],
+  "tool_servers": [],
   "knowledge_collections": [
     {
       "key": "shared",
@@ -73,7 +64,7 @@
       "knowledge_keys": ["shared", "network_visibility", "packet_expert"],
       "skill_keys": ["network_operations"],
       "function_keys": ["evidence_ingestion"],
-      "tool_keys": ["evidence"],
+      "tool_keys": [],
       "system_prompt_files": [
         "assistants/shared/core-policy.md",
         "assistants/nettap-operations/system-prompt.md"
@@ -81,7 +72,7 @@
       "suggestion_prompts": [
         {"title": ["Help me", "get started"], "content": "I need help with a network or security issue. Ask me one important question at a time."},
         {"title": ["Troubleshoot", "a network problem"], "content": "Help me troubleshoot a network performance, availability or connectivity problem."},
-        {"title": ["Analyze", "attached evidence"], "content": "Analyze the packet capture, log or flow file I attach and produce a professional evidence-supported assessment."},
+        {"title": ["Analyze", "attached evidence"], "content": "Analyze the packet capture, log, flow record or network diagram I attach and produce a professional evidence-supported assessment."},
         {"title": ["Improve", "network visibility"], "content": "Help me design or improve network observability, traffic acquisition and delivery to operations or security tools."}
       ],
       "tags": ["NetTAP", "Network Observability", "Packet Analysis", "Security Operations"]

@@ -1,6 +1,6 @@
 # Colleague evaluation guide
 
-This is a controlled evaluation of `0.3.0-rc.7`, not production approval.
+This is a controlled evaluation of `0.3.0-rc.8`, not production approval.
 
 ```bash
 git clone https://github.com/mpdwyer2367/nettap-packet-expert.git

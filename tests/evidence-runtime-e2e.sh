@@ -148,6 +148,6 @@ assert "raw evidence is retained locally" in report.lower()
 assert "analysis artifact sha-256" in report.lower()
 PY
 
-echo "PASS: authenticated Evidence Workspace runtime workflow (${mode})"
+echo "PASS: authenticated chat evidence-ingestion runtime workflow (${mode})"
 echo "Case ID: $case_id"
 echo "Source SHA-256: $fixture_sha256"

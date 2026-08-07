@@ -37,6 +37,7 @@ MANIFEST_PATH = Path(os.environ.get("NETTAP_PROVISIONING_MANIFEST", "/provision/
 SOURCE_ROOT = Path(os.environ.get("NETTAP_PROVISIONING_SOURCE_ROOT", "/source"))
 STATE_PATH = Path(os.environ.get("NETTAP_PROVISIONING_STATE", "/app/backend/data/nettap-provisioning-state.json"))
 CHECKSUM_PATH = Path(os.environ.get("NETTAP_PROVISIONING_CHECKSUMS", "/provision/knowledge-sources.sha256"))
+RETIRED_MANAGED_TOOL_SERVER_IDS = {"nettap_evidence"}
 
 
 def load_manifest() -> dict:
@@ -495,7 +496,7 @@ def assistant_payload(
         "filterIds": [functions[key]["id"] for key in assistant.get("function_keys", [])],
         "capabilities": {
             "file_context": False,
-            "vision": False,
+            "vision": True,
             "file_upload": True,
             "web_search": False,
             "image_generation": False,
@@ -545,6 +546,9 @@ def reconcile_assistant(
             "nettap-ai:0.3.0-rc.2",
             "nettap-ai:0.3.0-rc.3",
             "nettap-ai:0.3.0-rc.4",
+            "nettap-ai:0.3.0-rc.5",
+            "nettap-ai:0.3.0-rc.6",
+            "nettap-ai:0.3.0-rc.7",
             required_env("NETTAP_AI_MODEL"),
         }
         if not managed and (
@@ -578,7 +582,8 @@ def reconcile_tool_servers(client: ApiClient, manifest: dict, fingerprint: str) 
     """Register only reviewed read-only OpenAPI servers through the admin API."""
     _, current = client.request("GET", "/api/v1/configs/tool_servers")
     connections = current.get("TOOL_SERVER_CONNECTIONS") or []
-    managed_ids = {item["id"] for item in manifest.get("tool_servers", [])}
+    active_ids = {item["id"] for item in manifest.get("tool_servers", [])}
+    managed_ids = active_ids | RETIRED_MANAGED_TOOL_SERVER_IDS
     retained = []
     for connection in connections:
         info = connection.get("info") or {}
@@ -640,13 +645,13 @@ def reconcile_tool_servers(client: ApiClient, manifest: dict, fingerprint: str) 
         (item.get("info") or {}).get("id")
         for item in configured.get("TOOL_SERVER_CONNECTIONS") or []
     }
-    if managed_ids - configured_ids:
+    if active_ids - configured_ids:
         raise ProvisioningError(
-            f"Open WebUI did not retain managed tool server(s): {sorted(managed_ids - configured_ids)}"
+            f"Open WebUI did not retain managed tool server(s): {sorted(active_ids - configured_ids)}"
         )
     _, visible = client.request("GET", "/api/v1/tools/")
     visible_ids = {item.get("id") for item in visible}
-    expected_bindings = {f"server:{item}" for item in managed_ids}
+    expected_bindings = {f"server:{item}" for item in active_ids}
     if expected_bindings - visible_ids:
         raise ProvisioningError(
             f"managed evidence tool is not available to the administrator: {sorted(expected_bindings - visible_ids)}"

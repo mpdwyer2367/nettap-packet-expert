@@ -27,7 +27,7 @@ class OpenWebUIState:
         self.functions = {}
         self.tool_connections = []
         self.uploads = 0
-        self.rag_marker = "NETTAP-RAG-OFFLINE-PROBE-RC7"
+        self.rag_marker = "NETTAP-RAG-OFFLINE-PROBE-RC8"
         self.config = {
             "DEFAULT_MODELS": "",
             "DEFAULT_PINNED_MODELS": "",
@@ -218,8 +218,8 @@ class ProvisioningTest(unittest.TestCase):
         self.env.update({
             "OPEN_WEBUI_URL": f"http://127.0.0.1:{self.server.server_port}",
             "WEBUI_ADMIN_EMAIL": "admin@nettap.local",
-            "RELEASE_VERSION": "0.3.0-rc.7",
-            "NETTAP_AI_MODEL": "nettap-ai:0.3.0-rc.7",
+            "RELEASE_VERSION": "0.3.0-rc.8",
+            "NETTAP_AI_MODEL": "nettap-ai:0.3.0-rc.8",
             "NETTAP_PROVISIONING_MANIFEST": str(ROOT / "provisioning/open-webui.json"),
             "NETTAP_PROVISIONING_CHECKSUMS": str(ROOT / "provisioning/knowledge-sources.sha256"),
             "NETTAP_PROVISIONING_SOURCE_ROOT": str(ROOT),
@@ -253,28 +253,16 @@ class ProvisioningTest(unittest.TestCase):
         self.assertEqual(set(Handler.state.models), {"nettap-network-operations"})
         self.assertEqual(set(Handler.state.skills), {"nettap-network-operations"})
         self.assertEqual(set(Handler.state.functions), {"nettap_evidence_ingestion"})
-        self.assertEqual(len(Handler.state.tool_connections), 1)
-        self.assertEqual(
-            (Handler.state.tool_connections[0]["info"])["id"], "nettap_evidence"
-        )
-        self.assertEqual(
-            Handler.state.tool_connections[0]["config"]["access_grants"],
-            [
-                {
-                    "principal_type": "user",
-                    "principal_id": "admin-user-id",
-                    "permission": "read",
-                }
-            ],
-        )
+        self.assertEqual(Handler.state.tool_connections, [])
         for skill in Handler.state.skills.values():
             self.assertTrue(skill["content"].startswith("# NetTAP "))
             self.assertNotIn("\nname: nettap-", skill["content"])
         for model in Handler.state.models.values():
-            self.assertEqual(model["base_model_id"], "nettap-ai:0.3.0-rc.7")
+            self.assertEqual(model["base_model_id"], "nettap-ai:0.3.0-rc.8")
             self.assertEqual(model["params"]["function_calling"], "legacy")
             self.assertEqual(len(model["meta"]["knowledge"]), 3)
             self.assertEqual(len(model["meta"]["skillIds"]), 1)
+            self.assertTrue(model["meta"]["capabilities"]["vision"])
         self.assertEqual(
             Handler.state.models["nettap-network-operations"]["meta"]["skillIds"],
             ["nettap-network-operations"],
@@ -285,7 +273,7 @@ class ProvisioningTest(unittest.TestCase):
         )
         self.assertEqual(
             Handler.state.models["nettap-network-operations"]["meta"]["toolIds"],
-            ["server:nettap_evidence"],
+            [],
         )
         self.assertEqual(
             Handler.state.config["DEFAULT_PINNED_MODELS"],
@@ -321,12 +309,12 @@ class ProvisioningTest(unittest.TestCase):
             [{"group_id": "network-team", "permission": "read"}],
         )
         state = json.loads(self.state_path.read_text(encoding="utf-8"))
-        self.assertEqual(state["release_version"], "0.3.0-rc.7")
+        self.assertEqual(state["release_version"], "0.3.0-rc.8")
         self.assertEqual(state["offline_rag"]["result"], "PASS")
         self.assertEqual(set(state["skills"]), {"network_operations"})
         self.assertEqual(set(state["functions"]), {"evidence_ingestion"})
         self.assertNotIn("test-evidence-token", json.dumps(state))
-        self.assertEqual(state["tool_servers"]["evidence"]["binding"], "server:nettap_evidence")
+        self.assertEqual(state["tool_servers"], {})
         self.assertEqual(
             {item["id"]: item["skill_ids"] for item in state["assistants"]},
             {

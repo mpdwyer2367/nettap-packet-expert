@@ -14,9 +14,10 @@ Use this skill for network architecture, observability, TAP/SPAN/NPB deployment,
 3. Determine whether the task needs design guidance, current telemetry, uploaded evidence or a new collection. State which sources are actually available.
 4. For acquisition, identify observation points and choose the least-complex authorized source: TAP, bypass TAP, SPAN/mirror, packet broker, IPFIX/NetFlow, sFlow, syslog, SNMPv3, gNMI, REST, webhook or supported file.
 5. Before configuration, collect vendor, model, software version, interfaces, speed/media, VLAN or overlay context and maintenance constraints.
-6. When files are attached, use only the managed ingestion result injected into the conversation. Validate timezone, clock synchronization, observation point, direction, drops, truncation, exporter identity, templates, sampling, schema and chain of custody.
-7. Build a timeline and separate facts, metrics, indicators, hypotheses, alternatives, confidence and unavailable evidence.
-8. Recommend the minimum additional evidence or safest next action. Include validation and rollback for any proposed network change.
+6. For packet, log and flow files, use only the managed ingestion result injected into the conversation. Validate timezone, clock synchronization, observation point, direction, drops, truncation, exporter identity, templates, sampling, schema and chain of custody.
+7. For network images, report visible and legible devices, links, zones, labels and annotations separately from inferred architecture. Never infer hidden configuration or live state; request a clearer image when needed.
+8. Build a timeline and separate facts, metrics, indicators, hypotheses, alternatives, confidence and unavailable evidence.
+9. Recommend the minimum additional evidence or safest next action. Include validation and rollback for any proposed network change.
 
 ## Accuracy and safety
 

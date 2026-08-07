@@ -35,15 +35,15 @@ initialize_env() {
     cp "${project_dir}/.env.example" "$env_file"
   fi
   chmod 0600 "$env_file"
-  ensure_env_default RELEASE_VERSION "0.3.0-rc.7"
+  ensure_env_default RELEASE_VERSION "0.3.0-rc.8"
   ensure_env_default OLLAMA_IMAGE "ollama/ollama:0.32.5"
   ensure_env_default OPEN_WEBUI_IMAGE "ghcr.io/open-webui/open-webui:v0.11.0"
   ensure_env_default CADDY_IMAGE "caddy:2.11.4-alpine"
   ensure_env_default BACKUP_IMAGE "alpine:3.24.1"
-  ensure_env_default BASE_MODEL "qwen2.5:7b-instruct-q4_K_M"
-  ensure_env_default NETTAP_AI_MODEL "nettap-ai:0.3.0-rc.7"
-  ensure_env_default MODEL_NAME "nettap-ai:0.3.0-rc.7"
-  ensure_env_default EXPECTED_BASE_MODEL_ID "845dbda0ea48"
+  ensure_env_default BASE_MODEL "qwen3.5:9b"
+  ensure_env_default NETTAP_AI_MODEL "nettap-ai:0.3.0-rc.8"
+  ensure_env_default MODEL_NAME "nettap-ai:0.3.0-rc.8"
+  ensure_env_default EXPECTED_BASE_MODEL_ID "6488c96fa5fa"
   ensure_env_default RETIRE_LEGACY_NETTAP_MODELS "true"
   ensure_env_default NETTAP_OPERATIONS_PROFILE "nettap-network-operations"
   ensure_env_default RAG_EMBEDDING_MODEL_ID "sentence-transformers/all-MiniLM-L6-v2"
@@ -58,7 +58,7 @@ initialize_env() {
   ensure_env_default WEBUI_SECRET_KEY "GENERATE_ON_FIRST_START"
   ensure_env_default JWT_EXPIRES_IN "8h"
   ensure_env_default OLLAMA_CPUS "6"
-  ensure_env_default OLLAMA_MEMORY "8g"
+  ensure_env_default OLLAMA_MEMORY "12g"
   ensure_env_default WEBUI_CPUS "2"
   ensure_env_default WEBUI_MEMORY "3g"
   ensure_env_default EVIDENCE_CPUS "1"
@@ -67,18 +67,18 @@ initialize_env() {
   ensure_env_default EVIDENCE_MAX_RECORDS "100000"
   ensure_env_default GATEWAY_CPUS "1"
   ensure_env_default GATEWAY_MEMORY "512m"
-  if grep -Eq '^RELEASE_VERSION=(0\.2\.0-rc\.1|0\.3\.0-rc\.[1-6])$' "$env_file"; then
-    set_env_value RELEASE_VERSION "0.3.0-rc.7"
+  if grep -Eq '^RELEASE_VERSION=(0\.2\.0-rc\.1|0\.3\.0-rc\.[1-7])$' "$env_file"; then
+    set_env_value RELEASE_VERSION "0.3.0-rc.8"
     if grep -q '^WEB_PORT=3001$' "$env_file"; then set_env_value WEB_PORT "3100"; fi
     if grep -q '^APPLIANCE_HOSTNAME=packet-expert.local$' "$env_file"; then
       set_env_value APPLIANCE_HOSTNAME "nettap-ai.local"
     fi
   fi
-  if grep -Eq '^MODEL_NAME=(nettap-packet-expert:(0\.1\.0-rc\.8|0\.2\.0-rc\.1|0\.3\.0-rc\.1)|nettap-ai:(latest|0\.3\.0-rc\.[1-6]))$' "$env_file"; then
-    set_env_value MODEL_NAME "nettap-ai:0.3.0-rc.7"
+  if grep -Eq '^MODEL_NAME=(nettap-packet-expert:(0\.1\.0-rc\.8|0\.2\.0-rc\.1|0\.3\.0-rc\.1)|nettap-ai:(latest|0\.3\.0-rc\.[1-7]))$' "$env_file"; then
+    set_env_value MODEL_NAME "nettap-ai:0.3.0-rc.8"
   fi
-  if grep -Eq '^NETTAP_AI_MODEL=(nettap-packet-expert:[^[:space:]]+|nettap-ai:(latest|0\.3\.0-rc\.[1-6]))$' "$env_file"; then
-    set_env_value NETTAP_AI_MODEL "nettap-ai:0.3.0-rc.7"
+  if grep -Eq '^NETTAP_AI_MODEL=(nettap-packet-expert:[^[:space:]]+|nettap-ai:(latest|0\.3\.0-rc\.[1-7]))$' "$env_file"; then
+    set_env_value NETTAP_AI_MODEL "nettap-ai:0.3.0-rc.8"
   fi
   if grep -q '^RAG_EMBEDDING_MODEL=/app/backend/data/nettap-models/all-MiniLM-L6-v2$' "$env_file"; then
     set_env_value RAG_EMBEDDING_MODEL "/app/backend/data/nettap-models/all-MiniLM-L6-v2/1110a243fdf4706b3f48f1d95db1a4f5529b4d41"

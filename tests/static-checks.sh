@@ -16,8 +16,8 @@ required=(
 )
 for path in "${required[@]}"; do [[ -f "$path" ]] || { echo "Missing required file: $path" >&2; exit 1; }; done
 
-grep -Fqx 'RELEASE_VERSION=0.3.0-rc.7' .env.example
-grep -Fqx 'NETTAP_AI_MODEL=nettap-ai:0.3.0-rc.7' .env.example
+grep -Fqx 'RELEASE_VERSION=0.3.0-rc.8' .env.example
+grep -Fqx 'NETTAP_AI_MODEL=nettap-ai:0.3.0-rc.8' .env.example
 grep -Fqx 'NETTAP_OPERATIONS_PROFILE=nettap-network-operations' .env.example
 grep -Fqx 'BIND_ADDRESS=127.0.0.1' .env.example
 grep -Fqx 'WEB_PORT=3100' .env.example
@@ -27,7 +27,7 @@ import json
 from pathlib import Path
 
 m = json.loads(Path('provisioning/open-webui.json').read_text())
-assert m['release_version'] == '0.3.0-rc.7'
+assert m['release_version'] == '0.3.0-rc.8'
 assert {a['id'] for a in m['assistants']} == {'nettap-network-operations'}
 assert {s['id'] for s in m['skills']} == {'nettap-network-operations'}
 assert {f['id'] for f in m['functions']} == {'nettap_evidence_ingestion'}
@@ -35,8 +35,9 @@ a = m['assistants'][0]
 assert a['knowledge_keys'] == ['shared', 'network_visibility', 'packet_expert']
 assert a['skill_keys'] == ['network_operations']
 assert a['function_keys'] == ['evidence_ingestion']
-assert a['tool_keys'] == ['evidence']
-assert m['embedding']['probe_expected'] == 'NETTAP-RAG-OFFLINE-PROBE-RC7'
+assert a['tool_keys'] == []
+assert m['tool_servers'] == []
+assert m['embedding']['probe_expected'] == 'NETTAP-RAG-OFFLINE-PROBE-RC8'
 
 compose = Path('compose.yaml').read_text()
 local = Path('compose.local.yaml').read_text()
@@ -52,6 +53,8 @@ filter_source = Path('functions/nettap_evidence_ingestion.py').read_text()
 assert 'file_handler = True' in filter_source
 assert 'NETTAP_OPEN_WEBUI_UPLOAD_DIR' in filter_source
 assert 'EVIDENCE_API_TOKEN' in filter_source
+assert 'IMAGE_TYPES' in filter_source
+assert 'image_url' in filter_source
 PY
 
 if rg -n 'VISIBILITY_LAUNCHER_PORT|PACKET_EXPERT_LAUNCHER_PORT|^EVIDENCE_PORT=' .env.example compose.local.yaml; then
@@ -61,4 +64,4 @@ fi
 
 bash -n scripts/*.sh tests/*.sh
 python3 -m py_compile provisioning/*.py case_service/*.py functions/*.py tests/*.py
-echo 'PASS: RC7 static repository checks'
+echo 'PASS: RC8 static repository checks'

@@ -1,6 +1,6 @@
 # Integrated evidence ingestion
 
-There is no separate Evidence Workspace page or host port in RC7. Evidence ingestion is a private application service used from the authenticated Open WebUI chat.
+There is no separate Evidence Workspace page or host port in RC8. Evidence ingestion is a private application service used from the authenticated Open WebUI chat.
 
 ## User workflow
 
@@ -9,7 +9,9 @@ There is no separate Evidence Workspace page or host port in RC7. Evidence inges
 3. State the objective, environment and desired output.
 4. Review the response for source state, evidence IDs/hashes, quality warnings, observations, hypotheses, limitations and next actions.
 
-Supported attachments are `.pcap`, `.json`, `.jsonl`, `.ndjson`, `.log` and `.txt`. Classic PCAP supports Ethernet and raw-IP link types. PCAPNG and native binary flow telemetry require approved external normalization. The service enforces configured upload and record limits.
+Evidence attachments are `.pcap`, `.json`, `.jsonl`, `.ndjson`, `.log` and `.txt`. Classic PCAP supports Ethernet and raw-IP link types. PCAPNG and native binary flow telemetry require approved external normalization. The service enforces configured upload and record limits.
+
+The same chat control accepts `.png`, `.jpg`, `.jpeg` and `.webp` network images. The Filter validates file signatures and applies a four-image, 10 MB-per-image limit before sending pixels to the local multimodal model. Images are not parsed or retained by the evidence case service beyond normal Open WebUI upload storage; remove sensitive uploads according to the customer retention policy.
 
 ## Security properties
 

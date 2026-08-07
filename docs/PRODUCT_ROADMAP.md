@@ -1,9 +1,9 @@
 # Product roadmap
 
-## RC7 — unified application candidate
+## RC8 — unified application candidate
 
 - One authenticated Open WebUI and combined assistant
-- One shared Qwen2.5 7B base and one versioned `nettap-ai` model
+- One shared multimodal Qwen3.5 9B base and one versioned `nettap-ai` model
 - Pinned offline RAG with shared, visibility and packet-analysis knowledge
 - Chat attachment Filter and internal deterministic evidence service
 - Classic PCAP, structured JSON/JSONL and line-log ingestion with explicit limits

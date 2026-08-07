@@ -120,11 +120,11 @@ assert gateway["security_opt"] == ["no-new-privileges:true"]
 assert gateway["depends_on"]["evidence-service"]["condition"] == "service_healthy"
 
 env_example = (root / ".env.example").read_text(encoding="utf-8")
-assert "RELEASE_VERSION=0.3.0-rc.7" in env_example
-assert "BASE_MODEL=qwen2.5:7b-instruct-q4_K_M" in env_example
-assert "NETTAP_AI_MODEL=nettap-ai:0.3.0-rc.7" in env_example
+assert "RELEASE_VERSION=0.3.0-rc.8" in env_example
+assert "BASE_MODEL=qwen3.5:9b" in env_example
+assert "NETTAP_AI_MODEL=nettap-ai:0.3.0-rc.8" in env_example
 assert "RETIRE_LEGACY_NETTAP_MODELS=true" in env_example
-assert "EXPECTED_BASE_MODEL_ID=845dbda0ea48" in env_example
+assert "EXPECTED_BASE_MODEL_ID=6488c96fa5fa" in env_example
 assert "NETTAP_OPERATIONS_PROFILE=nettap-network-operations" in env_example
 assert "RAG_EMBEDDING_MODEL_REVISION=1110a243fdf4706b3f48f1d95db1a4f5529b4d41" in env_example
 assert "WEBUI_ADMIN_PASSWORD=GENERATE_ON_FIRST_START" in env_example
@@ -148,9 +148,10 @@ for control in ("file_handler = True", "NETTAP_EVIDENCE_URL", "EVIDENCE_API_TOKE
     assert control in managed_filter
 
 provisioner_environment = base["services"]["assistant-provisioner"]["environment"]
-assert provisioner_environment["NETTAP_EVIDENCE_TOOL_URL"] == "http://evidence-service:8081"
-assert provisioner_environment["EVIDENCE_API_TOKEN"] == "${EVIDENCE_API_TOKEN}"
-assert base["services"]["assistant-provisioner"]["depends_on"]["evidence-service"]["condition"] == "service_healthy"
+assert "NETTAP_EVIDENCE_TOOL_URL" not in provisioner_environment
+assert "EVIDENCE_API_TOKEN" not in provisioner_environment
+assert base["services"]["open-webui"]["depends_on"]["evidence-service"]["condition"] == "service_healthy"
+assert base["services"]["open-webui"]["environment"]["EVIDENCE_API_TOKEN"] == "${EVIDENCE_API_TOKEN}"
 
 workflow = (root / ".github/workflows/validate.yml").read_text(encoding="utf-8")
 for profile in ("compose.local.yaml", "compose.production.yaml", "compose.bootstrap.yaml"):

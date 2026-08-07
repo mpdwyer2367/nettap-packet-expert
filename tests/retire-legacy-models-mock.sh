@@ -11,11 +11,11 @@ cp "$project_dir/scripts/retire-legacy-models.sh" "$test_root/project/scripts/re
 
 cat > "$test_root/project/.env" <<'EOF'
 DEPLOYMENT_MODE=local
-NETTAP_AI_MODEL=nettap-ai:0.3.0-rc.7
-BASE_MODEL=qwen2.5:7b-instruct-q4_K_M
+NETTAP_AI_MODEL=nettap-ai:0.3.0-rc.8
+BASE_MODEL=qwen3.5:9b
 EOF
 cat > "$test_root/project/.env.example" <<'EOF'
-NETTAP_AI_MODEL=nettap-ai:0.3.0-rc.7
+NETTAP_AI_MODEL=nettap-ai:0.3.0-rc.8
 EOF
 
 cat > "$test_root/bin/docker" <<'EOF'
@@ -27,7 +27,7 @@ elif [[ "$*" == *" ps -q ollama" ]]; then
   echo "ollama-container"
 elif [[ "$*" == *" exec -T ollama ollama list" ]]; then
   echo 'NAME                                ID              SIZE'
-  echo 'nettap-ai:0.3.0-rc.7                current         4.7 GB'
+  echo 'nettap-ai:0.3.0-rc.8                current         4.7 GB'
   if ! grep -Fqx 'container:nettap-ai:latest' "$NETTAP_RETIRE_TEST_LOG" 2>/dev/null; then
     echo 'nettap-ai:latest                    legacy-one      4.7 GB'
   fi
@@ -37,7 +37,7 @@ elif [[ "$*" == *" exec -T ollama ollama list" ]]; then
   if ! grep -Fqx 'container:nettap-packet-expert:latest' "$NETTAP_RETIRE_TEST_LOG" 2>/dev/null; then
     echo 'nettap-packet-expert:latest         legacy-three    4.7 GB'
   fi
-  echo 'qwen2.5:7b-instruct-q4_K_M          base            4.7 GB'
+  echo 'qwen3.5:9b          base            4.7 GB'
   echo 'kimi-k3:cloud                       other           -'
 elif [[ "$*" == *" exec -T ollama ollama rm "* ]]; then
   printf 'container:%s\n' "${*: -1}" >> "$NETTAP_RETIRE_TEST_LOG"
@@ -81,7 +81,7 @@ if "${test_root}/project/scripts/retire-legacy-models.sh" --confirm >/dev/null 2
   exit 1
 fi
 [[ ! -e "$NETTAP_RETIRE_TEST_LOG" ]]
-printf '%s\n' 'NETTAP_AI_MODEL=nettap-ai:0.3.0-rc.7' > "$test_root/project/.env.example"
+printf '%s\n' 'NETTAP_AI_MODEL=nettap-ai:0.3.0-rc.8' > "$test_root/project/.env.example"
 
 "${test_root}/project/scripts/retire-legacy-models.sh" --confirm --include-native >/dev/null
 

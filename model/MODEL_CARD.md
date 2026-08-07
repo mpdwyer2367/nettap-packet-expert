@@ -2,23 +2,23 @@
 
 | Field | Value |
 |---|---|
-| Model tag | `nettap-ai:0.3.0-rc.7` |
-| Base | `qwen2.5:7b-instruct-q4_K_M` |
-| Expected Ollama base ID | `845dbda0ea48` |
+| Model tag | `nettap-ai:0.3.0-rc.8` |
+| Base | `qwen3.5:9b` |
+| Expected Ollama base ID | `6488c96fa5fa` |
 | Status | Release candidate; not production-certified |
 | Copyright | Copyright 2026 NetTAP Technology Limited |
 
 `nettap-ai` is one Ollama Modelfile-derived model for the combined NetTAP Network Observability & Packet Analysis assistant. It covers network architecture, visibility acquisition, telemetry, troubleshooting, packet-derived analysis, security operations and forensic guidance. It is not a separately fine-tuned weight set.
 
-A clean deployment downloads the approved Qwen2.5 7B base once. `ollama create` adds the NetTAP manifest while reusing content-addressed base blobs. The repository does not contain multi-gigabyte third-party weights. The pinned embedding model is a separate RAG dependency, not another chat LLM.
+A clean deployment downloads the approved multimodal Qwen3.5 9B Q4_K_M base once. `ollama create` adds the NetTAP manifest while reusing content-addressed base blobs. The repository does not contain multi-gigabyte third-party weights. The pinned embedding model is a separate RAG dependency, not another chat LLM.
 
-The full deployment adds reviewed prompts, one Skill, three managed knowledge collections and an attachment Filter. Supported attachments are deterministically processed by an internal evidence service; raw payloads, credentials and TLS secrets are not placed in the model prompt.
+The full deployment adds reviewed prompts, one Skill, three managed knowledge collections and an attachment Filter. Packet, log and normalized flow attachments are deterministically processed by an internal evidence service; supported network images are signature-validated and processed by the local multimodal model. Credentials and TLS secrets are never requested.
 
 ## Native model-only installation
 
 ```bash
 ./scripts/install-model-native.sh --confirm-download
-ollama run nettap-ai:0.3.0-rc.7
+ollama run nettap-ai:0.3.0-rc.8
 ```
 
 This does not install Open WebUI, RAG or attachment ingestion. Use the repository deployment guide for the complete application.

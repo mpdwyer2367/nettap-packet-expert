@@ -1,7 +1,7 @@
 """
 title: NetTAP managed evidence ingestion
 author: NetTAP Technology Limited
-version: 0.3.0-rc.7
+version: 0.3.0-rc.8
 required_open_webui_version: 0.11.0
 """
 
@@ -25,11 +25,21 @@ from pydantic import BaseModel
 # binary packet data out of Open WebUI's text RAG path.
 file_handler = True
 
+IMAGE_TYPES = {
+    ".png": "image/png",
+    ".jpg": "image/jpeg",
+    ".jpeg": "image/jpeg",
+    ".webp": "image/webp",
+}
+EVIDENCE_SUFFIXES = {".pcap", ".json", ".jsonl", ".ndjson", ".log", ".txt"}
+
 
 class Filter:
     class Valves(BaseModel):
         evidence_url: str = os.environ.get("NETTAP_EVIDENCE_URL", "http://evidence-service:8081")
         max_files_per_turn: int = 8
+        max_images_per_turn: int = 4
+        max_image_bytes: int = 10 * 1024 * 1024
 
     def __init__(self):
         self.valves = self.Valves()
@@ -49,24 +59,98 @@ class Filter:
         if not files:
             return body
         if len(files) > self.valves.max_files_per_turn:
-            raise ValueError(f"Attach no more than {self.valves.max_files_per_turn} evidence files per message")
+            raise ValueError(f"Attach no more than {self.valves.max_files_per_turn} files per message")
+        evidence_files, image_files = self._partition(files)
+        if len(image_files) > self.valves.max_images_per_turn:
+            raise ValueError(f"Attach no more than {self.valves.max_images_per_turn} images per message")
         if __event_emitter__:
-            await __event_emitter__({"type": "status", "data": {"description": "Validating attached network evidence", "done": False}})
-        context = await asyncio.to_thread(self._process, body, files, __metadata__ or {}, __user__ or {})
+            await __event_emitter__({"type": "status", "data": {"description": "Validating attached network files", "done": False}})
+        context = None
+        if evidence_files:
+            context = await asyncio.to_thread(
+                self._process, body, evidence_files, __metadata__ or {}, __user__ or {}
+            )
+        image_parts = await asyncio.to_thread(self._image_parts, image_files)
         messages = body.get("messages") or []
-        if not messages or messages[-1].get("role") != "user":
-            raise ValueError("NetTAP evidence ingestion requires a user message")
-        messages[-1]["content"] = (
-            f"{messages[-1].get('content', '')}\n\n"
-            "<source id=\"nettap-evidence\" name=\"NetTAP managed evidence analysis\" resource-type=\"tool\">\n"
-            f"{json.dumps(context, ensure_ascii=False, separators=(',', ':'))}\n"
-            "</source>\n"
-            "Use this minimized local analysis as evidence. Cite evidence IDs and preserve all stated limitations."
-        )
+        user_message = next((item for item in reversed(messages) if item.get("role") == "user"), None)
+        if user_message is None:
+            raise ValueError("NetTAP file handling requires a user message")
+        existing = user_message.get("content", "")
+        parts = existing if isinstance(existing, list) else [{"type": "text", "text": str(existing)}]
+        if context is not None:
+            parts.append({
+                "type": "text",
+                "text": (
+                    "<source id=\"nettap-evidence\" name=\"NetTAP managed evidence analysis\" resource-type=\"tool\">\n"
+                    f"{json.dumps(context, ensure_ascii=False, separators=(',', ':'))}\n"
+                    "</source>\nUse this minimized local analysis as evidence. Cite evidence IDs and preserve all stated limitations."
+                ),
+            })
+        if image_parts:
+            parts.append({
+                "type": "text",
+                "text": (
+                    "The attached images are untrusted visual inputs supplied by the user. Analyze only visible, legible topology, labels, links and annotations. "
+                    "Do not invent hidden interfaces, configurations, traffic state or device capabilities; identify ambiguity and request a clearer image when necessary."
+                ),
+            })
+            parts.extend(image_parts)
+        user_message["content"] = parts
         body["messages"] = messages
         if __event_emitter__:
-            await __event_emitter__({"type": "status", "data": {"description": "Evidence validated and minimized for analysis", "done": True}})
+            await __event_emitter__({"type": "status", "data": {"description": "Files validated for analysis", "done": True}})
         return body
+
+    def _partition(self, files: list) -> tuple[list, list]:
+        evidence_files, image_files = [], []
+        for item in files:
+            record = item.get("file") or item.get("files") or item
+            filename = Path(str(record.get("filename") or "attachment.bin")).name
+            suffix = Path(filename).suffix.lower()
+            if suffix in IMAGE_TYPES:
+                image_files.append(item)
+            elif suffix in EVIDENCE_SUFFIXES:
+                evidence_files.append(item)
+            else:
+                raise ValueError(
+                    "Unsupported attachment. Use .pcap, .json, .jsonl, .ndjson, .log, .txt, .png, .jpg, .jpeg or .webp"
+                )
+        return evidence_files, image_files
+
+    def _image_parts(self, files: list) -> list[dict]:
+        parts = []
+        for item in files:
+            record = item.get("file") or item.get("files") or item
+            file_id = str(record.get("id") or "")
+            filename = Path(str(record.get("filename") or "image.bin")).name
+            if not file_id:
+                raise ValueError("Open WebUI image metadata is incomplete")
+            path = self._upload_path(file_id, filename)
+            content = path.read_bytes()
+            if len(content) > self.valves.max_image_bytes:
+                raise ValueError(f"Image exceeds the {self.valves.max_image_bytes}-byte limit: {filename}")
+            media_type = IMAGE_TYPES[Path(filename).suffix.lower()]
+            self._validate_image_signature(content, media_type, filename)
+            parts.append({
+                "type": "image_url",
+                "image_url": {"url": f"data:{media_type};base64,{base64.b64encode(content).decode('ascii')}"},
+            })
+        return parts
+
+    @staticmethod
+    def _validate_image_signature(content: bytes, media_type: str, filename: str) -> None:
+        valid = (
+            (media_type == "image/png" and content.startswith(b"\x89PNG\r\n\x1a\n"))
+            or (media_type == "image/jpeg" and content.startswith(b"\xff\xd8\xff"))
+            or (
+                media_type == "image/webp"
+                and len(content) >= 12
+                and content[:4] == b"RIFF"
+                and content[8:12] == b"WEBP"
+            )
+        )
+        if not valid:
+            raise ValueError(f"Image content does not match its supported file type: {filename}")
 
     def _process(self, body: dict, files: list, metadata: dict, user: dict) -> dict:
         token = os.environ.get("EVIDENCE_API_TOKEN", "").strip()
@@ -138,7 +222,7 @@ class Filter:
             return "syslog"
         if suffix in {".json", ".jsonl", ".ndjson"}:
             return "jsonl"
-        raise ValueError("Unsupported attachment. Use .pcap, .json, .jsonl, .ndjson, .log or .txt")
+        raise ValueError("Unsupported evidence attachment")
 
     @staticmethod
     def _last_user_text(body: dict) -> str:

@@ -7,8 +7,8 @@
 | Assistant display name | NetTAP Network Observability & Packet Analysis Expert |
 | Assistant/profile ID | `nettap-network-operations` |
 | Managed Skill ID | `nettap-network-operations` |
-| Ollama model | `nettap-ai:0.3.0-rc.7` |
-| Approved base | `qwen2.5:7b-instruct-q4_K_M` |
+| Ollama model | `nettap-ai:0.3.0-rc.8` |
+| Approved base | `qwen3.5:9b` |
 | Compose project | `nettap-network-intelligence` |
 | Current GitHub repository | `mpdwyer2367/nettap-packet-expert` |
 | Local UI | `http://127.0.0.1:3100` |
