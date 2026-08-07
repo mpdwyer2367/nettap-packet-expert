@@ -1,59 +1,59 @@
-# Windows deployment
+# Windows and WSL2 deployment guide
 
 ## Requirements
 
-- Supported 64-bit Windows host
-- WSL 2 enabled
-- Docker Desktop using Linux containers
-- Git and PowerShell
-- At least 15 GiB free disk for evaluation
-- Recommended Docker allocation: 8 CPUs and 16 GiB memory
+- Supported 64-bit Windows with virtualization enabled
+- WSL2 and Docker Desktop using the WSL2 backend
+- Git inside the selected WSL2 distribution
+- 16 GB RAM recommended and at least 15 GiB free disk
+- Internet access during the first controlled installation only
 
-## New installation
+## Recommended WSL2 installation
+
+From a WSL2 shell:
+
+```bash
+git clone https://github.com/mpdwyer2367/nettap-packet-expert.git
+cd nettap-packet-expert
+git rev-parse HEAD
+./scripts/nettap-ai start-wsl2
+```
+
+Open <http://127.0.0.1:3100> from Windows. Sign in as `admin@nettap.local` using `.bootstrap-admin-password`, change the password, sign out and verify the generated password fails. Then run in WSL2:
+
+```bash
+./scripts/finalize-admin.sh --confirm
+./scripts/verify-macos-deployment.sh --windows-wsl2
+```
+
+## Native PowerShell entry point
+
+If the repository is stored on a Windows filesystem and Docker Desktop is available to PowerShell:
 
 ```powershell
 git clone https://github.com/mpdwyer2367/nettap-packet-expert.git
 Set-Location .\nettap-packet-expert
+git rev-parse HEAD
 .\scripts\start-windows.ps1
 ```
 
-The first start downloads the approved Qwen2.5 7B base and exact offline embedding revision, verifies them, builds one combined `nettap-ai:0.3.0-rc.4` model, removes temporary egress, provisions three knowledge collections and two Workspace Models, proves offline retrieval, retires older NetTAP container tags, and then starts one Open WebUI with two stateless experience launchers.
+The recommended release-acceptance path is WSL2 because the same shell scripts and exact Git commit can be tested on both platforms.
 
-Open:
-
-- <http://127.0.0.1:3000> — Network & Visibility
-- <http://127.0.0.1:3001> — Packet Expert
-- <http://127.0.0.1:3100> — shared Open WebUI
-- <http://127.0.0.1:3200> — authenticated local Evidence Workspace; token in `.evidence-api-token`
-
-Use `admin@nettap.local` with the locally generated password file printed by the script. Change it immediately and verify the generated value fails. Complete administrator finalization from WSL or Git Bash as described in [authentication](AUTHENTICATION.md).
-
-## Verification
-
-```powershell
-docker compose --env-file .env -f compose.yaml -f compose.local.yaml ps
-docker compose --env-file .env -f compose.yaml -f compose.local.yaml exec -T ollama ollama show nettap-ai:0.3.0-rc.4
-Invoke-WebRequest http://127.0.0.1:3100/health -UseBasicParsing
-Invoke-WebRequest http://127.0.0.1:3200/health -UseBasicParsing
-Invoke-WebRequest http://127.0.0.1:3000/ -UseBasicParsing
-Invoke-WebRequest http://127.0.0.1:3001/ -UseBasicParsing
-docker compose --env-file .env -f compose.yaml -f compose.local.yaml exec -T open-webui python -c "import json; from pathlib import Path; print(json.loads(Path('/app/backend/data/nettap-provisioning-state.json').read_text())['offline_rag']['result'])"
-```
-
-Windows runtime acceptance must record the Windows build, WSL version, Docker Desktop version, CPU architecture, container image digests, base and combined model IDs, both profile responses, both launcher results, login and password-change result, restart persistence, backup, restore, and rollback.
-
-The supplied profile is CPU-compatible and does not claim Windows GPU acceleration. Existing Packet Expert 0.2 users must follow [the migration guide](MIGRATION.md).
-
-## Clean release acceptance in WSL2
-
-Use the exact signed package used by the macOS tester. From an Ubuntu WSL2 shell with Docker Desktop integration enabled:
+## Verification and maintenance
 
 ```bash
-chmod +x scripts/* tests/*.sh
-./tests/clean-package-acceptance.sh \
-  --archive /mnt/c/approved/nettap-ai-suite-0.3.0-rc.4-source.tar.gz \
-  --evidence-dir /mnt/c/protected/nettap-rc3-windows \
-  --public-key /mnt/c/approved/cosign.pub
+./scripts/nettap-ai status
+./scripts/nettap-ai health
+docker compose --env-file .env -f compose.yaml -f compose.local.yaml logs --tail=200 open-webui ollama evidence-service
 ```
 
-The evidence directory must be empty. The test verifies WSL2, starts a unique clean Compose project, and records Windows/WSL2 acceptance against the package commit, tree, and SHA-256. `--allow-unsigned-evaluation` is not acceptable for release evidence. After both platform runs, compare their summaries as described in [the RC4 acceptance plan](RC4_ACCEPTANCE_PLAN.md).
+Attach the same representative normalized PCAP, log and flow fixtures used for macOS acceptance. Record Windows version, WSL distribution, Docker Desktop version, architecture, Git commit, package checksum, model ID and the generated verification report.
+
+## Troubleshooting
+
+- If port 3100 is refused, run `./scripts/nettap-ai repair-local`, then inspect `docker compose ... ps -a` and logs.
+- If provisioning rejects a credential, the existing volume has its own current password. Use that account; for an installation with exactly one administrator, use `./scripts/nettap-ai recover-admin --confirm`.
+- If Ollama port 11434 is already used by a native process, no change is normally needed: the containerized Ollama is internal and publishes no host port. Confirm the running Compose configuration rather than starting a second native service.
+- Do not delete volumes to repair login or port issues.
+
+Follow [Administrator guide](ADMINISTRATION.md) for backup, restore, update, model retirement and production gates.

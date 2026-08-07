@@ -5,6 +5,7 @@ Commercial distribution is fail-closed. Passing source CI is necessary but insuf
 | Gate | Required evidence | Owner | Candidate status |
 |---|---|---|---|
 | Source integrity | Shell lint, policy/secret checks, Compose rendering, exact commit | Engineering | Automated |
+| Authentication lifecycle | Clean canonical account database; non-personal login; unique per-install bootstrap; disabled signup; password replacement and old-password rejection; activation bound to the effective Compose project; restart persistence; no legacy runtime; no credential in reports or source | Security/QA | Controls implemented; target-host runtime evidence pending |
 | Functional runtime | Clean-package reports on advertised macOS and Windows/WSL2 configurations using the identical signed package | QA | Automated harness implemented; target hosts pending |
 | Model behavior | Fourteen guardrail and combined-capability cases plus normalized packet-derived, log and IPFIX cases | AI/QA | Suites implemented; exact-candidate runtime result pending |
 | Profile isolation and RAG | Automatic provisioning, exact embedding identity, offline retrieval, knowledge, RBAC, tool, launcher and direct-model negative tests | AI/Security | API-contract test implemented; target-host runtime evidence pending |
@@ -32,7 +33,7 @@ Evidence filenames under ignored `reports/production/private/`:
 - `support-readiness-approval.txt`
 - `signed-acceptance.txt`
 
-Presence alone is not a substitute for review. Each text record must include exact lines `Version: 0.3.0-rc.4`, `Commit: <full-commit>`, `Tree: <full-tree>`, `Package: nettap-ai-suite-0.3.0-rc.4-source.tar.gz`, `Package SHA256: <digest>` and `Result: PASS` plus signer, date, scope, exceptions, and linked protected evidence. `signed-acceptance.txt` must also contain `Signature verification: PASS`. The script validates these markers; authorized people validate their truth and attachments.
+Presence alone is not a substitute for review. Each text record must include exact lines `Version: 0.3.0-rc.7`, `Commit: <full-commit>`, `Tree: <full-tree>`, `Package: nettap-ai-suite-0.3.0-rc.7-source.tar.gz`, `Package SHA256: <digest>` and `Result: PASS` plus signer, date, scope, exceptions, and linked protected evidence. `signed-acceptance.txt` must also contain `Signature verification: PASS`. The script validates these markers; authorized people validate their truth and attachments.
 
 Both runtime records must also identify the same Git tree, source-package filename, source-package SHA-256, and immutable image digests. Generate them with `tests/clean-package-acceptance.sh`, then run:
 

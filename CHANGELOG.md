@@ -1,11 +1,22 @@
 # Changelog
 
-## Unreleased — evidence citation integrity
+## 0.3.0-rc.7 unified application candidate — 2026-08-07
 
-- Added evidence database schema v2 with additive migration from schema v1.
-- Added typed citations for evidence manifests, exact normalized observations, and SHA-256-bound deterministic analysis artifacts.
-- Added an audited, case-scoped read-only citation resolver and one-click citation inspection in the Evidence Workspace.
-- Added negative cross-case citation tests and documented the citation trust boundary and remaining release gates.
+- Replaced separate Network & Visibility and Packet Expert profiles with one combined managed assistant over one `nettap-ai` model.
+- Removed public launcher ports 3000/3001 and the separate Evidence Workspace UI/port 3200; one authenticated Open WebUI remains on port 3100 locally.
+- Added a reviewed Open WebUI attachment Filter that routes supported files to the internal deterministic evidence service and injects only minimized cited context.
+- Combined shared, visibility and packet-analysis knowledge and Skill capability while preserving one Qwen2.5 7B weight download.
+- Updated macOS, Windows/WSL2, production, backup, verification, administration and deployment workflows for the single-UI architecture.
+- Retained fail-closed production status pending exact-build platform, security, signing and commercial acceptance.
+
+## 0.3.0-rc.5 unified product experience candidate — 2026-08-05
+
+- Added polished, responsive Network & Visibility and Packet Expert welcome pages with clear capability boundaries, guided starts, real application-readiness indication, and direct experience switching.
+- Made the same branded pages available through the production TLS gateway at `/visibility/` and `/packet-expert/`.
+- Clarified the one-account authentication workflow without adding a second credential store: the welcome pages never accept credentials, and Open WebUI remains authoritative for login, roles, sessions, password changes, and access control.
+- Kept one `nettap-ai:0.3.0-rc.5` Ollama model manifest over one Qwen2.5 7B weight set; both managed Workspace Models retain separate prompts, Skills, RAG knowledge, suggestions, and permissions.
+- Updated macOS, Windows/WSL2, migration, architecture, authentication, operations, validation, and release-candidate records for RC5.
+- Retained fail-closed production and commercial gates pending exact-build runtime, security, signing, legal, support, and commercial acceptance.
 
 ## 0.3.0-rc.4 one-model replacement and canonical naming candidate — 2026-08-05
 

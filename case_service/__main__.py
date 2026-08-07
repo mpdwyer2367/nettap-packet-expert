@@ -14,7 +14,12 @@ def main() -> None:
     os.umask(0o077)
     config = Config.from_environment()
     repository = Repository(config.database_path, config.evidence_directory)
-    service = EvidenceService(repository, config.max_records)
+    service = EvidenceService(
+        repository,
+        config.max_records,
+        max_upload_bytes=config.max_upload_bytes,
+        operations_profile=config.operations_profile,
+    )
     serve(
         config.host,
         config.port,

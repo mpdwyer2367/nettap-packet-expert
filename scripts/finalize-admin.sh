@@ -37,6 +37,7 @@ umask 077
 {
   printf 'Administrator bootstrap finalized UTC: %s\n' "$(date -u +%FT%TZ)"
   printf 'Administrator email: %s\n' "$(load_env_value WEBUI_ADMIN_EMAIL)"
+  printf 'Compose project: %s\n' "$(deployment_project_name)"
   printf 'Operator confirmed old bootstrap credential rejection.\n'
 } > "$admin_finalized_file"
 chmod 0600 "$admin_finalized_file"

@@ -1,60 +1,28 @@
-# Administrator activation and account access
+# Authentication and administrator activation
+
+All user access goes through the single Open WebUI at port 3100 locally or the configured TLS gateway in production. Ollama and evidence processing have no user-facing login or host port.
 
 ## Fresh installation
 
-An empty Open WebUI data volume creates one local administrator:
+The installer creates one administrator:
 
-- Display name: `NetTAP Administrator`
-- Login: `admin@nettap.local`
-- Password: a unique value generated on the deployment host
-- Role: `admin`
+- Email: `admin@nettap.local`
+- Password: a unique random bootstrap value written to `.bootstrap-admin-password`
 
-There is no shared default password. The ignored file `.bootstrap-admin-password` is created with restricted local permissions and contains the one-time value. Open WebUI creates the account only when its user database is empty; existing volumes keep their existing accounts.
+No universal `admin/admin` credential is used. The credential file is local, mode 0600, ignored by Git and must never be included in a package or repository.
 
-## Required activation
+1. Sign in with the generated value.
+2. Change the password in Settings > Account.
+3. Sign out and verify the generated value is rejected.
+4. Run `./scripts/finalize-admin.sh --confirm` and type `FINALIZE`.
+5. Store the new credential in the organization’s approved password manager.
 
-1. Keep the application on `127.0.0.1`.
-2. Sign in using the generated credential file.
-3. In **Settings > Account**, choose a unique password of 12–72 characters with upper, lower, number, and symbol.
-4. Sign out, verify the generated password fails, and verify the new password succeeds.
-5. Run `./scripts/finalize-admin.sh --confirm` and type `FINALIZE`.
+## Existing volumes
 
-Finalization removes the local credential file, marks the bootstrap value retired in `.env`, and creates an ignored activation record. Production startup refuses to enable the TLS gateway until this record exists.
+An existing Open WebUI data volume retains its existing users and password hashes. Environment variables do not overwrite them. If provisioning requests credentials, enter a current administrator email/password interactively; neither is committed.
 
-## Enforcement boundary
+For a deployment with exactly one administrator, `./scripts/nettap-ai recover-admin --confirm` creates a protected database backup, resets that administrator to `admin@nettap.local` with a new random one-time password and invalidates sessions. If the database has zero or multiple administrators, stop and use an authorized reviewed recovery process; the script intentionally refuses to guess which account to change.
 
-The repository enforces production blocking and credential-file retirement. The operator confirmation remains a human assertion that the old password was rejected; stock Open WebUI does not expose a dedicated forced-first-login transaction to this Compose deployment. The activation warning is present in the loopback profile and removed by the production overlay after the activation gate.
+## Production controls
 
-## Existing installations
-
-Generated bootstrap credentials never reset an existing database. To list user identity and role without displaying password hashes:
-
-```bash
-docker compose --env-file .env -f compose.yaml -f compose.local.yaml exec -T open-webui python - <<'PY'
-import sqlite3
-db = sqlite3.connect('/app/backend/data/webui.db')
-for row in db.execute('SELECT name, email, role, created_at FROM user ORDER BY created_at'):
-    print(' | '.join(str(value) for value in row))
-PY
-```
-
-If access is lost, create a verified backup and follow the official Open WebUI password-reset procedure. Never delete `webui.db` as an access workaround; that can remove accounts, chats, settings, and knowledge.
-
-## Production account policy
-
-- Signup is disabled.
-- Additional accounts require an approved administrator workflow.
-- One application instance serves one customer or trust boundary.
-- Use an 8-hour session lifetime in this candidate.
-- API keys, web search, direct tool servers, sub-agents, user webhooks, non-admin file/web uploads, sharing/import/export, code execution, memories, admin exports, and admin chat access are disabled by default.
-- SSO/MFA is not part of the certified candidate scope; customers requiring it need a separately engineered and validated identity profile.
-
-## Acceptance
-
-Record generated-login success, password replacement, old-password rejection, new-password persistence after restart, disabled signup, administrator role, session expiry, and production-gateway refusal before finalization. Never record either password in the acceptance report.
-
-Official references:
-
-- [Open WebUI environment configuration](https://docs.openwebui.com/reference/env-configuration/)
-- [Open WebUI hardening](https://docs.openwebui.com/getting-started/advanced-topics/hardening/)
-- [Open WebUI password reset](https://docs.openwebui.com/troubleshooting/password-reset/)
+Production startup requires completed password finalization, TLS configuration, immutable image digests and release security gates. Keep signup disabled. Use individual named accounts for operators, least-privilege roles and the Open WebUI audit log. Never share an administrator password among customers or embed credentials in images, Compose files, documentation or GitHub releases.

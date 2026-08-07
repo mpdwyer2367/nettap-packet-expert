@@ -6,7 +6,7 @@ param(
 $ErrorActionPreference = 'Stop'
 $BaseModel = 'qwen2.5:7b-instruct-q4_K_M'
 $ExpectedBaseId = '845dbda0ea48'
-$ModelName = 'nettap-ai:0.3.0-rc.4'
+$ModelName = 'nettap-ai:0.3.0-rc.7'
 $ProjectDirectory = Split-Path -Parent $PSScriptRoot
 $Modelfile = Join-Path $ProjectDirectory 'model/nettap-ai.Modelfile'
 

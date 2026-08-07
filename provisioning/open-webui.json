@@ -1,13 +1,23 @@
 {
   "schema_version": 1,
-  "release_version": "0.3.0-rc.4",
+  "release_version": "0.3.0-rc.7",
   "embedding": {
     "engine": "",
     "model_path": "/app/backend/data/nettap-models/all-MiniLM-L6-v2/1110a243fdf4706b3f48f1d95db1a4f5529b4d41",
     "probe_collection": "shared",
     "probe_query": "What is the NetTAP offline RAG verification marker?",
-    "probe_expected": "NETTAP-RAG-OFFLINE-PROBE-RC4"
+    "probe_expected": "NETTAP-RAG-OFFLINE-PROBE-RC7"
   },
+  "tool_servers": [
+    {
+      "key": "evidence",
+      "id": "nettap_evidence",
+      "name": "NetTAP Internal Evidence Analysis",
+      "description": "Internal read-only access to validated, minimized evidence context. Raw evidence is never returned.",
+      "url_env": "NETTAP_EVIDENCE_TOOL_URL",
+      "openapi_path": "/openapi.json"
+    }
+  ],
   "knowledge_collections": [
     {
       "key": "shared",
@@ -38,56 +48,43 @@
   ],
   "skills": [
     {
-      "key": "network_visibility",
-      "id": "nettap-network-visibility",
-      "name": "NetTAP Network Intelligence — Network & Visibility",
-      "description": "Design, deploy, validate, and troubleshoot network visibility, acquisition, telemetry, and monitoring-tool delivery.",
-      "file": "skills/nettap-network-visibility/SKILL.md",
-      "tags": ["NetTAP", "Network Intelligence", "Network Visibility", "Managed"]
-    },
+      "key": "network_operations",
+      "id": "nettap-network-operations",
+      "name": "NetTAP Network Observability & Packet Analysis",
+      "description": "Design network visibility and analyze authorized packet, log, flow, performance and security evidence in one workflow.",
+      "file": "skills/nettap-network-operations/SKILL.md",
+      "tags": ["NetTAP", "Network Observability", "Packet Analysis", "Managed"]
+    }
+  ],
+  "functions": [
     {
-      "key": "packet_expert",
-      "id": "nettap-packet-expert",
-      "name": "NetTAP Network Intelligence — Packet Expert",
-      "description": "Plan authorized evidence collection and analyze normalized packet-derived, log, flow, performance, security, and forensic evidence.",
-      "file": "skills/nettap-packet-expert/SKILL.md",
-      "tags": ["NetTAP", "Network Intelligence", "Packet Expert", "Managed"]
+      "key": "evidence_ingestion",
+      "id": "nettap_evidence_ingestion",
+      "name": "NetTAP managed evidence ingestion",
+      "description": "Routes supported chat attachments through local deterministic parsing and injects only minimized evidence context.",
+      "file": "functions/nettap_evidence_ingestion.py"
     }
   ],
   "assistants": [
     {
-      "id": "nettap-network-visibility",
-      "name": "NetTAP Network Intelligence — Network & Visibility",
-      "description": "Network architecture, device planning, NetTAP visibility, traffic acquisition, and telemetry guidance.",
-      "knowledge_keys": ["shared", "network_visibility"],
-      "skill_keys": ["network_visibility"],
+      "id": "nettap-network-operations",
+      "name": "NetTAP Network Observability & Packet Analysis Expert",
+      "description": "One assistant for network architecture, observability, packet analysis, troubleshooting, security operations and forensics.",
+      "knowledge_keys": ["shared", "network_visibility", "packet_expert"],
+      "skill_keys": ["network_operations"],
+      "function_keys": ["evidence_ingestion"],
+      "tool_keys": ["evidence"],
       "system_prompt_files": [
         "assistants/shared/core-policy.md",
-        "assistants/network-visibility/system-prompt.md"
+        "assistants/nettap-operations/system-prompt.md"
       ],
       "suggestion_prompts": [
-        {"title": ["Understand", "my network"], "content": "Help me understand my network. Ask one important question at a time."},
-        {"title": ["Design or", "configure"], "content": "Help me design or configure my network from the objective and environment."},
-        {"title": ["Connect", "visibility and data"], "content": "Help me add NetTAP visibility or collect the right traffic and telemetry."}
+        {"title": ["Help me", "get started"], "content": "I need help with a network or security issue. Ask me one important question at a time."},
+        {"title": ["Troubleshoot", "a network problem"], "content": "Help me troubleshoot a network performance, availability or connectivity problem."},
+        {"title": ["Analyze", "attached evidence"], "content": "Analyze the packet capture, log or flow file I attach and produce a professional evidence-supported assessment."},
+        {"title": ["Improve", "network visibility"], "content": "Help me design or improve network observability, traffic acquisition and delivery to operations or security tools."}
       ],
-      "tags": ["NetTAP", "Network Intelligence", "Network Visibility"]
-    },
-    {
-      "id": "nettap-packet-expert",
-      "name": "NetTAP Network Intelligence — Packet Expert",
-      "description": "Authorized packet evidence, performance investigation, cyber visibility, and forensic analysis guidance.",
-      "knowledge_keys": ["shared", "packet_expert"],
-      "skill_keys": ["packet_expert"],
-      "system_prompt_files": [
-        "assistants/shared/core-policy.md",
-        "assistants/packet-expert/system-prompt.md"
-      ],
-      "suggestion_prompts": [
-        {"title": ["Start", "an investigation"], "content": "Help me start an authorized network or security investigation."},
-        {"title": ["Understand", "my evidence"], "content": "Help me understand what evidence I have and what it can support."},
-        {"title": ["Plan", "data collection"], "content": "Help me plan the minimum safe traffic, log, or telemetry collection."}
-      ],
-      "tags": ["NetTAP", "Network Intelligence", "Packet Expert"]
+      "tags": ["NetTAP", "Network Observability", "Packet Analysis", "Security Operations"]
     }
   ]
 }

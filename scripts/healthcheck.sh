@@ -13,16 +13,10 @@ if [[ "$mode" == production ]]; then
   https_port="$(load_env_value HTTPS_PORT)"
   curl --fail --silent --show-error --cacert "${project_dir}/config/tls/tls.crt" \
     --resolve "${hostname}:${https_port}:127.0.0.1" "https://${hostname}:${https_port}/health" >/dev/null
-  curl --fail --silent --show-error --cacert "${project_dir}/config/tls/tls.crt" \
-    --resolve "${hostname}:${https_port}:127.0.0.1" "https://${hostname}:${https_port}/evidence/health" >/dev/null
   echo "Healthy: https://${hostname}:${https_port}"
-  echo "Healthy: https://${hostname}:${https_port}/evidence/ (evidence workspace)"
 else
   "${compose_local[@]}" ps
   web_port="$(load_env_value WEB_PORT)"
   curl --fail --silent --show-error "http://127.0.0.1:${web_port}/health" >/dev/null
-  evidence_port="$(load_env_value EVIDENCE_PORT)"
-  curl --fail --silent --show-error "http://127.0.0.1:${evidence_port}/health" >/dev/null
   echo "Healthy: http://127.0.0.1:${web_port}"
-  echo "Healthy: http://127.0.0.1:${evidence_port} (evidence workspace)"
 fi

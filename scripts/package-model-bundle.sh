@@ -19,7 +19,7 @@ archive="${project_dir}/dist/${prefix}.tar.gz"
 
 git -C "$project_dir" archive --format=tar.gz --prefix="${prefix}/" -o "$archive" HEAD -- \
   .env.example LICENSE NOTICE THIRD_PARTY_NOTICES.md README.md \
-  model assistants skills knowledge provisioning/open-webui.json \
+  model assistants skills functions knowledge provisioning/open-webui.json \
   provisioning/knowledge-sources.sha256 scripts/install-model-native.sh \
   scripts/install-model-native.ps1 scripts/verify-model-bundle.sh
 

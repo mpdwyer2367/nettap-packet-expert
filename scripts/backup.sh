@@ -24,7 +24,7 @@ if [[ -n "$(find "$output_dir" -mindepth 1 -print -quit)" ]]; then
   echo "ERROR: Backup destination must be empty; existing files are never overwritten: $output_dir" >&2
   exit 4
 fi
-project_name="${COMPOSE_PROJECT_NAME:-nettap-packet-expert}"
+project_name="${COMPOSE_PROJECT_NAME:-nettap-network-intelligence}"
 [[ "$project_name" =~ ^[a-z0-9][a-z0-9_-]{2,62}$ ]] || {
   echo "ERROR: Invalid Compose project name for backup provenance: $project_name" >&2
   exit 4
@@ -42,7 +42,7 @@ restart_application() {
     if [[ "$mode" == production ]]; then
       "${compose_production[@]}" up -d ollama open-webui evidence-service gateway
     else
-      "${compose_local[@]}" up -d ollama open-webui evidence-service assistant-launcher
+      "${compose_local[@]}" up -d ollama open-webui evidence-service
     fi
     restart_required=false
   fi

@@ -9,6 +9,28 @@ $localComposeFile = Join-Path $projectDir 'compose.local.yaml'
 $bootstrapComposeFile = Join-Path $projectDir 'compose.bootstrap.yaml'
 $bootstrapPasswordPath = Join-Path $projectDir '.bootstrap-admin-password'
 $evidenceTokenPath = Join-Path $projectDir '.evidence-api-token'
+$adminFinalizedPath = Join-Path $projectDir '.admin-bootstrap-finalized'
+
+function Select-ProvisioningFingerprint {
+    param(
+        [Parameter(Mandatory = $true)]
+        [AllowEmptyCollection()]
+        [object[]]$OutputLines,
+        [switch]$AllowEmpty
+    )
+
+    $candidates = @(
+        $OutputLines |
+            ForEach-Object { $_.ToString().Trim() } |
+            Where-Object { $_ -cmatch '^[0-9a-f]{64}$' } |
+            Select-Object -Unique
+    )
+    if ($candidates.Count -eq 0 -and $AllowEmpty) { return '' }
+    if ($candidates.Count -ne 1) {
+        throw "Docker Compose returned $($candidates.Count) distinct provisioning fingerprints; expected exactly one."
+    }
+    return [string]$candidates[0]
+}
 
 if (-not (Get-Command docker -ErrorAction SilentlyContinue)) {
     throw 'Docker Desktop is required and docker was not found in PATH.'
@@ -39,26 +61,22 @@ if ($content -match '(?m)^WEBUI_SECRET_KEY=GENERATE_ON_FIRST_START$') {
 }
 
 $defaults = [ordered]@{
-    RELEASE_VERSION = '0.3.0-rc.4'
+    RELEASE_VERSION = '0.3.0-rc.7'
     OLLAMA_IMAGE = 'ollama/ollama:0.32.5'
     OPEN_WEBUI_IMAGE = 'ghcr.io/open-webui/open-webui:v0.11.0'
     CADDY_IMAGE = 'caddy:2.11.4-alpine'
     BACKUP_IMAGE = 'alpine:3.24.1'
     BASE_MODEL = 'qwen2.5:7b-instruct-q4_K_M'
-    NETTAP_AI_MODEL = 'nettap-ai:0.3.0-rc.4'
-    MODEL_NAME = 'nettap-ai:0.3.0-rc.4'
+    NETTAP_AI_MODEL = 'nettap-ai:0.3.0-rc.7'
+    MODEL_NAME = 'nettap-ai:0.3.0-rc.7'
     EXPECTED_BASE_MODEL_ID = '845dbda0ea48'
     RETIRE_LEGACY_NETTAP_MODELS = 'true'
-    NETTAP_VISIBILITY_PROFILE = 'nettap-network-visibility'
-    NETTAP_PACKET_EXPERT_PROFILE = 'nettap-packet-expert'
+    NETTAP_OPERATIONS_PROFILE = 'nettap-network-operations'
     RAG_EMBEDDING_MODEL_ID = 'sentence-transformers/all-MiniLM-L6-v2'
     RAG_EMBEDDING_MODEL_REVISION = '1110a243fdf4706b3f48f1d95db1a4f5529b4d41'
     RAG_EMBEDDING_MODEL = '/app/backend/data/nettap-models/all-MiniLM-L6-v2/1110a243fdf4706b3f48f1d95db1a4f5529b4d41'
     BIND_ADDRESS = '127.0.0.1'
     WEB_PORT = '3100'
-    VISIBILITY_LAUNCHER_PORT = '3000'
-    PACKET_EXPERT_LAUNCHER_PORT = '3001'
-    EVIDENCE_PORT = '3200'
     HTTPS_BIND_ADDRESS = '0.0.0.0'
     HTTPS_PORT = '8443'
     APPLIANCE_HOSTNAME = 'nettap-ai.local'
@@ -80,9 +98,9 @@ $defaults = [ordered]@{
     DEPLOYMENT_MODE = 'local'
 }
 
-$content = $content -replace '(?m)^RELEASE_VERSION=(0\.2\.0-rc\.1|0\.3\.0-rc\.[123])$', 'RELEASE_VERSION=0.3.0-rc.4'
-$content = $content -replace '(?m)^MODEL_NAME=(nettap-packet-expert:(0\.1\.0-rc\.8|0\.2\.0-rc\.1|0\.3\.0-rc\.1)|nettap-ai:(latest|0\.3\.0-rc\.[123]))$', 'MODEL_NAME=nettap-ai:0.3.0-rc.4'
-$content = $content -replace '(?m)^NETTAP_AI_MODEL=(nettap-packet-expert:[^\s]+|nettap-ai:(latest|0\.3\.0-rc\.[123]))$', 'NETTAP_AI_MODEL=nettap-ai:0.3.0-rc.4'
+$content = $content -replace '(?m)^RELEASE_VERSION=(0\.2\.0-rc\.1|0\.3\.0-rc\.[1-6])$', 'RELEASE_VERSION=0.3.0-rc.7'
+$content = $content -replace '(?m)^MODEL_NAME=(nettap-packet-expert:(0\.1\.0-rc\.8|0\.2\.0-rc\.1|0\.3\.0-rc\.1)|nettap-ai:(latest|0\.3\.0-rc\.[1-6]))$', 'MODEL_NAME=nettap-ai:0.3.0-rc.7'
+$content = $content -replace '(?m)^NETTAP_AI_MODEL=(nettap-packet-expert:[^\s]+|nettap-ai:(latest|0\.3\.0-rc\.[1-6]))$', 'NETTAP_AI_MODEL=nettap-ai:0.3.0-rc.7'
 $content = $content -replace '(?m)^RAG_EMBEDDING_MODEL=/app/backend/data/nettap-models/all-MiniLM-L6-v2$', 'RAG_EMBEDDING_MODEL=/app/backend/data/nettap-models/all-MiniLM-L6-v2/1110a243fdf4706b3f48f1d95db1a4f5529b4d41'
 $content = $content -replace '(?m)^APPLIANCE_HOSTNAME=packet-expert\.local$', 'APPLIANCE_HOSTNAME=nettap-ai.local'
 $content = $content -replace '(?m)^WEB_PORT=3001$', 'WEB_PORT=3100'
@@ -134,6 +152,43 @@ $compose = @(
 )
 
 $bootstrapCompose = $compose + @('-f', $bootstrapComposeFile)
+$legacyCompose = @(
+    'compose',
+    '--project-name', 'nettap-packet-expert',
+    '--project-directory', $projectDir,
+    '--env-file', $envPath,
+    '-f', $composeFile,
+    '-f', $localComposeFile
+)
+
+$legacyContainerIds = @(docker ps -aq --filter 'label=com.docker.compose.project=nettap-packet-expert')
+if ($legacyContainerIds.Count -gt 0 -and -not [string]::IsNullOrWhiteSpace(($legacyContainerIds -join ''))) {
+    Write-Host 'Stopping legacy nettap-packet-expert containers; legacy volumes are preserved for controlled migration.'
+    docker @legacyCompose down --remove-orphans
+    if ($LASTEXITCODE -ne 0) { throw 'Unable to stop the legacy NetTAP Compose runtime.' }
+}
+
+docker volume inspect 'nettap-network-intelligence_packet-expert-open-webui-data' 2>$null | Out-Null
+if ($LASTEXITCODE -ne 0) {
+    $content = [System.IO.File]::ReadAllText($envPath)
+    $content = $content -replace '(?m)^WEBUI_ADMIN_NAME=.*$', 'WEBUI_ADMIN_NAME=NetTAP Administrator'
+    $content = $content -replace '(?m)^WEBUI_ADMIN_EMAIL=.*$', 'WEBUI_ADMIN_EMAIL=admin@nettap.local'
+    $credentialMatchesProject = (Test-Path $bootstrapPasswordPath) -and
+        ([System.IO.File]::ReadAllText($bootstrapPasswordPath) -match '(?m)^Compose project: nettap-network-intelligence$')
+    if ($content -match '(?m)^WEBUI_ADMIN_PASSWORD=(BOOTSTRAP_RETIRED|GENERATE_ON_FIRST_START)?$' -or -not $credentialMatchesProject) {
+        $passwordBytes = New-Object byte[] 12
+        $passwordRng = [System.Security.Cryptography.RandomNumberGenerator]::Create()
+        $passwordRng.GetBytes($passwordBytes)
+        $passwordRng.Dispose()
+        $adminPassword = "Ntp!9$(($passwordBytes | ForEach-Object { $_.ToString('x2') }) -join '')"
+        $content = $content -replace '(?m)^WEBUI_ADMIN_PASSWORD=.*$', "WEBUI_ADMIN_PASSWORD=$adminPassword"
+        $credentialText = "Login: admin@nettap.local`r`nBootstrap password: $adminPassword`r`nGenerated UTC: $([DateTime]::UtcNow.ToString('o'))`r`nCompose project: nettap-network-intelligence`r`n"
+        [System.IO.File]::WriteAllText($bootstrapPasswordPath, $credentialText, [System.Text.UTF8Encoding]::new($false))
+        $adminPassword = $null
+    }
+    [System.IO.File]::WriteAllText($envPath, $content, [System.Text.UTF8Encoding]::new($false))
+    if (Test-Path $adminFinalizedPath) { Remove-Item $adminFinalizedPath -Force }
+}
 
 docker @compose config --quiet
 if ($LASTEXITCODE -ne 0) {
@@ -181,23 +236,32 @@ if ($LASTEXITCODE -ne 0) {
     throw 'Failed to remove temporary registry-egress network.'
 }
 
-docker @compose up -d ollama open-webui
+docker @compose up -d ollama open-webui evidence-service
 if ($LASTEXITCODE -ne 0) {
     throw 'Open WebUI failed to start.'
 }
 
-$desiredFingerprint = (docker @compose --profile provision run --rm --no-deps assistant-provisioner --fingerprint | Out-String).Trim()
-if ($LASTEXITCODE -ne 0 -or [string]::IsNullOrWhiteSpace($desiredFingerprint)) {
+$desiredFingerprintOutput = @(docker @compose --profile provision run --rm --no-deps assistant-provisioner --fingerprint 2>&1)
+if ($LASTEXITCODE -ne 0) {
     throw 'Unable to calculate the assistant provisioning fingerprint.'
 }
-$actualFingerprint = (docker @compose exec -T open-webui python -c "import json; from pathlib import Path; p=Path('/app/backend/data/nettap-provisioning-state.json'); print(json.loads(p.read_text(encoding='utf-8')).get('fingerprint','') if p.is_file() else '')" | Out-String).Trim()
+$desiredFingerprint = Select-ProvisioningFingerprint -OutputLines $desiredFingerprintOutput
+$actualFingerprintOutput = @(docker @compose exec -T open-webui python -c "import json; from pathlib import Path; p=Path('/app/backend/data/nettap-provisioning-state.json'); print(json.loads(p.read_text(encoding='utf-8')).get('fingerprint','') if p.is_file() else '')" 2>&1)
+if ($LASTEXITCODE -ne 0) {
+    throw 'Unable to read the installed assistant provisioning fingerprint.'
+}
+$actualFingerprint = Select-ProvisioningFingerprint -OutputLines $actualFingerprintOutput -AllowEmpty
 
 if ($actualFingerprint -ne $desiredFingerprint) {
     $adminPassword = ''
+    $adminEmail = 'admin@nettap.local'
     foreach ($line in [System.IO.File]::ReadAllLines($envPath)) {
         if ($line -match '^WEBUI_ADMIN_PASSWORD=(.+)$') { $adminPassword = $Matches[1] }
+        if ($line -match '^WEBUI_ADMIN_EMAIL=(.+)$') { $adminEmail = $Matches[1] }
     }
     if ([string]::IsNullOrWhiteSpace($adminPassword) -or $adminPassword -eq 'BOOTSTRAP_RETIRED' -or $adminPassword -eq 'GENERATE_ON_FIRST_START') {
+        $enteredEmail = Read-Host "Current Open WebUI administrator email [$adminEmail]"
+        if (-not [string]::IsNullOrWhiteSpace($enteredEmail)) { $adminEmail = $enteredEmail }
         $securePassword = Read-Host 'Current Open WebUI administrator password' -AsSecureString
         $passwordPointer = [Runtime.InteropServices.Marshal]::SecureStringToBSTR($securePassword)
         try {
@@ -207,20 +271,85 @@ if ($actualFingerprint -ne $desiredFingerprint) {
             [Runtime.InteropServices.Marshal]::ZeroFreeBSTR($passwordPointer)
         }
     }
-    $adminPassword | docker @compose --profile provision run --rm -T assistant-provisioner
+    $adminPassword | docker @compose --profile provision run --rm -T -e "WEBUI_ADMIN_EMAIL=$adminEmail" assistant-provisioner
+    $provisionExitCode = $LASTEXITCODE
+    if ($provisionExitCode -eq 11) {
+        $adminPassword = $null
+        Write-Host 'The existing Open WebUI volume retained a different administrator identity.'
+        $enteredEmail = Read-Host "Current Open WebUI administrator email [$adminEmail]"
+        if (-not [string]::IsNullOrWhiteSpace($enteredEmail)) { $adminEmail = $enteredEmail }
+        $securePassword = Read-Host 'Current Open WebUI administrator password' -AsSecureString
+        $passwordPointer = [Runtime.InteropServices.Marshal]::SecureStringToBSTR($securePassword)
+        try {
+            $adminPassword = [Runtime.InteropServices.Marshal]::PtrToStringBSTR($passwordPointer)
+        }
+        finally {
+            [Runtime.InteropServices.Marshal]::ZeroFreeBSTR($passwordPointer)
+        }
+        $adminPassword | docker @compose --profile provision run --rm -T -e "WEBUI_ADMIN_EMAIL=$adminEmail" assistant-provisioner
+        $provisionExitCode = $LASTEXITCODE
+    }
     $adminPassword = $null
-    if ($LASTEXITCODE -ne 0) {
+    if ($provisionExitCode -eq 11) {
+        throw 'Open WebUI rejected the current administrator email or password.'
+    }
+    if ($provisionExitCode -ne 0) {
         throw 'Automatic assistant and offline RAG provisioning failed.'
     }
-    $actualFingerprint = (docker @compose exec -T open-webui python -c "import json; from pathlib import Path; print(json.loads(Path('/app/backend/data/nettap-provisioning-state.json').read_text(encoding='utf-8')).get('fingerprint',''))" | Out-String).Trim()
+    $actualFingerprintOutput = @(docker @compose exec -T open-webui python -c "import json; from pathlib import Path; print(json.loads(Path('/app/backend/data/nettap-provisioning-state.json').read_text(encoding='utf-8')).get('fingerprint',''))" 2>&1)
+    if ($LASTEXITCODE -ne 0) {
+        throw 'Unable to read the installed assistant provisioning fingerprint after reconciliation.'
+    }
+    $actualFingerprint = Select-ProvisioningFingerprint -OutputLines $actualFingerprintOutput
     if ($actualFingerprint -ne $desiredFingerprint) {
-        throw 'Assistant provisioning state does not match this release.'
+        throw "Assistant provisioning state does not match this release. Expected $desiredFingerprint; installed $actualFingerprint."
     }
 }
 
-docker @compose up -d assistant-launcher evidence-service
+docker @compose up -d --force-recreate open-webui evidence-service
 if ($LASTEXITCODE -ne 0) {
-    throw 'Assistant launcher or Evidence Workspace failed to start.'
+    throw 'Open WebUI or the internal evidence service failed to start.'
+}
+
+$requiredBindings = @(
+    @{ Service = 'open-webui'; ContainerPort = '8080'; HostPort = '3100' }
+)
+foreach ($binding in $requiredBindings) {
+    $containerId = ((docker @compose ps -q $binding.Service) -join '').Trim()
+    if ([string]::IsNullOrWhiteSpace($containerId)) {
+        docker @compose ps
+        throw "$($binding.Service) has no container after recreation."
+    }
+    $actualBinding = ((docker port $containerId "$($binding.ContainerPort)/tcp" 2>$null) -join "`n").Trim()
+    $expectedBinding = "127.0.0.1:$($binding.HostPort)"
+    if ($actualBinding -ne $expectedBinding) {
+        docker @compose ps
+        docker @compose logs --no-color --tail 40 $binding.Service
+        throw "$($binding.Service) port $($binding.ContainerPort)/tcp is '$actualBinding'; expected '$expectedBinding'."
+    }
+}
+
+$requiredEndpoints = @(
+    @{ Name = 'NetTAP Network Observability & Packet Analysis'; Url = 'http://127.0.0.1:3100/health' }
+)
+foreach ($endpoint in $requiredEndpoints) {
+    $ready = $false
+    foreach ($attempt in 1..60) {
+        try {
+            Invoke-WebRequest -Uri $endpoint.Url -UseBasicParsing -TimeoutSec 5 | Out-Null
+            $ready = $true
+            break
+        }
+        catch {
+            Start-Sleep -Seconds 2
+        }
+    }
+    if (-not $ready) {
+        docker @compose ps
+        docker @compose logs --no-color --tail 40 open-webui evidence-service
+        throw "$($endpoint.Name) did not become reachable at $($endpoint.Url)."
+    }
+    Write-Host "PASS: $($endpoint.Name) is reachable at $($endpoint.Url)"
 }
 
 $retireLegacy = 'true'
@@ -235,29 +364,14 @@ if ($retireLegacy -match '^(?i:true|1|yes)$') {
 docker @compose ps
 
 $webPort = '3100'
-$visibilityPort = '3000'
-$packetPort = '3001'
-$evidencePort = '3200'
 foreach ($line in [System.IO.File]::ReadAllLines($envPath)) {
     if ($line -match '^WEB_PORT=(.+)$') {
         $webPort = $Matches[1]
     }
-    if ($line -match '^VISIBILITY_LAUNCHER_PORT=(.+)$') {
-        $visibilityPort = $Matches[1]
-    }
-    if ($line -match '^PACKET_EXPERT_LAUNCHER_PORT=(.+)$') {
-        $packetPort = $Matches[1]
-    }
-    if ($line -match '^EVIDENCE_PORT=(.+)$') {
-        $evidencePort = $Matches[1]
-    }
 }
 
-Write-Host "NetTAP Network Intelligence: http://127.0.0.1:$webPort"
-Write-Host "Network & Visibility: http://127.0.0.1:$visibilityPort"
-Write-Host "Packet Expert: http://127.0.0.1:$packetPort"
-Write-Host "Evidence Workspace: http://127.0.0.1:$evidencePort"
-Write-Host "Evidence API token file: $evidenceTokenPath"
+Write-Host "NetTAP Network Observability & Packet Analysis: http://127.0.0.1:$webPort"
+Write-Host 'Packet and telemetry evidence is attached in the authenticated chat; the parser has no public port.'
 Write-Host "Bootstrap credential file: $bootstrapPasswordPath"
 Write-Host 'Immediately change the generated password in Settings > Account.'
 Write-Host 'Then run finalize-admin.sh from WSL/Git Bash, or follow docs/AUTHENTICATION.md.'
