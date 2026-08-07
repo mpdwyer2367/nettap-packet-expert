@@ -3,12 +3,14 @@
 ## 0.3.0-rc.8 consolidated multimodal candidate — 2026-08-07
 
 - Retained one authenticated Open WebUI on loopback port 3100 and one combined managed assistant; ports 3000, 3001 and 3200 remain retired.
-- Advanced the single downloadable base to multimodal `qwen3.5:9b` and the NetTAP manifest to `nettap-ai:0.3.0-rc.8` so the same local model handles observability, packet analysis and network diagrams.
+- Advanced the single downloadable base to multimodal `qwen3.5:9b-q4_K_M` and the NetTAP manifest to `nettap-ai:0.3.0-rc.8` so the same local model handles observability, packet analysis and network diagrams.
 - Added signature-validated PNG, JPEG and WebP attachments with explicit visual fact/inference and prompt-injection boundaries.
 - Kept PCAP, log and normalized flow records on the deterministic internal evidence path and removed the redundant user-selectable evidence tool binding.
 - Updated model identity, memory guidance, provisioning, source pins, tests, architecture and acceptance documentation.
 - Corrected the managed offline-RAG probe content to the RC8 marker and added a manifest-to-knowledge consistency check.
 - Replaced unbounded acceptance-test `ollama run` calls with a token-limited local API request and a configurable hard timeout.
+- Pinned the Qwen3.5 9B base to the explicit `qwen3.5:9b-q4_K_M` tag while retaining expected Ollama ID `6488c96fa5fa`.
+- Added Ollama HTTP error-body and service-log diagnostics for controlled inference failures.
 - Preserved fail-closed production status pending exact-build macOS and Windows/WSL2 runtime acceptance and commercial release evidence.
 
 ## 0.3.0-rc.7 unified application candidate — 2026-08-07

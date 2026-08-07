@@ -11,7 +11,7 @@ Status: source-validated release candidate; target-host runtime acceptance pendi
 |---|---|
 | User experience | One authenticated Open WebUI at `http://127.0.0.1:3100` |
 | Assistant | One managed `nettap-network-operations` assistant |
-| Chat model | `nettap-ai:0.3.0-rc.8` over `qwen3.5:9b` |
+| Chat model | `nettap-ai:0.3.0-rc.8` over `qwen3.5:9b-q4_K_M` |
 | Base identity | Expected Ollama ID `6488c96fa5fa` |
 | RAG | One pinned MiniLM embedding revision; three managed NetTAP collections |
 | Evidence | Internal-only deterministic service for classic PCAP, text logs and normalized JSON/JSONL records |

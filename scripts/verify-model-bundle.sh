@@ -19,7 +19,7 @@ archive_digest="$(if command -v shasum >/dev/null 2>&1; then shasum -a 256 "$arc
 grep -Fqx "Artifact: $archive_name" "$provenance"
 grep -Fqx "SHA256: $archive_digest" "$provenance"
 grep -Fqx 'Model: nettap-ai:0.3.0-rc.8' "$provenance"
-grep -Fqx 'Base: qwen3.5:9b' "$provenance"
+grep -Fqx 'Base: qwen3.5:9b-q4_K_M' "$provenance"
 grep -Fqx 'Expected-Base-ID: 6488c96fa5fa' "$provenance"
 grep -Fqx 'Contains-Weights: no' "$provenance"
 

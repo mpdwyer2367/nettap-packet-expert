@@ -40,7 +40,7 @@ initialize_env() {
   ensure_env_default OPEN_WEBUI_IMAGE "ghcr.io/open-webui/open-webui:v0.11.0"
   ensure_env_default CADDY_IMAGE "caddy:2.11.4-alpine"
   ensure_env_default BACKUP_IMAGE "alpine:3.24.1"
-  ensure_env_default BASE_MODEL "qwen3.5:9b"
+  ensure_env_default BASE_MODEL "qwen3.5:9b-q4_K_M"
   ensure_env_default NETTAP_AI_MODEL "nettap-ai:0.3.0-rc.8"
   ensure_env_default MODEL_NAME "nettap-ai:0.3.0-rc.8"
   ensure_env_default EXPECTED_BASE_MODEL_ID "6488c96fa5fa"
@@ -79,6 +79,9 @@ initialize_env() {
   fi
   if grep -Eq '^NETTAP_AI_MODEL=(nettap-packet-expert:[^[:space:]]+|nettap-ai:(latest|0\.3\.0-rc\.[1-7]))$' "$env_file"; then
     set_env_value NETTAP_AI_MODEL "nettap-ai:0.3.0-rc.8"
+  fi
+  if grep -q '^BASE_MODEL=qwen3\.5:9b$' "$env_file"; then
+    set_env_value BASE_MODEL "qwen3.5:9b-q4_K_M"
   fi
   if grep -q '^RAG_EMBEDDING_MODEL=/app/backend/data/nettap-models/all-MiniLM-L6-v2$' "$env_file"; then
     set_env_value RAG_EMBEDDING_MODEL "/app/backend/data/nettap-models/all-MiniLM-L6-v2/1110a243fdf4706b3f48f1d95db1a4f5529b4d41"
@@ -193,6 +196,7 @@ bounded_ollama_generate() {
 import json
 import os
 import sys
+import urllib.error
 import urllib.request
 
 payload = json.dumps({
@@ -211,10 +215,16 @@ request = urllib.request.Request(
     headers={"Content-Type": "application/json"},
     method="POST",
 )
-with urllib.request.urlopen(
-    request, timeout=int(os.environ["NETTAP_VERIFY_TIMEOUT"])
-) as response:
-    result = json.loads(response.read().decode("utf-8"))
+try:
+    with urllib.request.urlopen(
+        request, timeout=int(os.environ["NETTAP_VERIFY_TIMEOUT"])
+    ) as response:
+        result = json.loads(response.read().decode("utf-8"))
+except urllib.error.HTTPError as error:
+    details = error.read().decode("utf-8", errors="replace").strip()
+    raise SystemExit(f"Ollama API HTTP {error.code}: {details or error.reason}") from None
+except (TimeoutError, urllib.error.URLError) as error:
+    raise SystemExit(f"Ollama API request failed: {error}") from None
 text = result.get("response", "").strip()
 if not text:
     raise SystemExit("Ollama returned no response text")
@@ -247,8 +257,7 @@ require_local_port_binding() {
 
 wait_for_local_endpoint() {
   local label="$1" url="$2"
-  local attempt
-  for attempt in $(seq 1 60); do
+  for _ in $(seq 1 60); do
     if curl --fail --silent --show-error "$url" >/dev/null 2>&1; then
       echo "PASS: ${label} is reachable at ${url}"
       return 0

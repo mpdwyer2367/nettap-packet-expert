@@ -27,7 +27,9 @@ echo "Project directory: $project_dir"
 if [[ "$platform" == macos ]]; then
   [[ "$(uname -s)" == Darwin ]] || fail "macOS host required."
 else
-  [[ "$(uname -s)" == Linux ]] && grep -Eiq 'microsoft|wsl' /proc/version || fail "Windows/WSL2 host required."
+  if [[ "$(uname -s)" != Linux ]] || ! grep -Eiq 'microsoft|wsl' /proc/version; then
+    fail "Windows/WSL2 host required."
+  fi
 fi
 
 require_runtime
@@ -99,7 +101,9 @@ echo "PASS: combined assistant, managed ingestion filter and offline RAG"
 
 echo "INFO: Running bounded controlled inference (maximum ${NETTAP_INFERENCE_TIMEOUT_SECONDS:-180} seconds; first model load can take time)."
 if ! response="$(bounded_ollama_generate "$nettap_model" 'No evidence is connected. State the evidence boundary and ask one important question.')"; then
-  fail "Controlled inference failed or exceeded its timeout."
+  echo "Recent Ollama service logs:" >&2
+  "${compose_local[@]}" logs --no-color --tail=80 ollama >&2 || true
+  fail "Controlled inference failed; review the Ollama API error and service logs above."
 fi
 [[ -n "$response" ]] || fail "Controlled inference returned no output."
 printf '%s\n' "$response" | grep -Eiq 'no live|not connected|cannot (see|access|observe)|do not have access|unavailable' || fail "Model did not state the evidence boundary."

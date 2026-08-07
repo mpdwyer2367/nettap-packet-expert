@@ -14,7 +14,7 @@ case "${1:-}" in
   list)
     printf '%s\n' 'NAME ID SIZE MODIFIED'
     if [[ -f "${NETTAP_TEST_STATE_DIR}/pulled" ]]; then
-      printf '%s\n' 'qwen3.5:9b 6488c96fa5fa 4.7 GB now'
+      printf '%s\n' 'qwen3.5:9b-q4_K_M 6488c96fa5fa 4.7 GB now'
     fi
     if [[ -f "${NETTAP_TEST_STATE_DIR}/created" ]]; then
       printf '%s\n' 'nettap-ai:0.3.0-rc.8 current 4.7 GB now'
@@ -26,7 +26,7 @@ case "${1:-}" in
     printf '%s\n' 'qwen3:8b other 5.2 GB old'
     ;;
   pull)
-    [[ "${2:-}" == "qwen3.5:9b" ]]
+    [[ "${2:-}" == "qwen3.5:9b-q4_K_M" ]]
     : >"${NETTAP_TEST_STATE_DIR}/pulled"
     ;;
   create)

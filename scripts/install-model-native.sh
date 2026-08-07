@@ -3,7 +3,7 @@ set -euo pipefail
 
 script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 project_dir="$(cd "${script_dir}/.." && pwd)"
-base_model="qwen3.5:9b"
+base_model="qwen3.5:9b-q4_K_M"
 expected_base_id="6488c96fa5fa"
 model_name="nettap-ai:0.3.0-rc.8"
 modelfile="${project_dir}/model/nettap-ai.Modelfile"

@@ -3,7 +3,7 @@
 | Field | Value |
 |---|---|
 | Model tag | `nettap-ai:0.3.0-rc.8` |
-| Base | `qwen3.5:9b` |
+| Base | `qwen3.5:9b-q4_K_M` |
 | Expected Ollama base ID | `6488c96fa5fa` |
 | Status | Release candidate; not production-certified |
 | Copyright | Copyright 2026 NetTAP Technology Limited |

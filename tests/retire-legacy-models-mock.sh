@@ -12,7 +12,7 @@ cp "$project_dir/scripts/retire-legacy-models.sh" "$test_root/project/scripts/re
 cat > "$test_root/project/.env" <<'EOF'
 DEPLOYMENT_MODE=local
 NETTAP_AI_MODEL=nettap-ai:0.3.0-rc.8
-BASE_MODEL=qwen3.5:9b
+BASE_MODEL=qwen3.5:9b-q4_K_M
 EOF
 cat > "$test_root/project/.env.example" <<'EOF'
 NETTAP_AI_MODEL=nettap-ai:0.3.0-rc.8
@@ -37,7 +37,7 @@ elif [[ "$*" == *" exec -T ollama ollama list" ]]; then
   if ! grep -Fqx 'container:nettap-packet-expert:latest' "$NETTAP_RETIRE_TEST_LOG" 2>/dev/null; then
     echo 'nettap-packet-expert:latest         legacy-three    4.7 GB'
   fi
-  echo 'qwen3.5:9b          base            4.7 GB'
+  echo 'qwen3.5:9b-q4_K_M          base            4.7 GB'
   echo 'kimi-k3:cloud                       other           -'
 elif [[ "$*" == *" exec -T ollama ollama rm "* ]]; then
   printf 'container:%s\n' "${*: -1}" >> "$NETTAP_RETIRE_TEST_LOG"

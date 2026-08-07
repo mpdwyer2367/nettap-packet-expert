@@ -5,7 +5,7 @@ This repository orchestrates separately distributed components; it does not cont
 | Component | Candidate reference | Upstream license/source | Distribution note |
 |---|---|---|---|
 | Ollama | `ollama/ollama:0.32.5` before digest lock | [Ollama repository](https://github.com/ollama/ollama) | MIT-licensed source; verify bundled notices and image contents |
-| Qwen3.5 9B | `qwen3.5:9b`, expected Ollama ID `6488c96fa5fa` | [Ollama model page](https://ollama.com/library/qwen3.5:9b) | Multimodal Apache-2.0 model; initialization refuses a changed manifest identity |
+| Qwen3.5 9B | `qwen3.5:9b-q4_K_M`, expected Ollama ID `6488c96fa5fa` | [Ollama model page](https://ollama.com/library/qwen3.5:9b-q4_K_M) | Multimodal Apache-2.0 model; initialization refuses a changed manifest identity |
 | Open WebUI | `ghcr.io/open-webui/open-webui:v0.11.0` before digest lock | [Open WebUI license](https://github.com/open-webui/open-webui/blob/main/LICENSE) | Branding and redistribution terms require legal review; supplied config does not remove branding |
 | all-MiniLM-L6-v2 embedding model | Revision `1110a243fdf4706b3f48f1d95db1a4f5529b4d41` | [Hugging Face model record](https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2) | Apache-2.0 model; cached during controlled initialization and loaded locally with remote code disabled |
 | Caddy | `caddy:2.11.4-alpine` before digest lock | [Caddy official image](https://hub.docker.com/_/caddy) | Apache-2.0 core; container may include other licensed packages |

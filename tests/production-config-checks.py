@@ -121,7 +121,7 @@ assert gateway["depends_on"]["evidence-service"]["condition"] == "service_health
 
 env_example = (root / ".env.example").read_text(encoding="utf-8")
 assert "RELEASE_VERSION=0.3.0-rc.8" in env_example
-assert "BASE_MODEL=qwen3.5:9b" in env_example
+assert "BASE_MODEL=qwen3.5:9b-q4_K_M" in env_example
 assert "NETTAP_AI_MODEL=nettap-ai:0.3.0-rc.8" in env_example
 assert "RETIRE_LEGACY_NETTAP_MODELS=true" in env_example
 assert "EXPECTED_BASE_MODEL_ID=6488c96fa5fa" in env_example
@@ -168,6 +168,8 @@ assert "package-model-bundle.sh" in workflow
 assert "verify-model-bundle.sh" in workflow
 
 common = (root / "scripts/common.sh").read_text(encoding="utf-8")
+assert 'ensure_env_default BASE_MODEL "qwen3.5:9b-q4_K_M"' in common
+assert "^BASE_MODEL=qwen3\\.5:9b$" in common
 assert "retire_legacy_models_if_enabled" in common
 assert 'RETIRE_LEGACY_NETTAP_MODELS "true"' in common
 assert 'canonical_project_name="nettap-network-intelligence"' in common

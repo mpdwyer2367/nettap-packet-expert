@@ -16,13 +16,6 @@ required=(
 )
 for path in "${required[@]}"; do [[ -f "$path" ]] || { echo "Missing required file: $path" >&2; exit 1; }; done
 
-for routed_script in $(sed -n 's/.*exec "${script_dir}\/\([^"]*\.sh\)".*/scripts\/\1/p' scripts/nettap-ai); do
-  [[ -x "$routed_script" ]] || {
-    echo "CLI-dispatched script is not executable: $routed_script" >&2
-    exit 1
-  }
-done
-
 grep -Fqx 'RELEASE_VERSION=0.3.0-rc.8' .env.example
 grep -Fqx 'NETTAP_AI_MODEL=nettap-ai:0.3.0-rc.8' .env.example
 grep -Fqx 'NETTAP_OPERATIONS_PROFILE=nettap-network-operations' .env.example
@@ -31,7 +24,14 @@ grep -Fqx 'WEB_PORT=3100' .env.example
 
 python3 - <<'PY'
 import json
+import os
+import re
 from pathlib import Path
+
+cli_source = Path('scripts/nettap-ai').read_text()
+for routed_name in re.findall(r'exec "\$\{script_dir\}/([^"]+\.sh)"', cli_source):
+    routed_script = Path('scripts') / routed_name
+    assert os.access(routed_script, os.X_OK), f'CLI-dispatched script is not executable: {routed_script}'
 
 m = json.loads(Path('provisioning/open-webui.json').read_text())
 assert m['release_version'] == '0.3.0-rc.8'

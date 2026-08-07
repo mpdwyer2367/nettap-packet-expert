@@ -8,7 +8,7 @@ RC8 is the consolidated multimodal candidate. It is eligible for controlled eval
 - Application: one authenticated Open WebUI at local loopback port 3100
 - Managed assistant: `nettap-network-operations`
 - NetTAP model: `nettap-ai:0.3.0-rc.8`
-- Base model: `qwen3.5:9b`, expected Ollama ID `6488c96fa5fa`
+- Base model: `qwen3.5:9b-q4_K_M`, expected Ollama ID `6488c96fa5fa`
 - Embedding revision: `1110a243fdf4706b3f48f1d95db1a4f5529b4d41`
 - Retired local ports: 3000, 3001 and 3200
 
