@@ -166,6 +166,62 @@ compose_legacy_local=(docker compose --project-name "$legacy_project_name" --pro
 # shellcheck disable=SC2034 # compatibility alias consumed by local test entry points
 compose=("${compose_local[@]}")
 
+bounded_ollama_generate() {
+  local model="$1" prompt="$2" mode="${3:-local}"
+  local timeout_seconds="${NETTAP_INFERENCE_TIMEOUT_SECONDS:-180}"
+  local max_tokens="${NETTAP_INFERENCE_MAX_TOKENS:-256}"
+  local -a selected=("${compose_local[@]}")
+  case "$mode" in
+    local) ;;
+    production) selected=("${compose_production[@]}") ;;
+    *) echo "ERROR: Inference mode must be local or production." >&2; return 2 ;;
+  esac
+  [[ "$timeout_seconds" =~ ^[1-9][0-9]*$ ]] || {
+    echo "ERROR: NETTAP_INFERENCE_TIMEOUT_SECONDS must be a positive integer." >&2
+    return 2
+  }
+  [[ "$max_tokens" =~ ^[1-9][0-9]*$ ]] || {
+    echo "ERROR: NETTAP_INFERENCE_MAX_TOKENS must be a positive integer." >&2
+    return 2
+  }
+
+  printf '%s' "$prompt" | "${selected[@]}" exec -T \
+    -e "NETTAP_VERIFY_MODEL=$model" \
+    -e "NETTAP_VERIFY_TIMEOUT=$timeout_seconds" \
+    -e "NETTAP_VERIFY_MAX_TOKENS=$max_tokens" \
+    open-webui python -c '
+import json
+import os
+import sys
+import urllib.request
+
+payload = json.dumps({
+    "model": os.environ["NETTAP_VERIFY_MODEL"],
+    "prompt": sys.stdin.read(),
+    "stream": False,
+    "think": False,
+    "options": {
+        "temperature": 0,
+        "num_predict": int(os.environ["NETTAP_VERIFY_MAX_TOKENS"]),
+    },
+}).encode("utf-8")
+request = urllib.request.Request(
+    "http://ollama:11434/api/generate",
+    data=payload,
+    headers={"Content-Type": "application/json"},
+    method="POST",
+)
+with urllib.request.urlopen(
+    request, timeout=int(os.environ["NETTAP_VERIFY_TIMEOUT"])
+) as response:
+    result = json.loads(response.read().decode("utf-8"))
+text = result.get("response", "").strip()
+if not text:
+    raise SystemExit("Ollama returned no response text")
+print(text)
+'
+}
+
 local_runtime_diagnostics() {
   echo "NetTAP local runtime diagnostics:" >&2
   "${compose_local[@]}" ps >&2 || true

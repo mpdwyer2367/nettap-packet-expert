@@ -32,7 +32,7 @@ PY
 )"
 [[ "$admin_count" -ge 1 ]] || { echo "FAIL: Open WebUI has no administrator account."; exit 6; }
 
-response="$("${compose[@]}" exec -T ollama ollama run "$nettap_model" \
+response="$(bounded_ollama_generate "$nettap_model" \
   'No capture or telemetry is connected. State whether live network evidence is available, then ask one important question to start a suspected network investigation.')"
 printf '%s\n' "$response"
 [[ -n "$response" ]] || { echo "FAIL: Empty model response."; exit 6; }

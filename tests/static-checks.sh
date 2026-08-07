@@ -64,6 +64,20 @@ assert 'NETTAP_OPEN_WEBUI_UPLOAD_DIR' in filter_source
 assert 'EVIDENCE_API_TOKEN' in filter_source
 assert 'IMAGE_TYPES' in filter_source
 assert 'image_url' in filter_source
+
+common_source = Path('scripts/common.sh').read_text()
+assert 'bounded_ollama_generate' in common_source
+assert 'NETTAP_INFERENCE_TIMEOUT_SECONDS' in common_source
+assert '"num_predict"' in common_source
+for bounded_script in (
+    'scripts/verify-macos-deployment.sh',
+    'tests/macos-e2e.sh',
+    'tests/model-behavior-eval.sh',
+    'tests/normalized-ingestion-eval.sh',
+):
+    source = Path(bounded_script).read_text()
+    assert 'bounded_ollama_generate' in source
+    assert ' ollama run ' not in source
 PY
 
 if rg -n 'VISIBILITY_LAUNCHER_PORT|PACKET_EXPERT_LAUNCHER_PORT|^EVIDENCE_PORT=' .env.example compose.local.yaml; then

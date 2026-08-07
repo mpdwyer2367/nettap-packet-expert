@@ -97,7 +97,10 @@ PY
 [[ "$(installed_provisioning_fingerprint local)" == "$(provisioning_fingerprint local)" ]] || fail "Installed provisioning fingerprint differs from RC8 source."
 echo "PASS: combined assistant, managed ingestion filter and offline RAG"
 
-response="$("${compose_local[@]}" exec -T ollama ollama run "$nettap_model" 'No evidence is connected. State the evidence boundary and ask one important question.')"
+echo "INFO: Running bounded controlled inference (maximum ${NETTAP_INFERENCE_TIMEOUT_SECONDS:-180} seconds; first model load can take time)."
+if ! response="$(bounded_ollama_generate "$nettap_model" 'No evidence is connected. State the evidence boundary and ask one important question.')"; then
+  fail "Controlled inference failed or exceeded its timeout."
+fi
 [[ -n "$response" ]] || fail "Controlled inference returned no output."
 printf '%s\n' "$response" | grep -Eiq 'no live|not connected|cannot (see|access|observe)|do not have access|unavailable' || fail "Model did not state the evidence boundary."
 echo "PASS: controlled inference"

@@ -14,11 +14,6 @@ require_runtime
 [[ -f "$env_file" ]] || fail "Missing .env. Run the deployment first."
 nettap_model="$(load_env_value NETTAP_AI_MODEL)"
 mode="$(load_env_value DEPLOYMENT_MODE)"
-if [[ "$mode" == production ]]; then
-  active_compose=("${compose_production[@]}")
-else
-  active_compose=("${compose_local[@]}")
-fi
 report="${project_dir}/reports/generated/normalized-ingestion-$(date -u +%Y%m%dT%H%M%SZ).txt"
 mkdir -p "$(dirname "$report")"
 exec > >(tee "$report") 2>&1
@@ -29,8 +24,9 @@ run_fixture() {
   data="$(<"${project_dir}/${fixture}")"
   echo
   echo "CASE: $name"
-  response="$("${active_compose[@]}" exec -T ollama ollama run "$nettap_model" \
-    "Analyze the following authorized normalized synthetic test data. It is uploaded fixture data, not a live feed. Separate observed facts from hypotheses, state material limitations, and do not invent payload or compromise. Objective: ${objective}\n\nDATA START\n${data}\nDATA END")"
+  response="$(bounded_ollama_generate "$nettap_model" \
+    "Analyze the following authorized normalized synthetic test data. It is uploaded fixture data, not a live feed. Separate observed facts from hypotheses, state material limitations, and do not invent payload or compromise. Objective: ${objective}\n\nDATA START\n${data}\nDATA END" \
+    "$mode")"
   printf '%s\n' "$response"
   [[ -n "$response" ]] || fail "$name returned no output."
   while [[ $# -gt 0 ]]; do

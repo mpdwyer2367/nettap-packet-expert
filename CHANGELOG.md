@@ -8,6 +8,7 @@
 - Kept PCAP, log and normalized flow records on the deterministic internal evidence path and removed the redundant user-selectable evidence tool binding.
 - Updated model identity, memory guidance, provisioning, source pins, tests, architecture and acceptance documentation.
 - Corrected the managed offline-RAG probe content to the RC8 marker and added a manifest-to-knowledge consistency check.
+- Replaced unbounded acceptance-test `ollama run` calls with a token-limited local API request and a configurable hard timeout.
 - Preserved fail-closed production status pending exact-build macOS and Windows/WSL2 runtime acceptance and commercial release evidence.
 
 ## 0.3.0-rc.7 unified application candidate — 2026-08-07

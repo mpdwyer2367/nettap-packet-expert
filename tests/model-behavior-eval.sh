@@ -19,7 +19,7 @@ run_case() {
   local response
   echo
   echo "CASE: $name"
-  response="$("${compose[@]}" exec -T ollama ollama run "$model" "$prompt")"
+  response="$(bounded_ollama_generate "$model" "$prompt")"
   printf '%s\n' "$response"
   [[ -n "$response" ]] || fail "$name returned no output."
   printf '%s\n' "$response" | grep -Eiq "$required_pattern" || \
