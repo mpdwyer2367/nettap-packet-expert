@@ -166,6 +166,8 @@ assert "admin-recovery-mock.sh" in workflow
 assert "retire-legacy-models.ps1" in workflow
 assert "package-model-bundle.sh" in workflow
 assert "verify-model-bundle.sh" in workflow
+assert 'release_version="$(sed -n' in workflow
+assert "0.3.0-rc.5" not in workflow
 
 common = (root / "scripts/common.sh").read_text(encoding="utf-8")
 assert 'ensure_env_default BASE_MODEL "qwen3.5:9b-q4_K_M"' in common

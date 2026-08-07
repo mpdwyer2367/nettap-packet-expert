@@ -73,9 +73,13 @@ jobs:
           if ($errors.Count -gt 0) { throw ($errors | Out-String) }
       - name: Build and verify unsigned source candidate
         run: |
+          release_version="$(sed -n 's/^RELEASE_VERSION=//p' .env.example)"
+          test -n "$release_version"
           ./scripts/package-release.sh --unsigned-candidate
-          ./scripts/verify-release.sh dist/nettap-ai-suite-0.3.0-rc.5-source.tar.gz
+          ./scripts/verify-release.sh "dist/nettap-ai-suite-${release_version}-source.tar.gz"
       - name: Build and verify combined model bundle
         run: |
+          release_version="$(sed -n 's/^RELEASE_VERSION=//p' .env.example)"
+          test -n "$release_version"
           ./scripts/package-model-bundle.sh
-          ./scripts/verify-model-bundle.sh dist/nettap-ai-model-0.3.0-rc.5.tar.gz
+          ./scripts/verify-model-bundle.sh "dist/nettap-ai-model-${release_version}.tar.gz"
