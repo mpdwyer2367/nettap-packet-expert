@@ -37,10 +37,13 @@ class AdministratorRecoveryTest(unittest.TestCase):
     def tearDown(self):
         self.temporary.cleanup()
 
-    def run_recovery(self, password="Ntp!9UnitTestPassword"):
+    def run_recovery(self, password="Ntp!9UnitTestPassword", email=None):
+        environment = {}
+        if email is not None:
+            environment[recovery.RECOVERY_EMAIL_ENV] = email
         with mock.patch.object(recovery, "DATABASE", str(self.database)), mock.patch.object(
             sys, "stdin", io.StringIO(password + "\n")
-        ):
+        ), mock.patch.dict("os.environ", environment, clear=True):
             return recovery.main()
 
     def test_recovers_single_admin_and_preserves_identity(self):
@@ -62,6 +65,41 @@ class AdministratorRecoveryTest(unittest.TestCase):
             self.run_recovery()
         db = sqlite3.connect(self.database)
         original = db.execute("SELECT email, password FROM auth WHERE id = ?", ("admin-1",)).fetchone()
+        db.close()
+        self.assertEqual(original, ("retained@example.test", "old-hash"))
+
+    def test_recovers_selected_canonical_admin_when_multiple_exist(self):
+        db = sqlite3.connect(self.database)
+        db.execute(
+            "UPDATE auth SET email = ? WHERE id = ?", ("admin@nettap.local", "admin-1")
+        )
+        db.execute(
+            "UPDATE user SET email = ? WHERE id = ?", ("admin@nettap.local", "admin-1")
+        )
+        db.execute("INSERT INTO auth VALUES (?, ?, ?)", ("admin-2", "second@example.test", "second-hash"))
+        db.execute("INSERT INTO user VALUES (?, ?, ?, ?)", ("admin-2", "second@example.test", "Second", "admin"))
+        db.commit()
+        db.close()
+
+        self.assertEqual(self.run_recovery(email="admin@nettap.local"), 0)
+        db = sqlite3.connect(self.database)
+        selected = db.execute(
+            "SELECT email, password FROM auth WHERE id = ?", ("admin-1",)
+        ).fetchone()
+        other = db.execute(
+            "SELECT email, password FROM auth WHERE id = ?", ("admin-2",)
+        ).fetchone()
+        db.close()
+        self.assertEqual(selected, ("admin@nettap.local", "test-hash:Ntp!9UnitTestPassword"))
+        self.assertEqual(other, ("second@example.test", "second-hash"))
+
+    def test_refuses_unknown_selected_administrator_without_changes(self):
+        with self.assertRaisesRegex(SystemExit, "matched 0 accounts"):
+            self.run_recovery(email="missing@example.test")
+        db = sqlite3.connect(self.database)
+        original = db.execute(
+            "SELECT email, password FROM auth WHERE id = ?", ("admin-1",)
+        ).fetchone()
         db.close()
         self.assertEqual(original, ("retained@example.test", "old-hash"))
 

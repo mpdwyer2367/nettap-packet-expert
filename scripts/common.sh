@@ -460,7 +460,7 @@ provision_assistants() {
   if [[ $provision_status -ne 0 ]]; then
     if [[ $provision_status -eq 11 ]]; then
       echo "ERROR: Open WebUI rejected the current administrator email or password." >&2
-      echo "Recovery: run ./scripts/recover-admin.sh --confirm, then rerun the platform start command." >&2
+      echo "Recovery: run ./scripts/recover-admin.sh --confirm --email <existing-admin-email>, then rerun the platform start command." >&2
     else
       echo "ERROR: Automatic assistant and offline RAG provisioning failed; review the provisioner error above." >&2
     fi

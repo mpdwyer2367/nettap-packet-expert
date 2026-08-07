@@ -21,7 +21,7 @@ No universal `admin/admin` credential is used. The credential file is local, mod
 
 An existing Open WebUI data volume retains its existing users and password hashes. Environment variables do not overwrite them. If provisioning requests credentials, enter a current administrator email/password interactively; neither is committed.
 
-For a deployment with exactly one administrator, `./scripts/nettap-ai recover-admin --confirm` creates a protected database backup, resets that administrator to `admin@nettap.local` with a new random one-time password and invalidates sessions. If the database has zero or multiple administrators, stop and use an authorized reviewed recovery process; the script intentionally refuses to guess which account to change.
+`./scripts/nettap-ai recover-admin --confirm --email admin@nettap.local` creates a protected database backup, resets that exact administrator to the canonical `admin@nettap.local` identity with a new random one-time password and invalidates sessions. The password is written only to the local mode-0600 `.bootstrap-admin-password` file. If `--email` is omitted, recovery still requires exactly one administrator; with multiple administrators, the command refuses to guess which account to change.
 
 ## Production controls
 

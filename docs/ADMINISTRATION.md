@@ -15,7 +15,7 @@ Run commands from the repository root. The canonical Compose project is `nettap-
 | Restart services | `docker compose --env-file .env -f compose.yaml -f compose.local.yaml restart` | Preserves volumes |
 | Repair local ports | `./scripts/nettap-ai repair-local` | Recreates local interfaces and verifies port 3100 |
 | Reconcile assistant/RAG | `./scripts/nettap-ai provision-assistants --confirm` | Prompts for current admin credential when required |
-| Recover sole admin | `./scripts/nettap-ai recover-admin --confirm` | Backs up DB, resets canonical admin and invalidates sessions; requires exactly one admin |
+| Recover admin | `./scripts/nettap-ai recover-admin --confirm --email admin@nettap.local` | Backs up the DB, resets the selected account to the canonical admin identity with a locally generated one-time password and invalidates sessions |
 | Finalize first login | `./scripts/finalize-admin.sh --confirm` | Retires bootstrap credential after password change is verified |
 | Rebuild approved model | `./scripts/nettap-ai update-models --confirm` | Uses temporary egress, revalidates and returns offline |
 | List retired tags | `./scripts/nettap-ai retire-old-models` | Dry run |

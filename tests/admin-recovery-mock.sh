@@ -29,7 +29,7 @@ if [[ "${1:-}" == compose && "$*" == *" ps -q open-webui"* ]]; then
   printf 'mock-open-webui\n'
   exit 0
 fi
-if [[ "${1:-}" == compose && "$*" == *" exec -T open-webui python"* ]]; then
+if [[ "${1:-}" == compose && "$*" == *" exec -T "*" open-webui python"* ]]; then
   while IFS= read -r _line; do :; done
   exit 0
 fi
@@ -47,13 +47,14 @@ chmod +x "$test_root/bin/docker"
 
 export NETTAP_RECOVERY_TEST_LOG="$test_root/docker.log"
 export PATH="$test_root/bin:$PATH"
-"$test_root/scripts/recover-admin.sh" --confirm >/dev/null
+"$test_root/scripts/recover-admin.sh" --confirm --email admin@nettap.local >/dev/null
 
 grep -Fqx 'WEBUI_ADMIN_EMAIL=admin@nettap.local' "$test_root/.env"
 grep -Eq '^WEBUI_ADMIN_PASSWORD=Ntp!9[0-9a-f]{24}$' "$test_root/.env"
 grep -Eq '^WEBUI_SECRET_KEY=[0-9a-f]{64}$' "$test_root/.env"
 grep -Fqx 'Login: admin@nettap.local' "$test_root/.bootstrap-admin-password"
 grep -Fqx 'Compose project: nettap-network-intelligence' "$test_root/.bootstrap-admin-password"
+grep -Fq 'NETTAP_RECOVERY_ADMIN_EMAIL=admin@nettap.local' "$NETTAP_RECOVERY_TEST_LOG"
 recovery_password="$(sed -n 's/^WEBUI_ADMIN_PASSWORD=//p' "$test_root/.env")"
 if grep -Fq "$recovery_password" "$NETTAP_RECOVERY_TEST_LOG"; then
   echo 'ERROR: Recovery password appeared in Docker command arguments.' >&2

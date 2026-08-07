@@ -3,6 +3,7 @@
 
 from __future__ import annotations
 
+import os
 import sqlite3
 import sys
 
@@ -12,6 +13,7 @@ import bcrypt
 CANONICAL_EMAIL = "admin@nettap.local"
 CANONICAL_NAME = "NetTAP Administrator"
 DATABASE = "/app/backend/data/webui.db"
+RECOVERY_EMAIL_ENV = "NETTAP_RECOVERY_ADMIN_EMAIL"
 
 
 def main() -> int:
@@ -22,13 +24,23 @@ def main() -> int:
     database = sqlite3.connect(DATABASE, timeout=30)
     try:
         database.execute("BEGIN IMMEDIATE")
-        admins = database.execute(
-            "SELECT a.id FROM auth AS a JOIN user AS u ON u.id = a.id WHERE u.role = ?",
-            ("admin",),
-        ).fetchall()
+        recovery_email = os.environ.get(RECOVERY_EMAIL_ENV, "").strip()
+        if recovery_email:
+            admins = database.execute(
+                "SELECT a.id FROM auth AS a JOIN user AS u ON u.id = a.id "
+                "WHERE u.role = ? AND (lower(a.email) = lower(?) OR lower(u.email) = lower(?))",
+                ("admin", recovery_email, recovery_email),
+            ).fetchall()
+            failure = f"selected administrator {recovery_email!r} matched {len(admins)} accounts"
+        else:
+            admins = database.execute(
+                "SELECT a.id FROM auth AS a JOIN user AS u ON u.id = a.id WHERE u.role = ?",
+                ("admin",),
+            ).fetchall()
+            failure = f"recovery requires exactly one administrator; found {len(admins)}"
         if len(admins) != 1:
             database.rollback()
-            raise SystemExit(f"recovery requires exactly one administrator; found {len(admins)}")
+            raise SystemExit(failure)
 
         admin_id = admins[0][0]
         auth_conflict = database.execute(

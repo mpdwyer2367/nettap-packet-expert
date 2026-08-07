@@ -98,7 +98,7 @@ For evidence analysis, attach a supported file to the chat and describe the goal
 ./scripts/nettap-ai health
 ./scripts/nettap-ai repair-local
 ./scripts/nettap-ai provision-assistants --confirm
-./scripts/nettap-ai recover-admin --confirm
+./scripts/nettap-ai recover-admin --confirm --email admin@nettap.local
 ./scripts/nettap-ai backup /secure/backup/path --confirm-stop
 ./scripts/nettap-ai update-models --confirm
 ./scripts/nettap-ai retire-old-models --confirm

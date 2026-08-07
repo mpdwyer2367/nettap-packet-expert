@@ -176,10 +176,10 @@ assert "stop_legacy_runtime_preserving_data" in common
 assert "prepare_canonical_admin_bootstrap" in common
 
 admin_recovery = (root / "scripts/recover_open_webui_admin.py").read_text(encoding="utf-8")
-for control in ("bcrypt.hashpw", "BEGIN IMMEDIATE"):
+for control in ("bcrypt.hashpw", "BEGIN IMMEDIATE", "NETTAP_RECOVERY_ADMIN_EMAIL"):
     assert control in admin_recovery
 recovery_entrypoint = (root / "scripts/recover-admin.sh").read_text(encoding="utf-8")
-for control in ("source.backup", "WEBUI_SECRET_KEY", "--force-recreate open-webui"):
+for control in ("source.backup", "WEBUI_SECRET_KEY", "--force-recreate open-webui", "--email"):
     assert control in recovery_entrypoint
 assert "--password" not in recovery_entrypoint
 assert "--password" not in admin_recovery

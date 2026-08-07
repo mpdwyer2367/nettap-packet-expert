@@ -52,7 +52,7 @@ Attach the same representative PCAP, log, normalized flow and network-image fixt
 ## Troubleshooting
 
 - If port 3100 is refused, run `./scripts/nettap-ai repair-local`, then inspect `docker compose ... ps -a` and logs.
-- If provisioning rejects a credential, the existing volume has its own current password. Use that account; for an installation with exactly one administrator, use `./scripts/nettap-ai recover-admin --confirm`.
+- If provisioning rejects a credential, the existing volume has its own current password. Use that account or run `./scripts/nettap-ai recover-admin --confirm --email admin@nettap.local` from WSL2 to back up the database and reset that exact account with a locally generated one-time password.
 - If Ollama port 11434 is already used by a native process, no change is normally needed: the containerized Ollama is internal and publishes no host port. Confirm the running Compose configuration rather than starting a second native service.
 - Do not delete volumes to repair login or port issues.
 
