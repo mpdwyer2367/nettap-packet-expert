@@ -45,6 +45,8 @@ assert a['function_keys'] == ['evidence_ingestion']
 assert a['tool_keys'] == []
 assert m['tool_servers'] == []
 assert m['embedding']['probe_expected'] == 'NETTAP-RAG-OFFLINE-PROBE-RC8'
+probe_source = Path('knowledge/NetTAP_Provisioning_Probe.md').read_text()
+assert m['embedding']['probe_expected'] in probe_source
 
 compose = Path('compose.yaml').read_text()
 local = Path('compose.local.yaml').read_text()
