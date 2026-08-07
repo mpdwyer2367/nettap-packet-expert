@@ -16,6 +16,13 @@ required=(
 )
 for path in "${required[@]}"; do [[ -f "$path" ]] || { echo "Missing required file: $path" >&2; exit 1; }; done
 
+for routed_script in $(sed -n 's/.*exec "${script_dir}\/\([^"]*\.sh\)".*/scripts\/\1/p' scripts/nettap-ai); do
+  [[ -x "$routed_script" ]] || {
+    echo "CLI-dispatched script is not executable: $routed_script" >&2
+    exit 1
+  }
+done
+
 grep -Fqx 'RELEASE_VERSION=0.3.0-rc.8' .env.example
 grep -Fqx 'NETTAP_AI_MODEL=nettap-ai:0.3.0-rc.8' .env.example
 grep -Fqx 'NETTAP_OPERATIONS_PROFILE=nettap-network-operations' .env.example
