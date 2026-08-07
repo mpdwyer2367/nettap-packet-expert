@@ -3,14 +3,14 @@ set -euo pipefail
 
 script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 project_dir="$(cd "${script_dir}/.." && pwd)"
-base_model="qwen2.5:7b-instruct-q4_K_M"
-expected_base_id="845dbda0ea48"
-model_name="nettap-ai:0.3.0-rc.4"
+base_model="qwen3.5:9b-q4_K_M"
+expected_base_id="6488c96fa5fa"
+model_name="nettap-ai:0.3.0-rc.8"
 modelfile="${project_dir}/model/nettap-ai.Modelfile"
 
 if [[ "${1:-}" != "--confirm-download" || $# -ne 1 ]]; then
   echo "Usage: ./scripts/install-model-native.sh --confirm-download" >&2
-  echo "This downloads the pinned Qwen2.5 7B base through Ollama, verifies its ID, and creates ${model_name}." >&2
+  echo "This downloads the pinned multimodal Qwen3.5 9B base through Ollama, verifies its ID, and creates ${model_name}." >&2
   exit 2
 fi
 
@@ -34,18 +34,18 @@ actual_base_id="$(ollama list | awk -v name="$base_model" '$1 == name { print $2
   exit 5
 }
 
-echo "Creating NetTAP Network Intelligence Model: ${model_name}"
+echo "Creating NetTAP Network Observability & Packet Analysis Model: ${model_name}"
 ollama create "$model_name" -f "$modelfile"
 rendered="$(ollama show --modelfile "$model_name")"
-[[ "$rendered" == *"You are the NetTAP Network Intelligence Model"* ]] || {
+[[ "$rendered" == *"You are the NetTAP Network Observability & Packet Analysis Model"* ]] || {
   echo "ERROR: Combined model identity verification failed." >&2
   exit 6
 }
-[[ "$rendered" == *"Network & Visibility mode"* ]] || {
+[[ "$rendered" == *"Network Observability mode"* ]] || {
   echo "ERROR: Network & Visibility capability is missing." >&2
   exit 6
 }
-[[ "$rendered" == *"Packet Expert mode"* ]] || {
+[[ "$rendered" == *"Packet Analysis mode"* ]] || {
   echo "ERROR: Packet Expert capability is missing." >&2
   exit 6
 }
@@ -69,4 +69,4 @@ remaining_legacy="$(ollama list | awk -v current="$model_name" 'NR > 1 && $1 != 
 echo "PASS: ${model_name} is saved in the active Ollama store."
 echo "PASS: superseded native NetTAP model tags were retired."
 echo "Run it directly with: ollama run ${model_name}"
-echo "For both branded assistants, offline RAG, accounts, and launchers, use the full Docker deployment in README.md."
+echo "For the single authenticated UI, offline RAG and managed file ingestion, use the full Docker deployment in README.md."

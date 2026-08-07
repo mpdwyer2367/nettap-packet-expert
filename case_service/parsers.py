@@ -59,6 +59,7 @@ ALLOWED_METADATA_KEYS = {
     "schema_version",
     "source_timezone",
     "tool_version",
+    "truncation",
 }
 SYSLOG_PATTERN = re.compile(
     r"^(?:<(?P<priority>\d{1,3})>)?(?P<timestamp>\S+(?:\s+\d{2}:\d{2}:\d{2})?)?\s*"

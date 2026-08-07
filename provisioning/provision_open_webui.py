@@ -22,6 +22,10 @@ class ProvisioningError(RuntimeError):
     pass
 
 
+class ProvisioningAuthenticationError(ProvisioningError):
+    pass
+
+
 def required_env(name: str) -> str:
     value = os.environ.get(name, "").strip()
     if not value:
@@ -33,6 +37,7 @@ MANIFEST_PATH = Path(os.environ.get("NETTAP_PROVISIONING_MANIFEST", "/provision/
 SOURCE_ROOT = Path(os.environ.get("NETTAP_PROVISIONING_SOURCE_ROOT", "/source"))
 STATE_PATH = Path(os.environ.get("NETTAP_PROVISIONING_STATE", "/app/backend/data/nettap-provisioning-state.json"))
 CHECKSUM_PATH = Path(os.environ.get("NETTAP_PROVISIONING_CHECKSUMS", "/provision/knowledge-sources.sha256"))
+RETIRED_MANAGED_TOOL_SERVER_IDS = {"nettap_evidence"}
 
 
 def load_manifest() -> dict:
@@ -76,6 +81,8 @@ def verify_source_checksums(manifest: dict) -> dict[str, str]:
         referenced.update(assistant["system_prompt_files"])
     for skill in manifest.get("skills", []):
         referenced.add(skill["file"])
+    for function in manifest.get("functions", []):
+        referenced.add(function["file"])
     if set(pinned) != referenced:
         raise ProvisioningError(
             f"pinned source set differs from manifest; missing={sorted(referenced - set(pinned))}, "
@@ -106,6 +113,8 @@ def provisioning_fingerprint(manifest: dict) -> str:
         referenced.update(assistant["system_prompt_files"])
     for skill in manifest.get("skills", []):
         referenced.add(skill["file"])
+    for function in manifest.get("functions", []):
+        referenced.add(function["file"])
     for relative in sorted(referenced):
         digest.update(relative.encode("utf-8"))
         digest.update(b"\0")
@@ -117,6 +126,7 @@ class ApiClient:
     def __init__(self, base_url: str):
         self.base_url = base_url.rstrip("/")
         self.token = None
+        self.user_id = None
 
     def request(self, method: str, path: str, payload=None, body=None, headers=None, allow=()):
         request_headers = {"Accept": "application/json"}
@@ -160,14 +170,27 @@ class ApiClient:
         raise ProvisioningError("Open WebUI did not become healthy within three minutes")
 
     def signin(self, email: str, password: str):
-        _, response = self.request(
+        status, response = self.request(
             "POST",
             "/api/v1/auths/signin",
             {"email": email, "password": password},
+            allow=(400, 401, 403),
         )
-        if response.get("role") != "admin" or not response.get("token"):
-            raise ProvisioningError("provisioning credential did not produce an administrator session")
+        if status != 200:
+            raise ProvisioningAuthenticationError(
+                "Open WebUI rejected the administrator credential; an existing data volume keeps its existing password"
+            )
+        if (
+            not isinstance(response, dict)
+            or response.get("role") != "admin"
+            or not response.get("token")
+            or not response.get("id")
+        ):
+            raise ProvisioningAuthenticationError(
+                "Open WebUI credential did not produce an administrator session"
+            )
         self.token = response["token"]
+        self.user_id = response["id"]
 
     def upload(self, knowledge_id: str, collection_key: str, release: str, relative: str):
         path = source_path(relative)
@@ -317,6 +340,63 @@ def reconcile_skill(client: ApiClient, skill: dict, fingerprint: str) -> dict:
     }
 
 
+def reconcile_function(client: ApiClient, definition: dict, fingerprint: str) -> dict:
+    """Install one reviewed, model-scoped Open WebUI Filter through its admin API."""
+    function_id = urllib.parse.quote(definition["id"], safe="")
+    status, existing = client.request(
+        "GET", f"/api/v1/functions/id/{function_id}", allow=(401, 404)
+    )
+    if status in (401, 404):
+        existing = None
+    if existing:
+        marker = (existing.get("meta") or {}).get("nettap_managed")
+        if not marker:
+            raise ProvisioningError(
+                f"refusing to overwrite unmanaged Open WebUI Function {definition['id']}"
+            )
+    content = source_path(definition["file"]).read_text(encoding="utf-8")
+    payload = {
+        "id": definition["id"],
+        "name": definition["name"],
+        "content": content,
+        "meta": {
+            "description": definition["description"],
+            "nettap_managed": {
+                "schema_version": 1,
+                "release_version": required_env("RELEASE_VERSION"),
+                "fingerprint": fingerprint,
+            },
+        },
+    }
+    if existing:
+        _, result = client.request(
+            "POST", f"/api/v1/functions/id/{function_id}/update", payload
+        )
+        action = "updated"
+    else:
+        _, result = client.request("POST", "/api/v1/functions/create", payload)
+        action = "created"
+    if not result.get("is_active"):
+        _, result = client.request("POST", f"/api/v1/functions/id/{function_id}/toggle")
+    if (
+        result.get("type") != "filter"
+        or result.get("is_active") is not True
+        or (result.get("meta") or {}).get("nettap_managed", {}).get("fingerprint")
+        != fingerprint
+    ):
+        raise ProvisioningError(
+            f"Open WebUI Function {definition['id']} did not retain its managed identity"
+        )
+    return {
+        "key": definition["key"],
+        "id": definition["id"],
+        "name": definition["name"],
+        "source": definition["file"],
+        "sha256": hashlib.sha256(content.encode()).hexdigest(),
+        "action": action,
+    }
+
+
 def reconcile_collection(client: ApiClient, manifest: dict, collection: dict, fingerprint: str) -> dict:
     release = manifest["release_version"]
     marker = f"[nettap-managed:{collection['key']}]"
@@ -388,7 +468,15 @@ def reconcile_collection(client: ApiClient, manifest: dict, collection: dict, fi
     }
 
 
-def assistant_payload(assistant: dict, knowledge: dict, skills: dict, fingerprint: str, existing=None) -> dict:
+def assistant_payload(
+    assistant: dict,
+    knowledge: dict,
+    skills: dict,
+    tool_servers: dict,
+    functions: dict,
+    fingerprint: str,
+    existing=None,
+) -> dict:
     runtime_model = required_env("NETTAP_AI_MODEL")
     prompt = "\n\n".join(source_path(path).read_text(encoding="utf-8").strip() for path in assistant["system_prompt_files"])
     existing = existing or {}
@@ -404,10 +492,12 @@ def assistant_payload(assistant: dict, knowledge: dict, skills: dict, fingerprin
             for key in assistant["knowledge_keys"]
         ],
         "skillIds": [skills[key]["id"] for key in assistant.get("skill_keys", [])],
+        "toolIds": [tool_servers[key]["binding"] for key in assistant.get("tool_keys", [])],
+        "filterIds": [functions[key]["id"] for key in assistant.get("function_keys", [])],
         "capabilities": {
-            "file_context": True,
-            "vision": False,
-            "file_upload": False,
+            "file_context": False,
+            "vision": True,
+            "file_upload": True,
             "web_search": False,
             "image_generation": False,
             "code_interpreter": False,
@@ -436,7 +526,15 @@ def assistant_payload(assistant: dict, knowledge: dict, skills: dict, fingerprin
     }
 
 
-def reconcile_assistant(client: ApiClient, assistant: dict, knowledge: dict, skills: dict, fingerprint: str) -> dict:
+def reconcile_assistant(
+    client: ApiClient,
+    assistant: dict,
+    knowledge: dict,
+    skills: dict,
+    tool_servers: dict,
+    functions: dict,
+    fingerprint: str,
+) -> dict:
     query = urllib.parse.urlencode({"id": assistant["id"]})
     status, existing = client.request("GET", f"/api/v1/models/model?{query}", allow=(404,))
     if status == 404:
@@ -446,6 +544,11 @@ def reconcile_assistant(client: ApiClient, assistant: dict, knowledge: dict, ski
         adoptable_bases = {
             "nettap-ai:0.3.0-rc.1",
             "nettap-ai:0.3.0-rc.2",
+            "nettap-ai:0.3.0-rc.3",
+            "nettap-ai:0.3.0-rc.4",
+            "nettap-ai:0.3.0-rc.5",
+            "nettap-ai:0.3.0-rc.6",
+            "nettap-ai:0.3.0-rc.7",
             required_env("NETTAP_AI_MODEL"),
         }
         if not managed and (
@@ -453,7 +556,9 @@ def reconcile_assistant(client: ApiClient, assistant: dict, knowledge: dict, ski
             or existing.get("base_model_id") not in adoptable_bases
         ):
             raise ProvisioningError(f"refusing to overwrite unmanaged Workspace Model {assistant['id']}")
-    payload = assistant_payload(assistant, knowledge, skills, fingerprint, existing)
+    payload = assistant_payload(
+        assistant, knowledge, skills, tool_servers, functions, fingerprint, existing
+    )
     if existing:
         _, result = client.request("POST", "/api/v1/models/model/update", payload)
         action = "updated"
@@ -468,11 +573,94 @@ def reconcile_assistant(client: ApiClient, assistant: dict, knowledge: dict, ski
         "action": action,
         "knowledge_ids": [item["id"] for item in payload["meta"]["knowledge"]],
         "skill_ids": payload["meta"]["skillIds"],
+        "tool_ids": payload["meta"]["toolIds"],
+        "filter_ids": payload["meta"]["filterIds"],
     }
 
 
+def reconcile_tool_servers(client: ApiClient, manifest: dict, fingerprint: str) -> dict:
+    """Register only reviewed read-only OpenAPI servers through the admin API."""
+    _, current = client.request("GET", "/api/v1/configs/tool_servers")
+    connections = current.get("TOOL_SERVER_CONNECTIONS") or []
+    active_ids = {item["id"] for item in manifest.get("tool_servers", [])}
+    managed_ids = active_ids | RETIRED_MANAGED_TOOL_SERVER_IDS
+    retained = []
+    for connection in connections:
+        info = connection.get("info") or {}
+        connection_id = info.get("id")
+        if connection_id not in managed_ids:
+            retained.append(connection)
+            continue
+        marker = (connection.get("config") or {}).get("nettap_managed")
+        if not marker:
+            raise ProvisioningError(
+                f"refusing to overwrite unmanaged tool server {connection_id}"
+            )
+
+    reconciled = {}
+    for definition in manifest.get("tool_servers", []):
+        url = required_env(definition["url_env"]).rstrip("/")
+        connection = {
+            "url": url,
+            "path": definition["openapi_path"],
+            "type": "openapi",
+            "auth_type": "bearer",
+            "headers": None,
+            "key": required_env("EVIDENCE_API_TOKEN"),
+            "config": {
+                "enable": True,
+                "access_grants": [
+                    {
+                        "principal_type": "user",
+                        "principal_id": client.user_id,
+                        "permission": "read",
+                    }
+                ],
+                "nettap_managed": {
+                    "schema_version": 1,
+                    "fingerprint": fingerprint,
+                },
+            },
+            "info": {
+                "id": definition["id"],
+                "name": definition["name"],
+                "description": definition["description"],
+            },
+        }
+        retained.append(connection)
+        reconciled[definition["key"]] = {
+            "id": definition["id"],
+            "name": definition["name"],
+            "binding": f"server:{definition['id']}",
+            "url": url,
+            "openapi_path": definition["openapi_path"],
+        }
+
+    _, configured = client.request(
+        "POST",
+        "/api/v1/configs/tool_servers",
+        {"TOOL_SERVER_CONNECTIONS": retained},
+    )
+    configured_ids = {
+        (item.get("info") or {}).get("id")
+        for item in configured.get("TOOL_SERVER_CONNECTIONS") or []
+    }
+    if active_ids - configured_ids:
+        raise ProvisioningError(
+            f"Open WebUI did not retain managed tool server(s): {sorted(active_ids - configured_ids)}"
+        )
+    _, visible = client.request("GET", "/api/v1/tools/")
+    visible_ids = {item.get("id") for item in visible}
+    expected_bindings = {f"server:{item}" for item in active_ids}
+    if expected_bindings - visible_ids:
+        raise ProvisioningError(
+            f"managed evidence tool is not available to the administrator: {sorted(expected_bindings - visible_ids)}"
+        )
+    return reconciled
+
+
 def configure_model_defaults(client: ApiClient, manifest: dict) -> dict:
-    """Make the two managed profiles easy to find without discarding admin metadata."""
+    """Pin the managed assistant without discarding administrator metadata."""
     _, current = client.request("GET", "/api/v1/configs/models")
     assistant_ids = [assistant["id"] for assistant in manifest["assistants"]]
     payload = {
@@ -544,6 +732,10 @@ def main() -> int:
     client.signin(required_env("WEBUI_ADMIN_EMAIL"), password)
     del password
 
+    tool_servers = reconcile_tool_servers(client, manifest, fingerprint)
+    for item in tool_servers.values():
+        print(f"OpenAPI tool server ready: {item['name']} ({item['binding']})")
+
     knowledge = {}
     for collection in manifest["knowledge_collections"]:
         result = reconcile_collection(client, manifest, collection, fingerprint)
@@ -559,9 +751,17 @@ def main() -> int:
         skills[result["key"]] = result
         print(f"Open WebUI Skill {result['action']}: {result['name']} ({result['id']})")
 
+    functions = {}
+    for definition in manifest.get("functions", []):
+        result = reconcile_function(client, definition, fingerprint)
+        functions[result["key"]] = result
+        print(f"Open WebUI Function {result['action']}: {result['name']} ({result['id']})")
+
     assistants = []
     for assistant in manifest["assistants"]:
-        result = reconcile_assistant(client, assistant, knowledge, skills, fingerprint)
+        result = reconcile_assistant(
+            client, assistant, knowledge, skills, tool_servers, functions, fingerprint
+        )
         assistants.append(result)
         print(f"Workspace Model {result['action']}: {result['name']} ({result['id']})")
 
@@ -576,6 +776,8 @@ def main() -> int:
         "completed_utc": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
         "knowledge": knowledge,
         "skills": skills,
+        "functions": functions,
+        "tool_servers": tool_servers,
         "assistants": assistants,
         "model_defaults": model_defaults,
         "offline_rag": rag,
@@ -588,6 +790,9 @@ def main() -> int:
 if __name__ == "__main__":
     try:
         raise SystemExit(main())
+    except ProvisioningAuthenticationError as exc:
+        print(f"ERROR: {exc}", file=sys.stderr)
+        raise SystemExit(11)
     except ProvisioningError as exc:
         print(f"ERROR: {exc}", file=sys.stderr)
         raise SystemExit(1)

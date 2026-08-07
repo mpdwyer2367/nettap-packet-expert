@@ -16,6 +16,7 @@ class Config:
     evidence_directory: Path
     max_upload_bytes: int
     max_records: int
+    operations_profile: str
 
     @classmethod
     def from_environment(cls) -> "Config":
@@ -49,6 +50,9 @@ class Config:
             evidence_directory=evidence,
             max_upload_bytes=max_upload,
             max_records=max_records,
+            operations_profile=os.environ.get(
+                "NETTAP_OPERATIONS_PROFILE", "nettap-network-operations"
+            ),
         )
 
 

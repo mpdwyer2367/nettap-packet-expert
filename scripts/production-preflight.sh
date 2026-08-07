@@ -18,5 +18,10 @@ require_security_scan_pass
 [[ -f "${project_dir}/config/tls/tls.crt" && -f "${project_dir}/config/tls/tls.key" ]] || {
   echo "FAIL: Production TLS is not configured." >&2; exit 11;
 }
-[[ -f "$admin_finalized_file" ]] || { echo "FAIL: Administrator activation is incomplete." >&2; exit 11; }
+effective_project="$(deployment_project_name)"
+if [[ ! -f "$admin_finalized_file" ]] || \
+  ! grep -Fqx "Compose project: $effective_project" "$admin_finalized_file"; then
+  echo "FAIL: Administrator activation is incomplete for $effective_project." >&2
+  exit 11
+fi
 echo "Production preflight passed: CPU, memory, disk, digests, matching security scan, TLS, and administrator activation."

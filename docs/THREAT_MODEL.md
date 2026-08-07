@@ -13,7 +13,7 @@ Administrator credentials, application secrets, customer chats, uploaded evidenc
 | Direct model API exposure | No Ollama host port; internal network | Docker host hardening |
 | WebUI bypass | No production WebUI host port | Verify with runtime gate |
 | Prompt injection/RAG poisoning | System policy treats evidence as untrusted; guardrail test | Curated knowledge, provenance, human review |
-| Cross-assistant prompt or knowledge leakage | One shared hard safety policy plus separate managed prompts, knowledge collections, profile IDs and launchers | Workspace Model binding and negative tests |
+| Knowledge or mode confusion | One shared hard safety policy, one managed assistant and explicit fact/inference boundaries | Behavioral and retrieval tests |
 | RAG dependency drift or poisoned cache | Exact repository revision, upstream file identity checks, revision-specific path, runtime SHA-256 manifest, remote code disabled | Approved hub access during bootstrap and release review |
 | Unauthorized tool execution | Tools disabled by default; user tool administration disabled | Connector allowlist, independent authorization and audit |
 | Sensitive packet disclosure | Data-minimization policy and explicit capability boundary | Approved normalization/redaction pipeline |
@@ -32,12 +32,12 @@ Administrator credentials, application secrets, customer chats, uploaded evidenc
 - Single-node service; no automatic failover.
 - Open WebUI administrator is highly privileged inside the instance.
 - Password activation includes a human confirmation because the upstream UI does not provide a complete forced-first-login state for this deployment.
-- A 7B model can produce incorrect or inconsistent answers; model output is advisory.
-- The repository does not provide native packet capture, live telemetry collectors, SSO/MFA, centralized audit export, licensing enforcement, or an OVA. The Evidence Workspace performs only its documented local parsing and normalization; it is not a general-purpose decoder or collector.
-- The loopback launcher pages select an assistant but are not authentication or authorization controls; Open WebUI and connector access control remain authoritative.
+- A 9B multimodal model can produce incorrect or inconsistent answers, including misreading diagrams; model output is advisory.
+- The repository does not provide native packet capture, live telemetry collectors, SSO/MFA, centralized audit export, licensing enforcement, or an OVA. The internal evidence service performs only its documented local parsing and normalization; it is not a general-purpose decoder or collector.
+- Open WebUI is the only customer-facing loopback UI. Ollama and the evidence service remain internal and publish no host ports.
 
 These limitations prevent an unconditional certification claim. They must be reflected in contracts, deployment architecture, acceptance criteria, and the product roadmap.
 
 ## Security test requirements
 
-Before commercial approval, test authentication and authorization, session expiry, cookie attributes, TLS configuration, rate and resource exhaustion, upload handling, prompt injection, malicious documents, cross-profile specialist knowledge and tool isolation, launcher selection, combined direct-model policy, backup confidentiality, restore integrity, logging leakage, dependency vulnerabilities, Docker isolation, upgrade/rollback, and loss of upstream registry access.
+Before commercial approval, test authentication and authorization, session expiry, cookie attributes, TLS configuration, rate and resource exhaustion, upload handling, image polyglots and resource abuse, visual prompt injection, malicious documents, combined knowledge boundaries, direct-model policy, backup confidentiality, restore integrity, logging leakage, dependency vulnerabilities, Docker isolation, upgrade/rollback, and loss of upstream registry access.

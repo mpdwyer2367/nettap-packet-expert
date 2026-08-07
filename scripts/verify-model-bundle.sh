@@ -18,9 +18,9 @@ fi)
 archive_digest="$(if command -v shasum >/dev/null 2>&1; then shasum -a 256 "$archive"; else sha256sum "$archive"; fi | awk '{print $1}')"
 grep -Fqx "Artifact: $archive_name" "$provenance"
 grep -Fqx "SHA256: $archive_digest" "$provenance"
-grep -Fqx 'Model: nettap-ai:0.3.0-rc.4' "$provenance"
-grep -Fqx 'Base: qwen2.5:7b-instruct-q4_K_M' "$provenance"
-grep -Fqx 'Expected-Base-ID: 845dbda0ea48' "$provenance"
+grep -Fqx 'Model: nettap-ai:0.3.0-rc.8' "$provenance"
+grep -Fqx 'Base: qwen3.5:9b-q4_K_M' "$provenance"
+grep -Fqx 'Expected-Base-ID: 6488c96fa5fa' "$provenance"
 grep -Fqx 'Contains-Weights: no' "$provenance"
 
 temporary_base="${TMPDIR:-$archive_dir}"
@@ -46,8 +46,8 @@ tar -xzf "$archive" -C "$temporary"
 bundle_root="${temporary}/${archive_name%.tar.gz}"
 [[ -f "${bundle_root}/model/nettap-ai.Modelfile" ]]
 [[ -f "${bundle_root}/model/MODEL_CARD.md" ]]
-[[ -f "${bundle_root}/skills/nettap-network-visibility/SKILL.md" ]]
-[[ -f "${bundle_root}/skills/nettap-packet-expert/SKILL.md" ]]
+[[ -f "${bundle_root}/skills/nettap-network-operations/SKILL.md" ]]
+[[ -f "${bundle_root}/functions/nettap_evidence_ingestion.py" ]]
 [[ -f "${bundle_root}/scripts/install-model-native.sh" ]]
 model_digest="$(if command -v shasum >/dev/null 2>&1; then shasum -a 256 "${bundle_root}/model/nettap-ai.Modelfile"; else sha256sum "${bundle_root}/model/nettap-ai.Modelfile"; fi | awk '{print $1}')"
 sources_digest="$(if command -v shasum >/dev/null 2>&1; then shasum -a 256 "${bundle_root}/provisioning/knowledge-sources.sha256"; else sha256sum "${bundle_root}/provisioning/knowledge-sources.sha256"; fi | awk '{print $1}')"
@@ -58,7 +58,7 @@ grep -Fqx "Provisioning-Sources-SHA256: $sources_digest" "$provenance"
 else
   sha256sum -c provisioning/knowledge-sources.sha256
 fi)
-grep -Fq 'You are the NetTAP Network Intelligence Model' "${bundle_root}/model/nettap-ai.Modelfile"
-grep -Fq 'Network & Visibility mode' "${bundle_root}/model/nettap-ai.Modelfile"
-grep -Fq 'Packet Expert mode' "${bundle_root}/model/nettap-ai.Modelfile"
+grep -Fq 'You are the NetTAP Network Observability & Packet Analysis Model' "${bundle_root}/model/nettap-ai.Modelfile"
+grep -Fq 'Network Observability mode' "${bundle_root}/model/nettap-ai.Modelfile"
+grep -Fq 'Packet Analysis mode' "${bundle_root}/model/nettap-ai.Modelfile"
 echo "PASS: NetTAP Network Intelligence Model bundle verified."

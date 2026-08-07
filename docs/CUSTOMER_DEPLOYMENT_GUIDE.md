@@ -58,7 +58,7 @@ On Windows, use `scripts/start-windows.ps1` and complete the Bash steps from WSL
 
 ## Knowledge configuration
 
-Startup automatically reconciles the reviewed shared and specialist Markdown into three managed collections through supported Open WebUI APIs. It attaches shared knowledge to both Workspace Models, Network & Visibility knowledge only to its matching profile, and Packet Expert knowledge only to Packet Expert. Both profiles use `nettap-ai:0.3.0-rc.4`. Confirm the recorded provisioning fingerprint, file hashes, exact embedding revision, and `Offline RAG verification: PASS`. Knowledge and uploaded evidence remain untrusted model inputs; neither may override system policy. See [knowledge management](KNOWLEDGE_MANAGEMENT.md).
+Startup automatically reconciles the reviewed shared, network-observability and packet-analysis Markdown into three managed collections through supported Open WebUI APIs. All collections, the managed Skill and attachment Filter bind to one assistant using `nettap-ai:0.3.0-rc.8`. Confirm the provisioning fingerprint, file hashes, exact embedding revision and `Offline RAG verification: PASS`. Knowledge, uploaded evidence and images remain untrusted inputs and may not override system policy. See [knowledge management](KNOWLEDGE_MANAGEMENT.md).
 
 ## Acceptance
 
@@ -70,7 +70,7 @@ Complete `reports/RELEASE_ACCEPTANCE_TEMPLATE.md` against the exact commit, imag
 - signup, code execution, API keys, web search, user webhooks, and admin chat access are disabled;
 - backup and restore into new volumes succeed;
 - fourteen behavioral and combined-capability smoke cases pass;
-- browser login, both launchers, profile switching, profile-specific prompts, and isolated specialist knowledge retrieval behave as documented;
+- browser login, the single assistant, broad starter prompts, combined knowledge retrieval and supported file attachments behave as documented;
 - the actual Ollama model-store measurement confirms one approved base and one combined NetTAP custom model;
 - no report contains credentials or customer evidence.
 

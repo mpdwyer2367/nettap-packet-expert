@@ -4,9 +4,9 @@ param(
 )
 
 $ErrorActionPreference = 'Stop'
-$BaseModel = 'qwen2.5:7b-instruct-q4_K_M'
-$ExpectedBaseId = '845dbda0ea48'
-$ModelName = 'nettap-ai:0.3.0-rc.4'
+$BaseModel = 'qwen3.5:9b-q4_K_M'
+$ExpectedBaseId = '6488c96fa5fa'
+$ModelName = 'nettap-ai:0.3.0-rc.8'
 $ProjectDirectory = Split-Path -Parent $PSScriptRoot
 $Modelfile = Join-Path $ProjectDirectory 'model/nettap-ai.Modelfile'
 
@@ -34,11 +34,11 @@ if ($ActualBaseId -ne $ExpectedBaseId) {
     throw "Base-model identity mismatch: expected $ExpectedBaseId, received $ActualBaseId."
 }
 
-Write-Host "Creating NetTAP Network Intelligence Model: $ModelName"
+Write-Host "Creating NetTAP Network Observability & Packet Analysis Model: $ModelName"
 & ollama create $ModelName -f $Modelfile
 if ($LASTEXITCODE -ne 0) { throw "Ollama could not create $ModelName." }
 $Rendered = (& ollama show --modelfile $ModelName) -join "`n"
-foreach ($RequiredText in @('You are the NetTAP Network Intelligence Model', 'Network & Visibility mode', 'Packet Expert mode')) {
+foreach ($RequiredText in @('You are the NetTAP Network Observability & Packet Analysis Model', 'Network Observability mode', 'Packet Analysis mode')) {
     if (-not $Rendered.Contains($RequiredText)) { throw "Combined model verification is missing: $RequiredText" }
 }
 
@@ -63,4 +63,4 @@ if ($remainingLegacy.Count -gt 0) { throw "Superseded native NetTAP tags remain:
 Write-Host "PASS: $ModelName is saved in the active Ollama store."
 Write-Host 'PASS: superseded native NetTAP model tags were retired.'
 Write-Host "Run it directly with: ollama run $ModelName"
-Write-Host 'For both branded assistants, offline RAG, accounts, and launchers, use the full Docker deployment in README.md.'
+Write-Host 'For the single authenticated UI, offline RAG and managed file ingestion, use the full Docker deployment in README.md.'

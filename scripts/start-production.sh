@@ -8,6 +8,8 @@ require_runtime
 initialize_env
 set_env_value DEPLOYMENT_MODE production
 docker info >/dev/null 2>&1 || { echo "ERROR: Docker engine is not running." >&2; exit 3; }
+stop_legacy_runtime_preserving_data
+prepare_canonical_admin_bootstrap
 
 [[ -f "${project_dir}/config/tls/tls.crt" && -f "${project_dir}/config/tls/tls.key" ]] || {
   echo "ERROR: Production TLS is not configured. Run ./scripts/configure-production.sh." >&2
@@ -15,7 +17,9 @@ docker info >/dev/null 2>&1 || { echo "ERROR: Docker engine is not running." >&2
 }
 require_digest_pins
 
-if [[ ! -f "$admin_finalized_file" ]]; then
+effective_project="$(deployment_project_name)"
+if [[ ! -f "$admin_finalized_file" ]] || \
+  ! grep -Fqx "Compose project: $effective_project" "$admin_finalized_file"; then
   echo "Production access is blocked until the generated administrator credential is changed and finalized."
   initialize_model_with_temporary_egress bootstrap-local
   web_port="$(load_env_value WEB_PORT)"
@@ -32,8 +36,6 @@ initialize_model_with_temporary_egress production
 hostname="$(load_env_value APPLIANCE_HOSTNAME)"
 https_port="$(load_env_value HTTPS_PORT)"
 echo "NetTAP Network Intelligence production candidate: https://${hostname}:${https_port}"
-echo "Network & Visibility: https://${hostname}:${https_port}/visibility"
-echo "Packet Expert: https://${hostname}:${https_port}/packet-expert"
-echo "Evidence Workspace: https://${hostname}:${https_port}/evidence/"
-echo "Evidence API token file: $evidence_token_file"
+echo "Combined Network Observability & Packet Analysis UI: https://${hostname}:${https_port}/"
+echo "Evidence parsing is an internal service and has no public route."
 echo "Run ./scripts/verify-production-deployment.sh and complete the production acceptance record."
