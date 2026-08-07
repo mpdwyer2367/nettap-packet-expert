@@ -257,8 +257,8 @@ require_local_port_binding() {
 
 wait_for_local_endpoint() {
   local label="$1" url="$2"
-  for _ in $(seq 1 60); do
-    if curl --fail --silent --show-error "$url" >/dev/null 2>&1; then
+  for _ in $(seq 1 30); do
+    if curl --fail --silent --show-error --connect-timeout 1 --max-time 2 "$url" >/dev/null 2>&1; then
       echo "PASS: ${label} is reachable at ${url}"
       return 0
     fi

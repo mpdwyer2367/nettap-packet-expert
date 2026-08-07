@@ -78,6 +78,10 @@ for bounded_script in (
     source = Path(bounded_script).read_text()
     assert 'bounded_ollama_generate' in source
     assert ' ollama run ' not in source
+
+verifier_source = Path('scripts/verify-macos-deployment.sh').read_text()
+assert 'wait_for_local_endpoint "Open WebUI health endpoint"' in verifier_source
+assert 'local_runtime_diagnostics' in verifier_source
 PY
 
 if rg -n 'VISIBILITY_LAUNCHER_PORT|PACKET_EXPERT_LAUNCHER_PORT|^EVIDENCE_PORT=' .env.example compose.local.yaml; then

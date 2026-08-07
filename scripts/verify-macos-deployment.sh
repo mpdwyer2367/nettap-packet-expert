@@ -73,7 +73,10 @@ web_port="$(load_env_value WEB_PORT)"
 [[ "$bind_address" == 127.0.0.1 ]] || fail "Local BIND_ADDRESS must be 127.0.0.1."
 webui_id="$("${compose_local[@]}" ps -q open-webui)"
 [[ "$(docker port "$webui_id" 8080/tcp 2>/dev/null || true)" == "${bind_address}:${web_port}" ]] || fail "Open WebUI is not bound to ${bind_address}:${web_port}."
-curl --fail --silent --show-error "http://${bind_address}:${web_port}/health" >/dev/null || fail "Open WebUI health endpoint failed."
+if ! wait_for_local_endpoint "Open WebUI health endpoint" "http://${bind_address}:${web_port}/health"; then
+  local_runtime_diagnostics
+  fail "Open WebUI health endpoint did not become ready."
+fi
 echo "PASS: one authenticated UI is reachable at http://${bind_address}:${web_port}"
 
 for retired_port in 3000 3001 3200; do

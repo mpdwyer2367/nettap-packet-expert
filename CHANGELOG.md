@@ -11,6 +11,7 @@
 - Replaced unbounded acceptance-test `ollama run` calls with a token-limited local API request and a configurable hard timeout.
 - Pinned the Qwen3.5 9B base to the explicit `qwen3.5:9b-q4_K_M` tag while retaining expected Ollama ID `6488c96fa5fa`.
 - Added Ollama HTTP error-body and service-log diagnostics for controlled inference failures.
+- Made local Open WebUI verification wait through transient Docker port-forward startup and print service diagnostics only after the bounded readiness window expires.
 - Preserved fail-closed production status pending exact-build macOS and Windows/WSL2 runtime acceptance and commercial release evidence.
 
 ## 0.3.0-rc.7 unified application candidate — 2026-08-07
