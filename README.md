@@ -137,6 +137,7 @@ Never merge Open WebUI SQLite files or mount one SQLite volume into multiple run
 ./scripts/nettap-ai status
 ./scripts/nettap-ai health
 ./scripts/nettap-ai update-models --confirm
+./scripts/nettap-ai candidate-model plan
 ./scripts/nettap-ai retire-old-models
 ./scripts/nettap-ai retire-old-models --confirm
 ./scripts/nettap-ai provision-assistants --confirm
@@ -152,6 +153,20 @@ models, accounts, chats, knowledge, evidence, and Docker volumes remain. Add
 `--include-native` only when a separate host-native store has been reviewed.
 
 The old `scripts/nettap-packet-expert` entry point remains as a compatibility wrapper for the 0.3 migration. See [administration](docs/ADMINISTRATION.md), [backup and restore](docs/COMPLETE_OPERATIONS_MANUAL.md), and [authentication](docs/AUTHENTICATION.md).
+
+### Controlled Qwen3.5 evaluation
+
+RC4 remains the working baseline. A separate evaluation lane can build `nettap-ai:0.4.0-qwen35-9b-rc.1` from the verified `qwen3.5:9b` base, create two clearly labeled non-default candidate profiles, and run the same fourteen behavior tests against RC4 and the candidate. The lane does not modify the RC4 tag, production defaults, reviewed knowledge, or Skills.
+
+```bash
+./scripts/nettap-ai candidate-model plan
+./scripts/nettap-ai candidate-model build --confirm
+./scripts/nettap-ai candidate-model provision-profiles --confirm
+./scripts/nettap-ai candidate-model test
+./scripts/nettap-ai candidate-model compare
+```
+
+This workflow is evaluation-only and refuses production mode. See [Qwen3.5 candidate evaluation](docs/QWEN35_CANDIDATE_EVALUATION.md) for the trust boundary and promotion gates.
 
 ## Knowledge and customizations
 

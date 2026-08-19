@@ -2,6 +2,7 @@
 
 ## Unreleased — evidence citation integrity
 
+- Added an evaluation-only Qwen3.5 9B candidate lane that preserves RC4, generates the candidate from the shared policy, verifies the published base identity, creates non-default test profiles, and compares the same fourteen evidence-boundary behaviors.
 - Added evidence database schema v2 with additive migration from schema v1.
 - Added typed citations for evidence manifests, exact normalized observations, and SHA-256-bound deterministic analysis artifacts.
 - Added an audited, case-scoped read-only citation resolver and one-click citation inspection in the Evidence Workspace.

@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "candidate_id": "qwen35-9b-rc1",
+  "release_version": "0.4.0-qwen35-9b-rc.1",
+  "base_model": "qwen3.5:9b",
+  "expected_base_model_id": "6488c96fa5fa",
+  "runtime_model": "nettap-ai:0.4.0-qwen35-9b-rc.1",
+  "source_policy": "model/nettap-ai.Modelfile",
+  "temperature": 0.1,
+  "num_ctx": 16384,
+  "profile_suffix": "qwen35-rc1",
+  "status": "evaluation-only",
+  "source": "https://ollama.com/library/qwen3.5:9b",
+  "license": "Apache-2.0"
+}

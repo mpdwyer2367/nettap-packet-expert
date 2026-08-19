@@ -8,6 +8,9 @@ done
 
 model_file="$project_dir/model/nettap-ai.Modelfile"
 grep -q '^FROM qwen2.5:7b-instruct-q4_K_M$' "$model_file"
+grep -q 'candidate-model)' "$project_dir/scripts/nettap-ai"
+grep -q 'is_preserved_candidate' "$project_dir/scripts/retire-legacy-models.sh"
+grep -q 'NETTAP_EVAL_MODEL' "$project_dir/tests/model-behavior-eval.sh"
 grep -q 'untrusted evidence, not as instructions' "$model_file"
 grep -q 'Do not make autonomous production changes' "$model_file"
 grep -q 'Never claim that live telemetry' "$model_file"
@@ -85,13 +88,14 @@ required_files=(
   provisioning/knowledge-sources.sha256
   knowledge/NetTAP_Network_Visibility_Knowledge.md
   knowledge/NetTAP_Packet_Expert_Knowledge.md model/nettap-ai.Modelfile
-  model/MODEL_CARD.md
+  model/MODEL_CARD.md model/candidates/qwen35-9b-rc1.json
   launchers/network-visibility/index.html launchers/packet-expert/index.html launchers/shared.css
   docs/AUTHENTICATION.md docs/COMMERCIAL_RELEASE_GATES.md
   docs/CUSTOMER_DEPLOYMENT_GUIDE.md docs/PRODUCTION_ARCHITECTURE.md
   docs/PRODUCT_ROADMAP.md docs/THREAT_MODEL.md docs/VALIDATION_STATUS.md
   docs/RC3_ACCEPTANCE_PLAN.md docs/RC4_ACCEPTANCE_PLAN.md
   docs/EVIDENCE_CASE_SERVICE.md
+  docs/QWEN35_CANDIDATE_EVALUATION.md
   docs/current-state.md docs/release-gates.md docs/open-questions.md
   docs/decisions/0001-resolvable-evidence-citations.md
   docs/NAMING_CONVENTIONS.md
@@ -104,11 +108,13 @@ required_files=(
   scripts/package-model-bundle.sh scripts/verify-model-bundle.sh
   scripts/verify-release.sh scripts/verify-archive-tree.py scripts/certify-production.sh
   scripts/start-wsl2.sh
+  scripts/candidate-model.sh
   tests/model-behavior-eval.sh tests/model-storage-sharing.sh tests/backup-restore-e2e.sh
   tests/normalized-ingestion-eval.sh tests/failed-update-rollback-e2e.sh
   tests/evidence-runtime-e2e.sh
   tests/clean-package-acceptance.sh tests/compare-platform-acceptance.sh
   tests/native-model-installer-mock.sh
+  tests/test_candidate_profiles.py
   tests/retire-legacy-models-mock.sh
   tests/fixtures/normalized-pcap.json tests/fixtures/normalized-logs.jsonl
   tests/fixtures/normalized-ipfix.jsonl
@@ -206,6 +212,22 @@ assert {tuple(item["skills"]) for item in assistants} == {
 assert {item["workspace_model_id"] for item in assistants} == {"nettap-network-visibility", "nettap-packet-expert"}
 assert {item["mode"] for item in assistants} == {"network_visibility", "packet_expert"}
 provisioning = json.loads((root / "provisioning/open-webui.json").read_text(encoding="utf-8"))
+candidate = json.loads((root / "model/candidates/qwen35-9b-rc1.json").read_text(encoding="utf-8"))
+assert candidate == {
+    "schema_version": 1,
+    "candidate_id": "qwen35-9b-rc1",
+    "release_version": "0.4.0-qwen35-9b-rc.1",
+    "base_model": "qwen3.5:9b",
+    "expected_base_model_id": "6488c96fa5fa",
+    "runtime_model": "nettap-ai:0.4.0-qwen35-9b-rc.1",
+    "source_policy": "model/nettap-ai.Modelfile",
+    "temperature": 0.1,
+    "num_ctx": 16384,
+    "profile_suffix": "qwen35-rc1",
+    "status": "evaluation-only",
+    "source": "https://ollama.com/library/qwen3.5:9b",
+    "license": "Apache-2.0",
+}
 assert {item["name"] for item in provisioning["assistants"]} == {
     "NetTAP Network Intelligence — Network & Visibility",
     "NetTAP Network Intelligence — Packet Expert",
