@@ -38,6 +38,29 @@ is_nettap_tag() {
   esac
 }
 
+is_preserved_candidate() {
+  local model="$1" manifest
+  for manifest in "${project_dir}"/model/candidates/*.json; do
+    [[ -f "$manifest" ]] || continue
+    if python3 - "$manifest" "$model" <<'PY'
+import json
+import sys
+from pathlib import Path
+
+candidate = json.loads(Path(sys.argv[1]).read_text(encoding="utf-8"))
+raise SystemExit(
+    0
+    if candidate.get("status") == "evaluation-only" and candidate.get("runtime_model") == sys.argv[2]
+    else 1
+)
+PY
+    then
+      return 0
+    fi
+  done
+  return 1
+}
+
 model_names() {
   awk 'NR > 1 {gsub(/\r/, "", $1); if ($1 != "") print $1}'
 }
@@ -72,9 +95,14 @@ printf '%s\n' "$container_rows" | awk -v model="$current_model" 'NR > 1 && $1 ==
 }
 
 container_candidates=()
+preserved_candidates=()
 while IFS= read -r model; do
   if [[ "$model" != "$current_model" ]] && is_nettap_tag "$model"; then
-    container_candidates+=("$model")
+    if is_preserved_candidate "$model"; then
+      preserved_candidates+=("$model")
+    else
+      container_candidates+=("$model")
+    fi
   fi
 done <<< "$(printf '%s\n' "$container_rows" | model_names)"
 
@@ -97,6 +125,9 @@ if [[ ${#container_candidates[@]} -eq 0 ]]; then
   echo "Legacy container tags: none"
 else
   printf 'Legacy container tag: %s\n' "${container_candidates[@]}"
+fi
+if [[ ${#preserved_candidates[@]} -gt 0 ]]; then
+  printf 'Preserved evaluation candidate: %s\n' "${preserved_candidates[@]}"
 fi
 if [[ "$include_native" == true ]]; then
   if [[ ${#native_candidates[@]} -eq 0 ]]; then
@@ -127,12 +158,12 @@ printf '%s\n' "$remaining_rows" | awk -v model="$current_model" 'NR > 1 && $1 ==
   exit 7
 }
 while IFS= read -r model; do
-  if [[ "$model" != "$current_model" ]] && is_nettap_tag "$model"; then
+  if [[ "$model" != "$current_model" ]] && is_nettap_tag "$model" && ! is_preserved_candidate "$model"; then
     echo "ERROR: Legacy container tag remains: $model" >&2
     exit 7
   fi
 done <<< "$(printf '%s\n' "$remaining_rows" | model_names)"
 
-echo "PASS: $current_model is the only NetTAP model tag in the appliance Ollama store."
+echo "PASS: $current_model is the only selected NetTAP release tag; declared evaluation candidates may coexist."
 echo "The two Open WebUI experiences remain lightweight profiles over this one model."
 echo "No Docker volume, Open WebUI account, chat, knowledge collection, or non-NetTAP model was removed."
