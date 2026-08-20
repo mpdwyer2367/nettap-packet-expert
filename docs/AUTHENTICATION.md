@@ -15,7 +15,7 @@ There is no shared default password. The ignored file `.bootstrap-admin-password
 
 1. Keep the application on `127.0.0.1`.
 2. Sign in using the generated credential file.
-3. In **Settings > Account**, choose a unique password of 12–72 characters with upper, lower, number, and symbol.
+3. In **Settings > Account**, choose a unique password of 8–72 characters with upper, lower, number, and symbol.
 4. Sign out, verify the generated password fails, and verify the new password succeeds.
 5. Run `./scripts/finalize-admin.sh --confirm` and type `FINALIZE`.
 
@@ -38,7 +38,20 @@ for row in db.execute('SELECT name, email, role, created_at FROM user ORDER BY c
 PY
 ```
 
-If access is lost, create a verified backup and follow the official Open WebUI password-reset procedure. Never delete `webui.db` as an access workaround; that can remove accounts, chats, settings, and knowledge.
+If access is lost, use the guarded recovery command from the deployment directory:
+
+```bash
+./scripts/nettap-ai reset-password \
+  --email matt.dwyer@nettaptech.com \
+  --name "Matthew Dwyer" \
+  --role admin \
+  --create-if-missing \
+  --confirm
+```
+
+The command securely prompts twice for the new password. It does not accept a password in command-line arguments or store it in the repository. Before changing the account, it creates and validates a SQLite backup under `/app/backend/data/nettap-account-recovery/`. It then creates the account if authorized, or resets the existing local credential, restores the requested role and active state, rotates `WEBUI_SECRET_KEY`, recreates Open WebUI to invalidate existing sessions, and verifies the new credential after restart.
+
+Do not delete `webui.db` as an access workaround; that can remove accounts, chats, settings, and knowledge. Stock Open WebUI does not provide an email-based **Forgot password** flow in this release, so password recovery remains an authenticated appliance-administration operation.
 
 ## Production account policy
 

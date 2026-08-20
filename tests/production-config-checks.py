@@ -99,6 +99,9 @@ for key in (
     assert env[key] == "False", f"{key} must be False"
 assert env["WEBUI_AUTH"] == "True"
 assert env["WEBUI_NAME"] == "NetTAP Network Intelligence"
+assert env["PASSWORD_VALIDATION_REGEX_PATTERN"].endswith(".{8,72}$$")
+assert env["PASSWORD_VALIDATION_HINT"] == "Use 8-72 characters with upper, lower, number, and symbol."
+assert "./provisioning:/nettap-provisioning:ro" in base["services"]["open-webui"]["volumes"]
 assert env["JWT_EXPIRES_IN"] == "${JWT_EXPIRES_IN}"
 assert env["ENABLE_PERSISTENT_CONFIG"] == "False"
 assert env["OFFLINE_MODE"] == "True"

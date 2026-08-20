@@ -27,6 +27,7 @@ case "$command_name" in
   install-native-model) exec "${script_dir}/install-model-native.sh" "$@" ;;
   package-model-bundle) exec "${script_dir}/package-model-bundle.sh" "$@" ;;
   provision-assistants) exec "${script_dir}/provision-assistants.sh" "$@" ;;
+  reset-password) exec "${script_dir}/reset-open-webui-password.sh" "$@" ;;
   lock-images) exec "${script_dir}/lock-images.sh" "$@" ;;
   scan) exec "${script_dir}/security-scan.sh" "$@" ;;
   backup) exec "${script_dir}/backup.sh" "$@" ;;
@@ -35,6 +36,6 @@ case "$command_name" in
   certify) exec "${script_dir}/certify-production.sh" "$@" ;;
   help|*)
     echo "NetTAP Network Intelligence administration"
-    echo "Commands: start-local, start-wsl2, configure-production, start-production, status, health, evidence, stop, update-models, retire-old-models, install-native-model, package-model-bundle, provision-assistants, lock-images, scan, backup, restore, verify-production, certify"
+    echo "Commands: start-local, start-wsl2, configure-production, start-production, status, health, evidence, stop, update-models, retire-old-models, install-native-model, package-model-bundle, provision-assistants, reset-password, lock-images, scan, backup, restore, verify-production, certify"
     ;;
 esac
