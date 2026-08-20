@@ -1,5 +1,9 @@
 services:
   open-webui:
+    environment:
+      # Local recovery may intentionally use a simple development credential.
+      # The production overlay retains the strong-password policy from compose.yaml.
+      ENABLE_PASSWORD_VALIDATION: "False"
     ports:
       - "${BIND_ADDRESS}:${WEB_PORT}:8080"
 

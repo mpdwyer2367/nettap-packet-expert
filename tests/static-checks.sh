@@ -55,6 +55,9 @@ grep -q 'retire-old-models)' "$project_dir/scripts/nettap-ai"
 grep -q 'nettap-ai-backup-\*' "$project_dir/scripts/retire-legacy-models.sh"
 grep -q '^WEBUI_ADMIN_PASSWORD=GENERATE_ON_FIRST_START$' "$project_dir/.env.example"
 grep -q 'ENABLE_SIGNUP: "False"' "$project_dir/compose.yaml"
+grep -q 'ENABLE_PASSWORD_VALIDATION: "False"' "$project_dir/compose.local.yaml"
+grep -q 'confirm-insecure-default' "$project_dir/scripts/reset-local-admin.sh"
+grep -q 'NETTAP_RESET_ADMIN_EMAIL' "$project_dir/provisioning/reset_local_admin.py"
 grep -q 'WEBUI_NAME: "NetTAP Network Intelligence"' "$project_dir/compose.yaml"
 grep -q 'nettap-network-intelligence-admin-activation-040rc1' "$project_dir/compose.yaml"
 grep -q 'internal: true' "$project_dir/compose.yaml"
@@ -67,6 +70,8 @@ grep -q 'assistant-provisioner:' "$project_dir/compose.yaml"
 grep -q 'NETTAP_PROVISIONING_CHECKSUMS: /provision/knowledge-sources.sha256' "$project_dir/compose.yaml"
 grep -q 'rag-cache-init:' "$project_dir/compose.yaml"
 grep -q 'provision_assistants local' "$project_dir/scripts/common.sh"
+fingerprint_sample='0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef'
+[[ "$(printf 'compose status\n%s\n' "$fingerprint_sample" | bash -c 'source "$1"; extract_provisioning_fingerprint' _ "$project_dir/scripts/common.sh")" == "$fingerprint_sample" ]]
 grep -q 'require_digest_pins' "$project_dir/scripts/start-production.sh"
 grep -q 'production-preflight.sh' "$project_dir/scripts/start-production.sh"
 grep -q 'NOT CERTIFIED' "$project_dir/scripts/certify-production.sh"
@@ -87,6 +92,7 @@ required_files=(
   knowledge/NetTAP_AI_Knowledge.md knowledge/NetTAP_Ingestion_Analysis_Guidance.md
   knowledge/NetTAP_Provisioning_Probe.md provisioning/open-webui.json
   provisioning/cache_embedding_model.py provisioning/provision_open_webui.py
+  provisioning/reset_local_admin.py
   provisioning/knowledge-sources.sha256
   knowledge/NetTAP_Network_Visibility_Knowledge.md
   knowledge/NetTAP_Packet_Expert_Knowledge.md model/nettap-ai.Modelfile
@@ -103,7 +109,7 @@ required_files=(
   docs/decisions/0001-resolvable-evidence-citations.md
   docs/NAMING_CONVENTIONS.md
   scripts/backup.sh scripts/restore.sh scripts/lock-images.sh
-  scripts/provision-assistants.sh
+  scripts/provision-assistants.sh scripts/reset-local-admin.sh
   scripts/security-scan.sh scripts/production-preflight.sh
   scripts/verify-production-deployment.sh scripts/package-release.sh
   scripts/install-model-native.sh scripts/install-model-native.ps1
@@ -119,7 +125,7 @@ required_files=(
   tests/retire-legacy-models-mock.sh
   tests/fixtures/normalized-pcap.json tests/fixtures/normalized-logs.jsonl
   tests/fixtures/normalized-ipfix.jsonl
-  tests/production-config-checks.py
+  tests/production-config-checks.py tests/test_reset_local_admin.py
   tests/test_provision_open_webui.py tests/test_verify_archive_tree.py tests/test_case_service.py
   reports/PRODUCTION_CERTIFICATION_STATUS_0.2.0-rc.1.md
   reports/RELEASE_ACCEPTANCE_0.2.0-rc.1.md

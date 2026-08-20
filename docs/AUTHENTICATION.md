@@ -40,6 +40,22 @@ PY
 
 If access is lost, create a verified backup and follow the official Open WebUI password-reset procedure. Never delete `webui.db` as an access workaround; that can remove accounts, chats, settings, and knowledge.
 
+### Explicit local default recovery
+
+For an intentionally simple loopback-only development credential, run:
+
+```bash
+./scripts/reset-local-admin.sh --confirm-insecure-default
+```
+
+This resets an existing administrator in place, writes a timestamped database backup beside `webui.db`, and configures these local credentials:
+
+- Display name: `admin`
+- Login email: `admin@nettap.local`
+- Password: `password`
+
+Open WebUI uses an email address for password sign-in, so enter `admin@nettap.local`, not the bare name `admin`. The command refuses production mode and any bind address other than `127.0.0.1`. Signup remains disabled. Replace the default password before exposing the application beyond the deployment host.
+
 ## Production account policy
 
 - Signup is disabled.
