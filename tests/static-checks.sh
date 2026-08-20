@@ -60,7 +60,12 @@ grep -q 'confirm-insecure-default' "$project_dir/scripts/reset-local-admin.sh"
 grep -q 'reset-password)' "$project_dir/scripts/nettap-ai"
 grep -q 'NETTAP_RESET_CREATE_IF_MISSING' "$project_dir/scripts/reset-password.sh"
 grep -q 'NETTAP_RESET_ADMIN_EMAIL' "$project_dir/provisioning/reset_local_admin.py"
-grep -q 'from passlib.context import CryptContext' "$project_dir/provisioning/reset_local_admin.py"
+grep -q 'import bcrypt' "$project_dir/provisioning/reset_local_admin.py"
+grep -q 'bcrypt.hashpw(password_bytes, bcrypt.gensalt())' "$project_dir/provisioning/reset_local_admin.py"
+if grep -q 'passlib' "$project_dir/provisioning/reset_local_admin.py"; then
+  echo "ERROR: Open WebUI v0.11.0 administrator reset depends on unavailable passlib." >&2
+  exit 1
+fi
 if grep -q 'from open_webui.utils.auth import get_password_hash' "$project_dir/provisioning/reset_local_admin.py"; then
   echo "ERROR: Local administrator reset imports application auth configuration." >&2
   exit 1

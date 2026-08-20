@@ -3,12 +3,29 @@ import sqlite3
 import tempfile
 import unittest
 from pathlib import Path
+from types import SimpleNamespace
 from unittest.mock import patch
 
 from provisioning import reset_local_admin
 
 
 class ResetLocalAdminTests(unittest.TestCase):
+    def test_hash_password_uses_open_webui_bcrypt_dependency(self):
+        fake_bcrypt = SimpleNamespace(
+            gensalt=lambda: b"salt",
+            hashpw=lambda password, salt: b"bcrypt-hash"
+            if password == b"password" and salt == b"salt"
+            else b"unexpected",
+        )
+        with patch.dict("sys.modules", {"bcrypt": fake_bcrypt}):
+            self.assertEqual(reset_local_admin.hash_password("password"), "bcrypt-hash")
+
+    def test_hash_password_rejects_more_than_72_bytes(self):
+        fake_bcrypt = SimpleNamespace(gensalt=lambda: b"salt", hashpw=lambda *_: b"hash")
+        with patch.dict("sys.modules", {"bcrypt": fake_bcrypt}):
+            with self.assertRaises(SystemExit):
+                reset_local_admin.hash_password("x" * 73)
+
     def test_existing_admin_is_reset_without_deleting_other_data(self):
         with tempfile.TemporaryDirectory() as directory:
             database = Path(directory) / "webui.db"

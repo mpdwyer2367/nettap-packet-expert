@@ -21,13 +21,15 @@ def fail(message: str) -> None:
 
 
 def hash_password(password: str) -> str:
-    # Use the same bcrypt-compatible context shipped in the pinned Open WebUI
-    # image without importing the full application configuration. Importing
-    # open_webui.utils.auth would unnecessarily require WEBUI_SECRET_KEY in
-    # this offline maintenance container.
-    from passlib.context import CryptContext
+    # Match Open WebUI v0.11.0's configured default without importing the full
+    # application auth module, which would unnecessarily require
+    # WEBUI_SECRET_KEY in this offline maintenance container.
+    import bcrypt
 
-    return CryptContext(schemes=["bcrypt"], deprecated="auto").hash(password)
+    password_bytes = password.encode("utf-8")
+    if len(password_bytes) > 72:
+        fail("The replacement password exceeds bcrypt's 72-byte limit.")
+    return bcrypt.hashpw(password_bytes, bcrypt.gensalt()).decode("utf-8")
 
 
 def main() -> None:
