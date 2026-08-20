@@ -236,17 +236,11 @@ provisioning_fingerprint() {
 }
 
 installed_provisioning_fingerprint() {
+  local output
   local -a selected=("${compose_local[@]}")
   if [[ "$1" == production ]]; then selected=("${compose_production[@]}"); fi
-  "${selected[@]}" exec -T open-webui python - <<'PY'
-import json
-from pathlib import Path
-path = Path('/app/backend/data/nettap-provisioning-state.json')
-try:
-    print(json.loads(path.read_text(encoding='utf-8')).get('fingerprint', ''))
-except (OSError, ValueError):
-    print('')
-PY
+  output="$("${selected[@]}" --profile provision run --rm --no-deps assistant-provisioner --installed-fingerprint)" || return
+  printf '%s\n' "$output" | extract_provisioning_fingerprint
 }
 
 provision_assistants() {

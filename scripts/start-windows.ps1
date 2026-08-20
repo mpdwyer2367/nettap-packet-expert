@@ -195,7 +195,9 @@ $desiredFingerprint = if ($desiredCandidates.Count -gt 0) { $desiredCandidates[-
 if ($LASTEXITCODE -ne 0 -or [string]::IsNullOrWhiteSpace($desiredFingerprint)) {
     throw 'Unable to calculate the assistant provisioning fingerprint.'
 }
-$actualFingerprint = (docker @compose exec -T open-webui python -c "import json; from pathlib import Path; p=Path('/app/backend/data/nettap-provisioning-state.json'); print(json.loads(p.read_text(encoding='utf-8')).get('fingerprint','') if p.is_file() else '')" | Out-String).Trim()
+$actualOutput = @(docker @compose --profile provision run --rm --no-deps assistant-provisioner --installed-fingerprint)
+$actualCandidates = @($actualOutput | ForEach-Object { ([string]$_).Trim() } | Where-Object { $_ -match '^[0-9a-f]{64}$' })
+$actualFingerprint = if ($actualCandidates.Count -gt 0) { $actualCandidates[-1] } else { '' }
 
 if ($actualFingerprint -ne $desiredFingerprint) {
     $adminPassword = ''
@@ -217,7 +219,9 @@ if ($actualFingerprint -ne $desiredFingerprint) {
     if ($LASTEXITCODE -ne 0) {
         throw 'Automatic assistant and offline RAG provisioning failed.'
     }
-    $actualFingerprint = (docker @compose exec -T open-webui python -c "import json; from pathlib import Path; print(json.loads(Path('/app/backend/data/nettap-provisioning-state.json').read_text(encoding='utf-8')).get('fingerprint',''))" | Out-String).Trim()
+    $actualOutput = @(docker @compose --profile provision run --rm --no-deps assistant-provisioner --installed-fingerprint)
+    $actualCandidates = @($actualOutput | ForEach-Object { ([string]$_).Trim() } | Where-Object { $_ -match '^[0-9a-f]{64}$' })
+    $actualFingerprint = if ($actualCandidates.Count -gt 0) { $actualCandidates[-1] } else { '' }
     if ($actualFingerprint -ne $desiredFingerprint) {
         throw "Assistant provisioning state does not match this release. Expected $desiredFingerprint; installed $actualFingerprint. Rerun .\scripts\start-windows.ps1 and provide the current administrator password when prompted."
     }
