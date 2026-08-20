@@ -35,6 +35,43 @@ STATE_PATH = Path(os.environ.get("NETTAP_PROVISIONING_STATE", "/app/backend/data
 CHECKSUM_PATH = Path(os.environ.get("NETTAP_PROVISIONING_CHECKSUMS", "/provision/knowledge-sources.sha256"))
 
 
+# Exact product identities from supported pre-0.4 releases. An unmanaged model is
+# adoptable only when its stable ID, display name, and base all match this list.
+# This keeps migration automatic without turning a shared model ID into a broad
+# overwrite exception.
+LEGACY_ASSISTANT_IDENTITIES = {
+    "nettap-network-visibility": {
+        "names": {
+            "NetTAP Network & Visibility",
+            "NetTAP Network Intelligence — Network & Visibility",
+        },
+        "bases": {
+            "nettap-ai:0.3.0-rc.1",
+            "nettap-ai:0.3.0-rc.2",
+            "nettap-ai:0.3.0-rc.3",
+            "nettap-ai:0.3.0-rc.4",
+            "nettap-ai:0.3.0-rc.5",
+        },
+    },
+    "nettap-packet-expert": {
+        "names": {
+            "NetTAP Packet Expert",
+            "NetTAP Network Intelligence — Packet Expert",
+        },
+        "bases": {
+            "nettap-ai:0.3.0-rc.1",
+            "nettap-ai:0.3.0-rc.2",
+            "nettap-ai:0.3.0-rc.3",
+            "nettap-ai:0.3.0-rc.4",
+            "nettap-ai:0.3.0-rc.5",
+            "nettap-packet-expert:0.1.0-rc.7",
+            "nettap-packet-expert:0.1.0-rc.8",
+            "nettap-packet-expert:0.3.0-rc.1",
+        },
+    },
+}
+
+
 def load_manifest() -> dict:
     manifest = json.loads(MANIFEST_PATH.read_text(encoding="utf-8"))
     if manifest.get("schema_version") != 1:
@@ -436,6 +473,15 @@ def assistant_payload(assistant: dict, knowledge: dict, skills: dict, fingerprin
     }
 
 
+def is_adoptable_legacy_assistant(existing: dict, assistant: dict) -> bool:
+    identity = LEGACY_ASSISTANT_IDENTITIES.get(assistant["id"])
+    if not identity:
+        return False
+    names = identity["names"] | {assistant["name"]}
+    bases = identity["bases"] | {required_env("NETTAP_AI_MODEL")}
+    return existing.get("name") in names and existing.get("base_model_id") in bases
+
+
 def reconcile_assistant(client: ApiClient, assistant: dict, knowledge: dict, skills: dict, fingerprint: str) -> dict:
     query = urllib.parse.urlencode({"id": assistant["id"]})
     status, existing = client.request("GET", f"/api/v1/models/model?{query}", allow=(404,))
@@ -443,16 +489,11 @@ def reconcile_assistant(client: ApiClient, assistant: dict, knowledge: dict, ski
         existing = None
     if existing:
         managed = (existing.get("meta") or {}).get("nettap_managed")
-        adoptable_bases = {
-            "nettap-ai:0.3.0-rc.1",
-            "nettap-ai:0.3.0-rc.2",
-            required_env("NETTAP_AI_MODEL"),
-        }
-        if not managed and (
-            existing.get("name") != assistant["name"]
-            or existing.get("base_model_id") not in adoptable_bases
-        ):
-            raise ProvisioningError(f"refusing to overwrite unmanaged Workspace Model {assistant['id']}")
+        if not managed and not is_adoptable_legacy_assistant(existing, assistant):
+            raise ProvisioningError(
+                f"refusing to overwrite unmanaged Workspace Model {assistant['id']} "
+                f"(name={existing.get('name')!r}, base_model_id={existing.get('base_model_id')!r})"
+            )
     payload = assistant_payload(assistant, knowledge, skills, fingerprint, existing)
     if existing:
         _, result = client.request("POST", "/api/v1/models/model/update", payload)

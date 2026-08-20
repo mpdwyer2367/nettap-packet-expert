@@ -308,6 +308,55 @@ class ProvisioningTest(unittest.TestCase):
         self.assertFalse(self.state_path.exists())
         self.assertEqual(Handler.state.models, {})
 
+    def test_adopts_recognized_legacy_packet_expert_profile(self):
+        Handler.state.models["nettap-packet-expert"] = {
+            "id": "nettap-packet-expert",
+            "name": "NetTAP Packet Expert",
+            "base_model_id": "nettap-ai:0.3.0-rc.4",
+            "meta": {"description": "legacy profile"},
+            "params": {"system": "legacy prompt"},
+            "access_grants": [{"group_id": "packet-team", "permission": "read"}],
+            "is_active": True,
+        }
+
+        result = self.run_provisioner()
+
+        self.assertIn(
+            "Workspace Model updated: NetTAP Network Intelligence — Packet Expert",
+            result.stdout,
+        )
+        migrated = Handler.state.models["nettap-packet-expert"]
+        self.assertEqual(migrated["name"], "NetTAP Network Intelligence — Packet Expert")
+        self.assertEqual(migrated["base_model_id"], "nettap-ai:0.4.0-rc.1")
+        self.assertEqual(
+            migrated["access_grants"],
+            [{"group_id": "packet-team", "permission": "read"}],
+        )
+        self.assertEqual(migrated["meta"]["nettap_managed"]["release_version"], "0.4.0-rc.1")
+
+    def test_refuses_unrecognized_workspace_model_identity_collision(self):
+        Handler.state.models["nettap-packet-expert"] = {
+            "id": "nettap-packet-expert",
+            "name": "Operator Packet Analysis",
+            "base_model_id": "operator-model:latest",
+            "meta": {},
+            "params": {"system": "operator prompt"},
+            "access_grants": [],
+            "is_active": True,
+        }
+
+        result = self.run_provisioner(check=False)
+
+        self.assertEqual(result.returncode, 1)
+        self.assertIn("refusing to overwrite unmanaged Workspace Model nettap-packet-expert", result.stderr)
+        self.assertIn("name='Operator Packet Analysis'", result.stderr)
+        self.assertIn("base_model_id='operator-model:latest'", result.stderr)
+        self.assertEqual(
+            Handler.state.models["nettap-packet-expert"]["params"]["system"],
+            "operator prompt",
+        )
+        self.assertFalse(self.state_path.exists())
+
     def test_fails_closed_when_offline_retrieval_marker_is_missing(self):
         Handler.state.rag_marker = "unexpected result"
         result = self.run_provisioner(check=False)

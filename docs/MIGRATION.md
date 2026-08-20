@@ -56,7 +56,7 @@ Initialization performs these bounded changes:
 7. Starts the two stateless launcher pages only after provisioning succeeds.
 8. Verifies the new model is installed, then removes older recognized NetTAP tags from the containerized appliance store when `RETIRE_LEGACY_NETTAP_MODELS=true`.
 
-It does not modify Open WebUI tables directly, delete non-NetTAP models, or touch a separate native Ollama store. The provisioner adopts only recognized NetTAP profiles, preserves their access grants, and refuses unmanaged naming or file conflicts. Because the default one-model lifecycle removes prior container tags only after the new model and profile provisioning pass, a protected pre-upgrade backup is mandatory for rollback.
+It does not modify Open WebUI tables directly, delete non-NetTAP models, or touch a separate native Ollama store. The provisioner adopts only exact recognized legacy NetTAP profile identities, preserves their access grants, and refuses unmanaged naming or file conflicts. Recognized profile migration requires the stable `nettap-network-visibility` or `nettap-packet-expert` ID, its current or historical NetTAP display name, and a known NetTAP 0.1 or 0.3 base tag. Matching only the ID is never sufficient. Because the default one-model lifecycle removes prior container tags only after the new model and profile provisioning pass, a protected pre-upgrade backup is mandatory for rollback.
 
 Set `RETIRE_LEGACY_NETTAP_MODELS=false` in `.env` only for a controlled rollback
 exercise. The supported default is `true`, which leaves one current NetTAP tag
@@ -73,7 +73,7 @@ non-NetTAP models, accounts, chats, knowledge, evidence, or Docker volumes.
 4. Confirm the installation reported `Offline RAG verification: PASS` and created the shared, Network & Visibility, and Packet Expert managed collections.
 5. Confirm both managed Workspace Models use the same `nettap-ai` base, shared knowledge is attached to both, and each specialist collection is attached only to its matching profile.
 6. Keep legacy or customer-created collections outside the managed NetTAP collection names; review and migrate them separately.
-7. If provisioning reports an unmanaged conflict, back up and rename or relocate that content after review; do not bypass the check or edit SQLite directly.
+7. A recognized legacy Workspace Model is migrated in place and keeps its access grants. If provisioning still reports an unmanaged conflict, use the name and base identity in the error to review the object, then back up and rename or relocate unrelated content; do not bypass the check or edit SQLite directly.
 
 ## Acceptance
 
