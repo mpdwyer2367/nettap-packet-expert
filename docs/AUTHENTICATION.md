@@ -56,6 +56,23 @@ This resets an existing administrator in place, writes a timestamped database ba
 
 Open WebUI uses an email address for password sign-in, so enter `admin@nettap.local`, not the bare name `admin`. The command refuses production mode and any bind address other than `127.0.0.1`. Signup remains disabled. Replace the default password before exposing the application beyond the deployment host.
 
+To reset or reidentify the retained local administrator with a specific email,
+run the supported command and enter the new password twice at the hidden prompt:
+
+```bash
+./scripts/nettap-ai reset-password \
+  --email matt.dwyer@nettaptech.com \
+  --name "Matthew Dwyer" \
+  --role admin \
+  --create-if-missing \
+  --confirm
+```
+
+If the email does not exist, `--create-if-missing` safely reidentifies the
+retained administrator record instead of creating a second disconnected local
+administrator. The command backs up `webui.db`, preserves the account ID and
+associated data, keeps signup disabled, and is refused outside loopback local mode.
+
 ## Production account policy
 
 - Signup is disabled.

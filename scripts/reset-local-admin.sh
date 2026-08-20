@@ -48,6 +48,7 @@ printf '%s\n' "$admin_password" | "${compose_local[@]}" --profile provision run 
   --entrypoint python \
   -e "NETTAP_RESET_ADMIN_EMAIL=${admin_email}" \
   -e "NETTAP_RESET_ADMIN_NAME=${admin_name}" \
+  -e "NETTAP_RESET_CREATE_IF_MISSING=true" \
   assistant-provisioner /provision/reset_local_admin.py
 
 set_env_value WEBUI_ADMIN_NAME "$admin_name"

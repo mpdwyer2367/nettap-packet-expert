@@ -57,6 +57,8 @@ grep -q '^WEBUI_ADMIN_PASSWORD=GENERATE_ON_FIRST_START$' "$project_dir/.env.exam
 grep -q 'ENABLE_SIGNUP: "False"' "$project_dir/compose.yaml"
 grep -q 'ENABLE_PASSWORD_VALIDATION: "False"' "$project_dir/compose.local.yaml"
 grep -q 'confirm-insecure-default' "$project_dir/scripts/reset-local-admin.sh"
+grep -q 'reset-password)' "$project_dir/scripts/nettap-ai"
+grep -q 'NETTAP_RESET_CREATE_IF_MISSING' "$project_dir/scripts/reset-password.sh"
 grep -q 'NETTAP_RESET_ADMIN_EMAIL' "$project_dir/provisioning/reset_local_admin.py"
 grep -q 'from passlib.context import CryptContext' "$project_dir/provisioning/reset_local_admin.py"
 if grep -q 'from open_webui.utils.auth import get_password_hash' "$project_dir/provisioning/reset_local_admin.py"; then
@@ -118,7 +120,7 @@ required_files=(
   docs/decisions/0001-resolvable-evidence-citations.md
   docs/NAMING_CONVENTIONS.md
   scripts/backup.sh scripts/restore.sh scripts/lock-images.sh
-  scripts/provision-assistants.sh scripts/reset-local-admin.sh
+  scripts/provision-assistants.sh scripts/reset-local-admin.sh scripts/reset-password.sh
   scripts/security-scan.sh scripts/production-preflight.sh
   scripts/verify-production-deployment.sh scripts/package-release.sh
   scripts/install-model-native.sh scripts/install-model-native.ps1

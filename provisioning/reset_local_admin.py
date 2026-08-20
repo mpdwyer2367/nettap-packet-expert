@@ -12,6 +12,7 @@ from pathlib import Path
 DATABASE = Path("/app/backend/data/webui.db")
 EMAIL = os.environ.get("NETTAP_RESET_ADMIN_EMAIL", "admin@nettap.local")
 NAME = os.environ.get("NETTAP_RESET_ADMIN_NAME", "admin")
+CREATE_IF_MISSING = os.environ.get("NETTAP_RESET_CREATE_IF_MISSING", "false").lower() == "true"
 
 
 def fail(message: str) -> None:
@@ -59,6 +60,8 @@ def main() -> None:
             fail(f"{EMAIL} belongs to a non-administrator account.")
 
         if target is None:
+            if not CREATE_IF_MISSING:
+                fail(f"No account exists for {EMAIL}; use the approved create-if-missing workflow.")
             target = connection.execute(
                 "SELECT id, email FROM user WHERE role = 'admin' ORDER BY created_at LIMIT 1"
             ).fetchone()

@@ -40,6 +40,7 @@ class ResetLocalAdminTests(unittest.TestCase):
 
             with (
                 patch.object(reset_local_admin, "DATABASE", database),
+                patch.object(reset_local_admin, "CREATE_IF_MISSING", True),
                 patch.object(
                     reset_local_admin,
                     "hash_password",
