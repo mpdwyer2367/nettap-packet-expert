@@ -20,11 +20,13 @@ def fail(message: str) -> None:
 
 
 def hash_password(password: str) -> str:
-    # Use the hashing implementation shipped in the pinned Open WebUI image.
-    sys.path.insert(0, "/app/backend")
-    from open_webui.utils.auth import get_password_hash
+    # Use the same bcrypt-compatible context shipped in the pinned Open WebUI
+    # image without importing the full application configuration. Importing
+    # open_webui.utils.auth would unnecessarily require WEBUI_SECRET_KEY in
+    # this offline maintenance container.
+    from passlib.context import CryptContext
 
-    return get_password_hash(password)
+    return CryptContext(schemes=["bcrypt"], deprecated="auto").hash(password)
 
 
 def main() -> None:

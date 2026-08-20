@@ -58,6 +58,11 @@ grep -q 'ENABLE_SIGNUP: "False"' "$project_dir/compose.yaml"
 grep -q 'ENABLE_PASSWORD_VALIDATION: "False"' "$project_dir/compose.local.yaml"
 grep -q 'confirm-insecure-default' "$project_dir/scripts/reset-local-admin.sh"
 grep -q 'NETTAP_RESET_ADMIN_EMAIL' "$project_dir/provisioning/reset_local_admin.py"
+grep -q 'from passlib.context import CryptContext' "$project_dir/provisioning/reset_local_admin.py"
+if grep -q 'from open_webui.utils.auth import get_password_hash' "$project_dir/provisioning/reset_local_admin.py"; then
+  echo "ERROR: Local administrator reset imports application auth configuration." >&2
+  exit 1
+fi
 grep -q 'WEBUI_NAME: "NetTAP Network Intelligence"' "$project_dir/compose.yaml"
 grep -q 'nettap-network-intelligence-admin-activation-040rc1' "$project_dir/compose.yaml"
 grep -q 'internal: true' "$project_dir/compose.yaml"
