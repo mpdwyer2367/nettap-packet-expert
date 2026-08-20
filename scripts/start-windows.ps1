@@ -29,14 +29,6 @@ if (-not (Test-Path $envPath)) {
 }
 
 $content = [System.IO.File]::ReadAllText($envPath)
-if ($content -match '(?m)^WEBUI_SECRET_KEY=GENERATE_ON_FIRST_START$') {
-    $bytes = New-Object byte[] 32
-    $rng = [System.Security.Cryptography.RandomNumberGenerator]::Create()
-    $rng.GetBytes($bytes)
-    $rng.Dispose()
-    $secret = ($bytes | ForEach-Object { $_.ToString('x2') }) -join ''
-    $content = $content -replace '(?m)^WEBUI_SECRET_KEY=GENERATE_ON_FIRST_START$', "WEBUI_SECRET_KEY=$secret"
-}
 
 $defaults = [ordered]@{
     RELEASE_VERSION = '0.4.0-rc.1'
@@ -97,6 +89,16 @@ foreach ($entry in $defaults.GetEnumerator()) {
     }
 }
 $content = $content -replace '(?m)^DEPLOYMENT_MODE=production$', 'DEPLOYMENT_MODE=local'
+$content = $content -replace '(?m)^WEBUI_SECRET_KEY=$', 'WEBUI_SECRET_KEY=GENERATE_ON_FIRST_START'
+
+if ($content -match '(?m)^WEBUI_SECRET_KEY=GENERATE_ON_FIRST_START$') {
+    $bytes = New-Object byte[] 32
+    $rng = [System.Security.Cryptography.RandomNumberGenerator]::Create()
+    $rng.GetBytes($bytes)
+    $rng.Dispose()
+    $secret = ($bytes | ForEach-Object { $_.ToString('x2') }) -join ''
+    $content = $content -replace '(?m)^WEBUI_SECRET_KEY=GENERATE_ON_FIRST_START$', "WEBUI_SECRET_KEY=$secret"
+}
 
 if ($content -match '(?m)^WEBUI_ADMIN_PASSWORD=GENERATE_ON_FIRST_START$') {
     $passwordBytes = New-Object byte[] 12
@@ -189,11 +191,15 @@ if ($LASTEXITCODE -ne 0) {
     throw 'Open WebUI failed to start.'
 }
 
-$desiredFingerprint = (docker @compose --profile provision run --rm --no-deps assistant-provisioner --fingerprint | Out-String).Trim()
+$desiredOutput = @(docker @compose --profile provision run --rm --no-deps assistant-provisioner --fingerprint)
+$desiredCandidates = @($desiredOutput | ForEach-Object { ([string]$_).Trim() } | Where-Object { $_ -match '^[0-9a-f]{64}$' })
+$desiredFingerprint = if ($desiredCandidates.Count -gt 0) { $desiredCandidates[-1] } else { '' }
 if ($LASTEXITCODE -ne 0 -or [string]::IsNullOrWhiteSpace($desiredFingerprint)) {
     throw 'Unable to calculate the assistant provisioning fingerprint.'
 }
-$actualFingerprint = (docker @compose exec -T open-webui python -c "import json; from pathlib import Path; p=Path('/app/backend/data/nettap-provisioning-state.json'); print(json.loads(p.read_text(encoding='utf-8')).get('fingerprint','') if p.is_file() else '')" | Out-String).Trim()
+$actualOutput = @(docker @compose --profile provision run --rm --no-deps assistant-provisioner --installed-fingerprint)
+$actualCandidates = @($actualOutput | ForEach-Object { ([string]$_).Trim() } | Where-Object { $_ -match '^[0-9a-f]{64}$' })
+$actualFingerprint = if ($actualCandidates.Count -gt 0) { $actualCandidates[-1] } else { '' }
 
 if ($actualFingerprint -ne $desiredFingerprint) {
     $adminPassword = ''
@@ -215,9 +221,11 @@ if ($actualFingerprint -ne $desiredFingerprint) {
     if ($LASTEXITCODE -ne 0) {
         throw 'Automatic assistant and offline RAG provisioning failed.'
     }
-    $actualFingerprint = (docker @compose exec -T open-webui python -c "import json; from pathlib import Path; print(json.loads(Path('/app/backend/data/nettap-provisioning-state.json').read_text(encoding='utf-8')).get('fingerprint',''))" | Out-String).Trim()
+    $actualOutput = @(docker @compose --profile provision run --rm --no-deps assistant-provisioner --installed-fingerprint)
+    $actualCandidates = @($actualOutput | ForEach-Object { ([string]$_).Trim() } | Where-Object { $_ -match '^[0-9a-f]{64}$' })
+    $actualFingerprint = if ($actualCandidates.Count -gt 0) { $actualCandidates[-1] } else { '' }
     if ($actualFingerprint -ne $desiredFingerprint) {
-        throw 'Assistant provisioning state does not match this release.'
+        throw "Assistant provisioning state does not match this release. Expected $desiredFingerprint; installed $actualFingerprint. Rerun .\scripts\start-windows.ps1 and provide the current administrator password when prompted."
     }
 }
 
