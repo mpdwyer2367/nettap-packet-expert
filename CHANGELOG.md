@@ -1,7 +1,12 @@
 # Changelog
 
-## Unreleased — evidence citation integrity
+## 0.4.0-rc.1 Qwen3.5 9B promotion candidate — 2026-08-20
 
+- Promoted verified `qwen3.5:9b-q4_K_M` with Ollama ID `6488c96fa5fa` to the default shared base for both managed profiles.
+- Advanced the single runtime model to `nettap-ai:0.4.0-rc.1` without overwriting the historical Qwen2.5-based RC4 artifact.
+- Configured a 16,384-token context window and increased the default Ollama memory allowance to 12 GiB.
+- Replaced the temporary Qwen3.5 candidate lane with an auditable release manifest, promotion record and exact-build acceptance plan.
+- Preserved deterministic packet decoding, evidence minimization, profile isolation, offline RAG and disabled-by-default tool boundaries.
 - Added evidence database schema v2 with additive migration from schema v1.
 - Added typed citations for evidence manifests, exact normalized observations, and SHA-256-bound deterministic analysis artifacts.
 - Added an audited, case-scoped read-only citation resolver and one-click citation inspection in the Evidence Workspace.

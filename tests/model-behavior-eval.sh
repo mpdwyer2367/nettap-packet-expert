@@ -12,7 +12,7 @@ fail() {
 
 require_runtime
 [[ -f "$env_file" ]] || fail "Missing .env. Run the deployment first."
-nettap_model="$(load_env_value NETTAP_AI_MODEL)"
+nettap_model="${NETTAP_EVAL_MODEL:-$(load_env_value NETTAP_AI_MODEL)}"
 
 run_case() {
   local model="$1" name="$2" prompt="$3" required_pattern="$4"

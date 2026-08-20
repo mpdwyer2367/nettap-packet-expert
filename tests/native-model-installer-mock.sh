@@ -14,10 +14,10 @@ case "${1:-}" in
   list)
     printf '%s\n' 'NAME ID SIZE MODIFIED'
     if [[ -f "${NETTAP_TEST_STATE_DIR}/pulled" ]]; then
-      printf '%s\n' 'qwen2.5:7b-instruct-q4_K_M 845dbda0ea48 4.7 GB now'
+      printf '%s\n' 'qwen3.5:9b-q4_K_M 6488c96fa5fa 6.6 GB now'
     fi
     if [[ -f "${NETTAP_TEST_STATE_DIR}/created" ]]; then
-      printf '%s\n' 'nettap-ai:0.3.0-rc.4 current 4.7 GB now'
+      printf '%s\n' 'nettap-ai:0.4.0-rc.1 current 6.6 GB now'
     fi
     if [[ ! -f "${NETTAP_TEST_STATE_DIR}/legacy-removed" ]]; then
       printf '%s\n' 'nettap-ai:latest legacy 4.7 GB old'
@@ -26,17 +26,17 @@ case "${1:-}" in
     printf '%s\n' 'qwen3:8b other 5.2 GB old'
     ;;
   pull)
-    [[ "${2:-}" == "qwen2.5:7b-instruct-q4_K_M" ]]
+    [[ "${2:-}" == "qwen3.5:9b-q4_K_M" ]]
     : >"${NETTAP_TEST_STATE_DIR}/pulled"
     ;;
   create)
-    [[ "${2:-}" == "nettap-ai:0.3.0-rc.4" ]]
+    [[ "${2:-}" == "nettap-ai:0.4.0-rc.1" ]]
     [[ "${3:-}" == "-f" && -f "${4:-}" ]]
     : >"${NETTAP_TEST_STATE_DIR}/created"
     ;;
   show)
     [[ "${2:-}" == "--modelfile" ]]
-    [[ "${3:-}" == "nettap-ai:0.3.0-rc.4" ]]
+    [[ "${3:-}" == "nettap-ai:0.4.0-rc.1" ]]
     [[ -f "${NETTAP_TEST_STATE_DIR}/created" ]]
     printf '%s\n' 'SYSTEM """You are the NetTAP Network Intelligence Model.'
     printf '%s\n' 'Network & Visibility mode'
@@ -65,7 +65,7 @@ NETTAP_TEST_STATE_DIR="$test_dir/state" \
   "$project_dir/scripts/install-model-native.sh" --confirm-download \
   >"$test_dir/output.txt"
 
-grep -Fq 'PASS: nettap-ai:0.3.0-rc.4 is saved in the active Ollama store.' \
+grep -Fq 'PASS: nettap-ai:0.4.0-rc.1 is saved in the active Ollama store.' \
   "$test_dir/output.txt"
 grep -Fq 'PASS: superseded native NetTAP model tags were retired.' "$test_dir/output.txt"
 [[ -f "$test_dir/state/legacy-removed" ]]

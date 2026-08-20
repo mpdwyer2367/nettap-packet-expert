@@ -105,7 +105,7 @@ actual_files = {
 }
 assert actual_files == expected_files
 assert aggregate.hexdigest() == embedding['aggregate_sha256']
-assert provisioning['release_version'] == '0.3.0-rc.4'
+assert provisioning['release_version'] == '0.4.0-rc.1'
 assert provisioning['offline_rag']['result'] == 'PASS'
 assert {item['id'] for item in provisioning['assistants']} == {
     'nettap-network-visibility', 'nettap-packet-expert'

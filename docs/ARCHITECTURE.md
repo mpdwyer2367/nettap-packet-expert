@@ -14,7 +14,7 @@ flowchart TB
     P --> PR["Packet Skill + RAG"]
     V --> O["One Ollama service"]
     P --> O
-    O --> M["nettap-ai:0.3.0-rc.4"]
+    O --> M["nettap-ai:0.4.0-rc.1"]
     M --> Q["One pinned Qwen2.5 7B base"]
     U --> E["Evidence Workspace"]
     E --> D["Deterministic parsers + case store"]
@@ -34,7 +34,7 @@ flowchart TB
     G["Reviewed GitHub release"] --> T["Temporary install-only egress"]
     T --> Q["Pull and verify one Qwen base"]
     T --> R["Cache and pin one RAG embedding model"]
-    Q --> C["Create nettap-ai:0.3.0-rc.4"]
+    Q --> C["Create nettap-ai:0.4.0-rc.1"]
     C --> P["Provision both Open WebUI profiles"]
     R --> P
     P --> V["Verify model identity and offline retrieval"]
@@ -72,7 +72,7 @@ The Compose project name and existing volume names remain `nettap-packet-expert`
 | `http://127.0.0.1:3100` | Shared Open WebUI application |
 | `http://127.0.0.1:3200` | Evidence Workspace evaluation UI and API |
 
-The launchers submit only documented Open WebUI `model` and `q` URL parameters. Port 3000 selects `nettap-network-visibility`; port 3001 selects `nettap-packet-expert`. Both profiles resolve to `nettap-ai:0.3.0-rc.4`. The launchers do not hold accounts, chats, model weights, tools, or knowledge.
+The launchers submit only documented Open WebUI `model` and `q` URL parameters. Port 3000 selects `nettap-network-visibility`; port 3001 selects `nettap-packet-expert`. Both profiles resolve to `nettap-ai:0.4.0-rc.1`. The launchers do not hold accounts, chats, model weights, tools, or knowledge.
 
 During initialization only, the bootstrap overlay supplies egress to Ollama and the embedding-cache job. Normal runtime has internal Docker networks, `OFFLINE_MODE=True`, `HF_HUB_OFFLINE=1`, a pinned local embedding path, automatic model updates disabled, and no remote-code trust. The assistant provisioner starts only after Open WebUI is healthy, authenticates as the administrator, reconciles knowledge and Skills, proves local retrieval, attaches the matching Skill and knowledge collections to each profile, writes a state record, and exits. The default RC4 lifecycle then removes recognized older NetTAP tags from the containerized Ollama store; it never removes the current model, approved base, non-NetTAP models, or application volumes.
 

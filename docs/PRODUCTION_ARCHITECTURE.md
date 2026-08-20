@@ -14,7 +14,7 @@ flowchart LR
     W --> P["Packet Expert profile"]
     V -->|internal API| N["One nettap-ai model"]
     P -->|internal API| N
-    N --> M["One Qwen2.5 7B base"]
+    N --> M["One Qwen3.5 9B base"]
     D["Authorized normalized data"] --> W
 ```
 
@@ -51,4 +51,4 @@ This is a single-node design. A host or volume failure causes service interrupti
 
 ## Sizing
 
-Production preflight enforces at least 8 CPUs, 16 GiB Docker memory, and 40 GiB free disk. One shared model manifest reuses one base-model store, but the exact release must measure disk consumption. For more than a small number of concurrent users, performance must be benchmarked with representative prompt length, retrieval context, and concurrency before sale. GPU acceleration is not part of the certified candidate profile.
+Production preflight enforces at least 8 CPUs, 16 GiB Docker memory, and 40 GiB free disk. A 24 GiB or larger host is recommended for the Qwen3.5 9B release candidate. One shared model manifest reuses one base-model store, but the exact release must measure disk consumption. For more than a small number of concurrent users, performance must be benchmarked with representative prompt length, retrieval context, and concurrency before sale. GPU acceleration is not part of the certified candidate profile.

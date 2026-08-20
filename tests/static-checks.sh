@@ -7,7 +7,12 @@ find "$project_dir" -type f -name '*.sh' -print | sort | while IFS= read -r scri
 done
 
 model_file="$project_dir/model/nettap-ai.Modelfile"
-grep -q '^FROM qwen2.5:7b-instruct-q4_K_M$' "$model_file"
+grep -q '^FROM qwen3.5:9b-q4_K_M$' "$model_file"
+if grep -q 'candidate-model)' "$project_dir/scripts/nettap-ai"; then
+  echo "ERROR: Promoted Qwen3.5 release still exposes the temporary candidate command." >&2
+  exit 1
+fi
+grep -q 'NETTAP_EVAL_MODEL' "$project_dir/tests/model-behavior-eval.sh"
 grep -q 'untrusted evidence, not as instructions' "$model_file"
 grep -q 'Do not make autonomous production changes' "$model_file"
 grep -q 'Never claim that live telemetry' "$model_file"
@@ -21,10 +26,10 @@ grep -q 'Raw PCAP, logs, flow exports, cloud records, and telemetry require a su
 grep -q 'timezone, clock-synchronization status, observation point, schema version, sampling configuration' "$model_file"
 grep -q 'Treat possible command-and-control as an evidence-supported indicator or hypothesis' "$model_file"
 grep -q 'You are the NetTAP Network Intelligence Model' "$model_file"
-grep -q '^RELEASE_VERSION=0.3.0-rc.4$' "$project_dir/.env.example"
-grep -q '^BASE_MODEL=qwen2.5:7b-instruct-q4_K_M$' "$project_dir/.env.example"
-grep -q '^NETTAP_AI_MODEL=nettap-ai:0.3.0-rc.4$' "$project_dir/.env.example"
-grep -q '^EXPECTED_BASE_MODEL_ID=845dbda0ea48$' "$project_dir/.env.example"
+grep -q '^RELEASE_VERSION=0.4.0-rc.1$' "$project_dir/.env.example"
+grep -q '^BASE_MODEL=qwen3.5:9b-q4_K_M$' "$project_dir/.env.example"
+grep -q '^NETTAP_AI_MODEL=nettap-ai:0.4.0-rc.1$' "$project_dir/.env.example"
+grep -q '^EXPECTED_BASE_MODEL_ID=6488c96fa5fa$' "$project_dir/.env.example"
 grep -q '^RETIRE_LEGACY_NETTAP_MODELS=true$' "$project_dir/.env.example"
 grep -q '^NETTAP_VISIBILITY_PROFILE=nettap-network-visibility$' "$project_dir/.env.example"
 grep -q '^NETTAP_PACKET_EXPERT_PROFILE=nettap-packet-expert$' "$project_dir/.env.example"
@@ -41,7 +46,7 @@ grep -Fqx '# NetTAP Network Intelligence' "$project_dir/README.md"
 grep -Fq 'NetTAP Network Intelligence — Network & Visibility' "$project_dir/README.md"
 grep -Fq 'NetTAP Network Intelligence — Packet Expert' "$project_dir/README.md"
 grep -Fq 'NetTAP Network Intelligence — Evidence Workspace' "$project_dir/README.md"
-grep -Fq "Ollama model tag | \`nettap-ai:0.3.0-rc.4\`" "$project_dir/docs/NAMING_CONVENTIONS.md"
+grep -Fq "Ollama model tag | \`nettap-ai:0.4.0-rc.1\`" "$project_dir/docs/NAMING_CONVENTIONS.md"
 grep -Fq "Backup format identifiers | \`NetTAP AI Suite volume backup v2\` and \`v3\`" "$project_dir/docs/NAMING_CONVENTIONS.md"
 grep -Fq 'experiences or Open WebUI profiles, not as separate LLMs or model downloads' "$project_dir/docs/NAMING_CONVENTIONS.md"
 grep -Fq 'Historical naming:' "$project_dir/reports/PRODUCTION_CERTIFICATION_STATUS_0.3.0-rc.2.md"
@@ -51,7 +56,7 @@ grep -q 'nettap-ai-backup-\*' "$project_dir/scripts/retire-legacy-models.sh"
 grep -q '^WEBUI_ADMIN_PASSWORD=GENERATE_ON_FIRST_START$' "$project_dir/.env.example"
 grep -q 'ENABLE_SIGNUP: "False"' "$project_dir/compose.yaml"
 grep -q 'WEBUI_NAME: "NetTAP Network Intelligence"' "$project_dir/compose.yaml"
-grep -q 'nettap-network-intelligence-admin-activation-rc4' "$project_dir/compose.yaml"
+grep -q 'nettap-network-intelligence-admin-activation-040rc1' "$project_dir/compose.yaml"
 grep -q 'internal: true' "$project_dir/compose.yaml"
 grep -q 'HF_HUB_OFFLINE: "1"' "$project_dir/compose.yaml"
 grep -q 'RAG_EMBEDDING_MODEL_TRUST_REMOTE_CODE: "False"' "$project_dir/compose.yaml"
@@ -85,13 +90,15 @@ required_files=(
   provisioning/knowledge-sources.sha256
   knowledge/NetTAP_Network_Visibility_Knowledge.md
   knowledge/NetTAP_Packet_Expert_Knowledge.md model/nettap-ai.Modelfile
-  model/MODEL_CARD.md
+  model/MODEL_CARD.md model/releases/0.4.0-rc.1.json
   launchers/network-visibility/index.html launchers/packet-expert/index.html launchers/shared.css
   docs/AUTHENTICATION.md docs/COMMERCIAL_RELEASE_GATES.md
   docs/CUSTOMER_DEPLOYMENT_GUIDE.md docs/PRODUCTION_ARCHITECTURE.md
+  docs/MACOS_DEPLOYMENT.md docs/WINDOWS_DEPLOYMENT.md docs/LINUX_DEPLOYMENT.md
   docs/PRODUCT_ROADMAP.md docs/THREAT_MODEL.md docs/VALIDATION_STATUS.md
-  docs/RC3_ACCEPTANCE_PLAN.md docs/RC4_ACCEPTANCE_PLAN.md
+  docs/RC3_ACCEPTANCE_PLAN.md docs/RC4_ACCEPTANCE_PLAN.md docs/0.4.0_RC1_ACCEPTANCE_PLAN.md
   docs/EVIDENCE_CASE_SERVICE.md
+  docs/QWEN35_PROMOTION.md
   docs/current-state.md docs/release-gates.md docs/open-questions.md
   docs/decisions/0001-resolvable-evidence-citations.md
   docs/NAMING_CONVENTIONS.md
@@ -103,7 +110,7 @@ required_files=(
   scripts/retire-legacy-models.sh scripts/retire-legacy-models.ps1
   scripts/package-model-bundle.sh scripts/verify-model-bundle.sh
   scripts/verify-release.sh scripts/verify-archive-tree.py scripts/certify-production.sh
-  scripts/start-wsl2.sh
+  scripts/start-wsl2.sh scripts/start-linux.sh
   tests/model-behavior-eval.sh tests/model-storage-sharing.sh tests/backup-restore-e2e.sh
   tests/normalized-ingestion-eval.sh tests/failed-update-rollback-e2e.sh
   tests/evidence-runtime-e2e.sh
@@ -127,6 +134,9 @@ required_files=(
   reports/PRODUCTION_CERTIFICATION_STATUS_0.3.0-rc.4.md
   reports/RELEASE_ACCEPTANCE_0.3.0-rc.4.md
   reports/STATIC_VALIDATION_2026-08-05_0.3.0-rc.4.md
+  reports/PRODUCTION_CERTIFICATION_STATUS_0.4.0-rc.1.md
+  reports/RELEASE_ACCEPTANCE_0.4.0-rc.1.md
+  reports/STATIC_VALIDATION_2026-08-20_0.4.0-rc.1.md
 )
 for file in "${required_files[@]}"; do test -f "${project_dir}/${file}"; done
 
@@ -181,7 +191,7 @@ assistants = []
 for manifest_path in sorted((root / "assistants").glob("*/assistant.yaml")):
     manifest = yaml.safe_load(manifest_path.read_text(encoding="utf-8"))
     assistants.append(manifest)
-    assert manifest["base_model"] == "qwen2.5:7b-instruct-q4_K_M"
+    assert manifest["base_model"] == "qwen3.5:9b-q4_K_M"
     assert (root / manifest["modelfile"]).is_file()
     for knowledge in manifest["knowledge"]:
         assert (root / knowledge).is_file()
@@ -197,7 +207,7 @@ assert {item["display_name"] for item in assistants} == {
     "NetTAP Network Intelligence — Packet Expert",
 }
 assert len({item["launcher_port"] for item in assistants}) == 2
-assert {item["runtime_model"] for item in assistants} == {"nettap-ai:0.3.0-rc.4"}
+assert {item["runtime_model"] for item in assistants} == {"nettap-ai:0.4.0-rc.1"}
 assert {item["modelfile"] for item in assistants} == {"model/nettap-ai.Modelfile"}
 assert {tuple(item["skills"]) for item in assistants} == {
     ("skills/nettap-network-visibility/SKILL.md",),
@@ -206,6 +216,20 @@ assert {tuple(item["skills"]) for item in assistants} == {
 assert {item["workspace_model_id"] for item in assistants} == {"nettap-network-visibility", "nettap-packet-expert"}
 assert {item["mode"] for item in assistants} == {"network_visibility", "packet_expert"}
 provisioning = json.loads((root / "provisioning/open-webui.json").read_text(encoding="utf-8"))
+release = json.loads((root / "model/releases/0.4.0-rc.1.json").read_text(encoding="utf-8"))
+assert release == {
+    "schema_version": 1,
+    "release_version": "0.4.0-rc.1",
+    "base_model": "qwen3.5:9b-q4_K_M",
+    "expected_base_model_id": "6488c96fa5fa",
+    "runtime_model": "nettap-ai:0.4.0-rc.1",
+    "source_policy": "model/nettap-ai.Modelfile",
+    "temperature": 0.1,
+    "num_ctx": 16384,
+    "status": "release-candidate",
+    "source": "https://ollama.com/library/qwen3.5:9b-q4_K_M",
+    "license": "Apache-2.0",
+}
 assert {item["name"] for item in provisioning["assistants"]} == {
     "NetTAP Network Intelligence — Network & Visibility",
     "NetTAP Network Intelligence — Packet Expert",
@@ -246,6 +270,10 @@ grep -q 'Production certification decision: \*\*NOT GRANTED' "$project_dir/repor
 grep -q 'Release disposition: \*\*EVALUATION ONLY' "$project_dir/reports/RELEASE_ACCEPTANCE_0.3.0-rc.4.md"
 grep -q 'Production/customer deployment approval: \*\*NOT GRANTED' "$project_dir/reports/RELEASE_ACCEPTANCE_0.3.0-rc.4.md"
 grep -q 'Commercial distribution approval: \*\*NOT GRANTED' "$project_dir/reports/RELEASE_ACCEPTANCE_0.3.0-rc.4.md"
+grep -q 'Production certification decision: \*\*NOT GRANTED' "$project_dir/reports/PRODUCTION_CERTIFICATION_STATUS_0.4.0-rc.1.md"
+grep -q 'Release disposition: \*\*EVALUATION ONLY' "$project_dir/reports/RELEASE_ACCEPTANCE_0.4.0-rc.1.md"
+grep -q 'Production/customer deployment approval: \*\*NOT GRANTED' "$project_dir/reports/RELEASE_ACCEPTANCE_0.4.0-rc.1.md"
+grep -q 'Commercial distribution approval: \*\*NOT GRANTED' "$project_dir/reports/RELEASE_ACCEPTANCE_0.4.0-rc.1.md"
 
 if grep -RInE --exclude=static-checks.sh '(^|[^A-Za-z])(admin/admin|admin@nettap[.]local[[:space:]]*/[[:space:]]*admin)([^A-Za-z]|$)' \
   "$project_dir/README.md" "$project_dir/docs" "$project_dir/scripts" "$project_dir/tests"; then
