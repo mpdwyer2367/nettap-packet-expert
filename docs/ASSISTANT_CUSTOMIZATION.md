@@ -4,7 +4,7 @@
 
 | Layer | Network & Visibility | Packet Expert | Update method |
 |---|---|---|---|
-| Base weights | Shared Qwen2.5 7B | Shared Qwen2.5 7B | Approved product release only |
+| Base weights | Shared Qwen3.5 9B Q4_K_M | Shared Qwen3.5 9B Q4_K_M | Approved product release only |
 | Ollama policy | `model/nettap-ai.Modelfile` | Same combined model | Reviewed source change and one model rebuild |
 | Manifest | `assistants/network-visibility/assistant.yaml` | `assistants/packet-expert/assistant.yaml` | Reviewed source change |
 | Shared knowledge | `knowledge/NetTAP_AI_Knowledge.md` | Same reviewed shared collection | Version, review, hash, automatic reconciliation |

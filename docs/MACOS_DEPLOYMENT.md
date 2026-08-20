@@ -14,6 +14,17 @@ chmod +x scripts/* tests/*.sh
 
 The first start downloads the approved Qwen3.5 9B Q4_K_M base and exact offline embedding revision, verifies them, builds one combined `nettap-ai:0.4.0-rc.1` model, removes temporary egress, provisions three knowledge collections and two Workspace Models, proves offline retrieval, retires older NetTAP container tags, and then starts one Open WebUI with two stateless experience launchers.
 
+`nettap-ai-suite-0.4.0-rc.1` is the source-package name and does not appear in the Ollama model selector. The expected runtime model tag is `nettap-ai:0.4.0-rc.1`.
+
+For an existing installation that still shows `nettap-ai:0.3.0-rc.4`, run:
+
+```bash
+./scripts/nettap-ai update-models --confirm
+./scripts/nettap-ai status
+```
+
+The status output must contain `qwen3.5:9b-q4_K_M` and `nettap-ai:0.4.0-rc.1`. Open <http://127.0.0.1:3000> for the managed Network & Visibility RAG profile, <http://127.0.0.1:3001> for the managed Packet Expert RAG profile, or <http://127.0.0.1:3100> for the shared Open WebUI.
+
 Open:
 
 - <http://127.0.0.1:3000> — Network & Visibility
