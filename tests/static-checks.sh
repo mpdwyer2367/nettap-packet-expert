@@ -77,6 +77,8 @@ grep -q 'assistant-provisioner:' "$project_dir/compose.yaml"
 grep -q 'NETTAP_PROVISIONING_CHECKSUMS: /provision/knowledge-sources.sha256' "$project_dir/compose.yaml"
 grep -q 'rag-cache-init:' "$project_dir/compose.yaml"
 grep -q 'provision_assistants local' "$project_dir/scripts/common.sh"
+grep -q 'parser.add_argument("--installed-fingerprint"' "$project_dir/provisioning/provision_open_webui.py"
+grep -q "Path('/app/backend/data/nettap-provisioning-state.json')" "$project_dir/scripts/common.sh"
 fingerprint_sample='0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef'
 [[ "$(printf 'compose status\n%s\n' "$fingerprint_sample" | bash -c 'source "$1"; extract_provisioning_fingerprint' _ "$project_dir/scripts/common.sh")" == "$fingerprint_sample" ]]
 grep -q 'require_digest_pins' "$project_dir/scripts/start-production.sh"

@@ -262,6 +262,8 @@ class ProvisioningTest(unittest.TestCase):
         )
         state = json.loads(self.state_path.read_text(encoding="utf-8"))
         self.assertEqual(state["release_version"], "0.4.0-rc.1")
+        installed = self.run_provisioner("--installed-fingerprint").stdout.strip()
+        self.assertEqual(installed, state["fingerprint"])
         self.assertEqual(state["offline_rag"]["result"], "PASS")
         self.assertEqual(set(state["skills"]), {"network_visibility", "packet_expert"})
         self.assertEqual(

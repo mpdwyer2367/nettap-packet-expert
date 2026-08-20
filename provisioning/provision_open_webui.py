@@ -525,14 +525,33 @@ def write_state(state: dict):
     os.replace(temporary, STATE_PATH)
 
 
+def installed_fingerprint() -> str:
+    try:
+        state = json.loads(STATE_PATH.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return ""
+    fingerprint = state.get("fingerprint", "")
+    if not isinstance(fingerprint, str) or len(fingerprint) != 64:
+        return ""
+    try:
+        int(fingerprint, 16)
+    except ValueError:
+        return ""
+    return fingerprint
+
+
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--fingerprint", action="store_true")
+    parser.add_argument("--installed-fingerprint", action="store_true")
     args = parser.parse_args()
     manifest = load_manifest()
     fingerprint = provisioning_fingerprint(manifest)
     if args.fingerprint:
         print(fingerprint)
+        return 0
+    if args.installed_fingerprint:
+        print(installed_fingerprint())
         return 0
 
     password = sys.stdin.readline().rstrip("\r\n")
@@ -581,6 +600,8 @@ def main() -> int:
         "offline_rag": rag,
     }
     write_state(state)
+    if installed_fingerprint() != fingerprint:
+        raise ProvisioningError("provisioning state could not be read back after it was written")
     print(f"Provisioning state: {STATE_PATH}")
     return 0
 
