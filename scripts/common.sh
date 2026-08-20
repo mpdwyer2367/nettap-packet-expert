@@ -218,10 +218,21 @@ recover_failed_model_initialization() {
   exit 9
 }
 
+extract_provisioning_fingerprint() {
+  awk '/^[0-9a-f]{64}$/ { fingerprint=$0 } END { if (fingerprint != "") print fingerprint }'
+}
+
 provisioning_fingerprint() {
+  local output fingerprint
   local -a selected=("${compose_local[@]}")
   if [[ "$1" == production ]]; then selected=("${compose_production[@]}"); fi
-  "${selected[@]}" --profile provision run --rm --no-deps assistant-provisioner --fingerprint
+  output="$("${selected[@]}" --profile provision run --rm --no-deps assistant-provisioner --fingerprint)" || return
+  fingerprint="$(printf '%s\n' "$output" | extract_provisioning_fingerprint)"
+  [[ -n "$fingerprint" ]] || {
+    echo "ERROR: Provisioner did not return a valid SHA-256 release fingerprint." >&2
+    return 7
+  }
+  printf '%s\n' "$fingerprint"
 }
 
 installed_provisioning_fingerprint() {
@@ -266,6 +277,9 @@ provision_assistants() {
   actual="$(installed_provisioning_fingerprint "$mode")"
   [[ "$actual" == "$desired" ]] || {
     echo "ERROR: Assistant provisioning state does not match the release fingerprint." >&2
+    echo "Expected fingerprint: $desired" >&2
+    echo "Installed fingerprint: ${actual:-missing}" >&2
+    echo "Run ./scripts/provision-assistants.sh --confirm, then retry startup." >&2
     return 7
   }
 }

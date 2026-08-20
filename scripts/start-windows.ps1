@@ -189,7 +189,9 @@ if ($LASTEXITCODE -ne 0) {
     throw 'Open WebUI failed to start.'
 }
 
-$desiredFingerprint = (docker @compose --profile provision run --rm --no-deps assistant-provisioner --fingerprint | Out-String).Trim()
+$desiredOutput = @(docker @compose --profile provision run --rm --no-deps assistant-provisioner --fingerprint)
+$desiredCandidates = @($desiredOutput | ForEach-Object { ([string]$_).Trim() } | Where-Object { $_ -match '^[0-9a-f]{64}$' })
+$desiredFingerprint = if ($desiredCandidates.Count -gt 0) { $desiredCandidates[-1] } else { '' }
 if ($LASTEXITCODE -ne 0 -or [string]::IsNullOrWhiteSpace($desiredFingerprint)) {
     throw 'Unable to calculate the assistant provisioning fingerprint.'
 }
@@ -217,7 +219,7 @@ if ($actualFingerprint -ne $desiredFingerprint) {
     }
     $actualFingerprint = (docker @compose exec -T open-webui python -c "import json; from pathlib import Path; print(json.loads(Path('/app/backend/data/nettap-provisioning-state.json').read_text(encoding='utf-8')).get('fingerprint',''))" | Out-String).Trim()
     if ($actualFingerprint -ne $desiredFingerprint) {
-        throw 'Assistant provisioning state does not match this release.'
+        throw "Assistant provisioning state does not match this release. Expected $desiredFingerprint; installed $actualFingerprint. Rerun .\scripts\start-windows.ps1 and provide the current administrator password when prompted."
     }
 }
 
