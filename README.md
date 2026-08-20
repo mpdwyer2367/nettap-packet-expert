@@ -121,9 +121,9 @@ Startup uses temporary registry egress to retrieve the verified base model, pinn
 
 Startup also generates `.evidence-api-token` and starts the loopback-only Evidence Workspace. Use it to create a case, upload authorized evidence, review provenance and quality, run deterministic analysis, inspect case-scoped citations to exact normalized observations, and export the minimized case context. Raw evidence is never automatically submitted to the model. The service remains an evaluation feature and does not change the `0.4.0-rc.1` production-certification status.
 
-The startup script also generates a unique bootstrap password and prints the protected local file containing it. Sign in as `admin@nettap.local`, change the password immediately, verify the generated password no longer works, and complete administrator finalization. There is no shared or committed default password.
+Fresh loopback-only installations use the documented local administrator `admin@nettaptech.com` with password `Password!`. The startup script records it in the ignored, mode-0600 `.bootstrap-admin-password` file. Change the password immediately, verify the default password no longer works, and complete administrator finalization. Production preflight rejects the default password.
 
-A populated Open WebUI volume retains its existing accounts and passwords; startup does not reset them.
+A populated Open WebUI volume retains its existing accounts and passwords; startup does not reset them. To restore the documented local default on an existing loopback installation, run `./scripts/nettap-ai reset-default-admin --confirm-insecure-default`.
 
 ## Upgrade from Packet Expert 0.2
 

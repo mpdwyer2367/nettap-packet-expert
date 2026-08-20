@@ -19,7 +19,7 @@ Run `tests/clean-package-acceptance.sh` from empty, uniquely named Docker
 volumes on macOS and Windows/WSL2 using the same archive, commit, tree, checksum,
 signature, and public key. Each result must prove:
 
-1. One-command installation and generated administrator credential handling.
+1. One-command installation and documented local administrator credential handling.
 2. Ports 3000, 3001, 3100, and 3200 work as documented.
 3. Both canonical Open WebUI profile names select `nettap-ai:0.3.0-rc.4`.
 4. Offline RAG imports, indexes, retrieves, and survives restart without egress.

@@ -78,5 +78,5 @@ done
 [[ "$ui_ready" == true ]] || { echo "FAIL: Open WebUI did not recover after restart."; exit 8; }
 
 echo "PASS: administrator presence, one combined model identity, automatic profile/RAG provisioning, inference, both launchers, UI health, and restart persistence checks completed."
-echo "Manual acceptance is still required on a fresh data volume: use the generated credential, change it, confirm it fails, finalize activation, confirm the new password survives restart, and validate representative browser chats in both managed profiles."
+echo "Manual acceptance is still required on a fresh data volume: use the documented local default, change it, confirm it fails, finalize activation, confirm the new password survives restart, and validate representative browser chats in both managed profiles."
 echo "Report: $report_file"

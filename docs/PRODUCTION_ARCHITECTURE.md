@@ -29,7 +29,7 @@ Only the gateway publishes a production port. Open WebUI and Ollama remain on in
 | Evidence to model | Data minimization; evidence treated as untrusted | Customer authorization, classification, retention |
 | Image supply chain | Immutable digests, SBOM, CVE gate | Authorized exception process and re-scan cadence |
 | Persistent state | Named volumes, protected backup/restore | Host-disk encryption and off-host backup protection |
-| Administration | Generated bootstrap, explicit retirement, CLI gates | Named operators, MFA/SSO roadmap, log collection |
+| Administration | Loopback default bootstrap, explicit retirement, production CLI gates | Named operators, MFA/SSO roadmap, log collection |
 
 Open WebUI administrators can access and control the application instance. They are equivalent to root within that tenant boundary. Separate customers must not share one instance.
 

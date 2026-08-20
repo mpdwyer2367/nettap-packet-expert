@@ -120,8 +120,8 @@ fi
 
 echo
 echo "Manual credential checkpoint"
-echo "1. Open http://127.0.0.1:3100 and sign in with the generated credential in ${runtime_root}/.bootstrap-admin-password."
-echo "2. Change the password in Settings > Account, sign out, and verify the generated password is rejected."
+echo "1. Open http://127.0.0.1:3100 and sign in as admin@nettaptech.com with the documented local default."
+echo "2. Change the password in Settings > Account, sign out, and verify the default password is rejected."
 printf 'Type PASSWORD-CHANGED only after completing all three actions: '
 read -r credential_confirmation
 [[ "$credential_confirmation" == PASSWORD-CHANGED ]] || { echo "ERROR: Administrator activation was not accepted." >&2; exit 5; }

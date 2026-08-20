@@ -8,7 +8,7 @@ Administrator credentials, application secrets, customer chats, uploaded evidenc
 
 | Threat | Implemented control | Required external control |
 |---|---|---|
-| Shared/default credential | Unique generated bootstrap password; production blocked until retirement | Named admin, secure workstation, periodic review |
+| Documented local default credential | Loopback-only binding; explicit password replacement; production blocked until retirement | Named admin, secure workstation, periodic review |
 | Network interception | TLS-only production gateway; secure cookies | Customer PKI, DNS, firewall |
 | Direct model API exposure | No Ollama host port; internal network | Docker host hardening |
 | WebUI bypass | No production WebUI host port | Verify with runtime gate |

@@ -5,18 +5,18 @@
 An empty Open WebUI data volume creates one local administrator:
 
 - Display name: `NetTAP Administrator`
-- Login: `admin@nettap.local`
-- Password: a unique value generated on the deployment host
+- Login: `admin@nettaptech.com`
+- Password: `Password!`
 - Role: `admin`
 
-There is no shared default password. The ignored file `.bootstrap-admin-password` is created with restricted local permissions and contains the one-time value. Open WebUI creates the account only when its user database is empty; existing volumes keep their existing accounts.
+This documented credential is limited to local evaluation bound to `127.0.0.1`. The ignored file `.bootstrap-admin-password` is created with restricted local permissions as an operator reminder. Open WebUI creates the account only when its user database is empty; existing volumes keep their existing accounts. Production preflight rejects the default password.
 
 ## Required activation
 
 1. Keep the application on `127.0.0.1`.
-2. Sign in using the generated credential file.
+2. Sign in using `admin@nettaptech.com` and `Password!`.
 3. In **Settings > Account**, choose a unique password of 12–72 characters with upper, lower, number, and symbol.
-4. Sign out, verify the generated password fails, and verify the new password succeeds.
+4. Sign out, verify the default password fails, and verify the new password succeeds.
 5. Run `./scripts/finalize-admin.sh --confirm` and type `FINALIZE`.
 
 Finalization removes the local credential file, marks the bootstrap value retired in `.env`, and creates an ignored activation record. Production startup refuses to enable the TLS gateway until this record exists.
@@ -27,7 +27,7 @@ The repository enforces production blocking and credential-file retirement. The 
 
 ## Existing installations
 
-Generated bootstrap credentials never reset an existing database. To list user identity and role without displaying password hashes:
+Bootstrap environment values never reset an existing database. To list user identity and role without displaying password hashes:
 
 ```bash
 docker compose --env-file .env -f compose.yaml -f compose.local.yaml exec -T open-webui python - <<'PY'
@@ -45,16 +45,16 @@ If access is lost, create a verified backup and follow the official Open WebUI p
 For an intentionally simple loopback-only development credential, run:
 
 ```bash
-./scripts/reset-local-admin.sh --confirm-insecure-default
+./scripts/nettap-ai reset-default-admin --confirm-insecure-default
 ```
 
 This resets an existing administrator in place, writes a timestamped database backup beside `webui.db`, and configures these local credentials:
 
-- Display name: `admin`
-- Login email: `admin@nettap.local`
-- Password: `password`
+- Display name: `NetTAP Administrator`
+- Login email: `admin@nettaptech.com`
+- Password: `Password!`
 
-Open WebUI uses an email address for password sign-in, so enter `admin@nettap.local`, not the bare name `admin`. The command refuses production mode and any bind address other than `127.0.0.1`. Signup remains disabled. Replace the default password before exposing the application beyond the deployment host.
+Open WebUI uses an email address for password sign-in, so enter `admin@nettaptech.com`, not the bare name `admin`. The command refuses production mode and any bind address other than `127.0.0.1`. Signup remains disabled. Replace the default password before exposing the application beyond the deployment host.
 
 To reset or reidentify the retained local administrator with a specific email,
 run the supported command and enter the new password twice at the hidden prompt:
@@ -84,7 +84,7 @@ associated data, keeps signup disabled, and is refused outside loopback local mo
 
 ## Acceptance
 
-Record generated-login success, password replacement, old-password rejection, new-password persistence after restart, disabled signup, administrator role, session expiry, and production-gateway refusal before finalization. Never record either password in the acceptance report.
+Record default-login success, password replacement, default-password rejection, new-password persistence after restart, disabled signup, administrator role, session expiry, and production-gateway refusal before finalization. Never record the replacement password in the acceptance report.
 
 Official references:
 

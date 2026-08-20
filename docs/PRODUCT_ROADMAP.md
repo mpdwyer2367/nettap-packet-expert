@@ -40,7 +40,7 @@ Implemented in `0.2.0-rc.1`:
 
 - Qwen2.5 7B plus versioned NetTAP policy
 - local evaluation and TLS single-customer profiles
-- generated administrator activation and fail-closed production start
+- documented local administrator activation and fail-closed production start
 - internal-only model runtime and temporary registry egress
 - immutable container digests and expected base-model identity
 - metadata audit logs, resource/log limits, backup/restore, SBOM/CVE gate

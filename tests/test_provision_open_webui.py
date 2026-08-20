@@ -93,7 +93,7 @@ class Handler(BaseHTTPRequestHandler):
         path = parsed.path
         if path == "/api/v1/auths/signin":
             payload = self.read_json()
-            if payload != {"email": "admin@nettap.local", "password": "Test-password-123!"}:
+            if payload != {"email": "admin@nettaptech.com", "password": "Test-password-123!"}:
                 return self.send_json(401, {"detail": "bad credentials"})
             return self.send_json(200, {"token": "test-token", "role": "admin"})
         if path == "/api/v1/knowledge/create":
@@ -174,7 +174,7 @@ class ProvisioningTest(unittest.TestCase):
         self.env = os.environ.copy()
         self.env.update({
             "OPEN_WEBUI_URL": f"http://127.0.0.1:{self.server.server_port}",
-            "WEBUI_ADMIN_EMAIL": "admin@nettap.local",
+            "WEBUI_ADMIN_EMAIL": "admin@nettaptech.com",
             "RELEASE_VERSION": "0.4.0-rc.1",
             "NETTAP_AI_MODEL": "nettap-ai:0.4.0-rc.1",
             "NETTAP_PROVISIONING_MANIFEST": str(ROOT / "provisioning/open-webui.json"),

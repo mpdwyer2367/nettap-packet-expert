@@ -131,11 +131,13 @@ assert "EXPECTED_BASE_MODEL_ID=6488c96fa5fa" in env_example
 assert "NETTAP_VISIBILITY_PROFILE=nettap-network-visibility" in env_example
 assert "NETTAP_PACKET_EXPERT_PROFILE=nettap-packet-expert" in env_example
 assert "RAG_EMBEDDING_MODEL_REVISION=1110a243fdf4706b3f48f1d95db1a4f5529b4d41" in env_example
-assert "WEBUI_ADMIN_PASSWORD=GENERATE_ON_FIRST_START" in env_example
+assert "WEBUI_ADMIN_EMAIL=admin@nettaptech.com" in env_example
+assert "WEBUI_ADMIN_PASSWORD=Password!" in env_example
 assert "WEBUI_ADMIN_PASSWORD=admin" not in env_example
 assert "BIND_ADDRESS=127.0.0.1" in env_example
 assert "EVIDENCE_PORT=3200" in env_example
 assert "EVIDENCE_API_TOKEN=GENERATE_ON_FIRST_START" in env_example
+assert "Password!" in (root / "scripts/production-preflight.sh").read_text()
 assert "EVIDENCE_MAX_UPLOAD_BYTES=52428800" in env_example
 
 caddy = (root / "config/Caddyfile").read_text(encoding="utf-8")

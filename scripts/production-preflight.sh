@@ -18,5 +18,8 @@ require_security_scan_pass
 [[ -f "${project_dir}/config/tls/tls.crt" && -f "${project_dir}/config/tls/tls.key" ]] || {
   echo "FAIL: Production TLS is not configured." >&2; exit 11;
 }
+[[ "$(load_env_value WEBUI_ADMIN_PASSWORD)" != 'Password!' ]] || {
+  echo "FAIL: Replace the documented local default administrator password before production." >&2; exit 11;
+}
 [[ -f "$admin_finalized_file" ]] || { echo "FAIL: Administrator activation is incomplete." >&2; exit 11; }
 echo "Production preflight passed: CPU, memory, disk, digests, matching security scan, TLS, and administrator activation."

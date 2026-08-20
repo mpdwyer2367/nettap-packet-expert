@@ -22,7 +22,7 @@ Use [macOS deployment](MACOS_DEPLOYMENT.md) or [Windows deployment](WINDOWS_DEPL
 
 ## Administrator activation
 
-The first start generates a unique local credential. Change it, prove the old value fails, and run `./scripts/finalize-admin.sh --confirm`. A populated Open WebUI volume keeps its existing users and passwords. The platform never restores a shared default password.
+The first local start uses `admin@nettaptech.com` with `Password!`. Change it, prove the default value fails, and run `./scripts/finalize-admin.sh --confirm`. A populated Open WebUI volume keeps its existing users and passwords unless an operator explicitly runs the loopback-only default recovery command. Production preflight rejects the default password.
 
 ## Routine commands
 
@@ -88,7 +88,7 @@ Run `./scripts/nettap-ai update-models --confirm` and inspect `ollama list` for 
 
 ### Existing login fails
 
-Do not expect the generated bootstrap credential to reset a populated volume. Follow [authentication](AUTHENTICATION.md) and preserve the database before any approved recovery action.
+Do not expect bootstrap environment values to reset a populated volume. Follow [authentication](AUTHENTICATION.md) and use the supported recovery command, which backs up the database before changing the retained administrator.
 
 ### Live telemetry appears unavailable
 

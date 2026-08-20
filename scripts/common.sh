@@ -107,8 +107,8 @@ initialize_env() {
   fi
 
   ensure_env_default WEBUI_ADMIN_NAME "NetTAP Administrator"
-  ensure_env_default WEBUI_ADMIN_EMAIL "admin@nettap.local"
-  ensure_env_default WEBUI_ADMIN_PASSWORD "GENERATE_ON_FIRST_START"
+  ensure_env_default WEBUI_ADMIN_EMAIL "admin@nettaptech.com"
+  ensure_env_default WEBUI_ADMIN_PASSWORD "Password!"
   ensure_env_default EVIDENCE_API_TOKEN "GENERATE_ON_FIRST_START"
   if grep -q '^WEBUI_ADMIN_PASSWORD=GENERATE_ON_FIRST_START$' "$env_file"; then
     local admin_password
@@ -122,6 +122,18 @@ initialize_env() {
     } > "$bootstrap_password_file"
     chmod 0600 "$bootstrap_password_file"
     unset admin_password
+  fi
+  if [[ "$(load_env_value DEPLOYMENT_MODE)" == local \
+    && "$(load_env_value WEBUI_ADMIN_EMAIL)" == admin@nettaptech.com \
+    && "$(load_env_value WEBUI_ADMIN_PASSWORD)" == 'Password!' \
+    && ! -f "$bootstrap_password_file" ]]; then
+    umask 077
+    {
+      printf 'Login: admin@nettaptech.com\n'
+      printf 'Bootstrap password: Password!\n'
+      printf 'Default local credential initialized UTC: %s\n' "$(date -u +%FT%TZ)"
+    } > "$bootstrap_password_file"
+    chmod 0600 "$bootstrap_password_file"
   fi
   if grep -q '^EVIDENCE_API_TOKEN=GENERATE_ON_FIRST_START$' "$env_file"; then
     local evidence_token

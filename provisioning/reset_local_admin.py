@@ -10,8 +10,8 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 DATABASE = Path("/app/backend/data/webui.db")
-EMAIL = os.environ.get("NETTAP_RESET_ADMIN_EMAIL", "admin@nettap.local")
-NAME = os.environ.get("NETTAP_RESET_ADMIN_NAME", "admin")
+EMAIL = os.environ.get("NETTAP_RESET_ADMIN_EMAIL", "admin@nettaptech.com")
+NAME = os.environ.get("NETTAP_RESET_ADMIN_NAME", "NetTAP Administrator")
 CREATE_IF_MISSING = os.environ.get("NETTAP_RESET_CREATE_IF_MISSING", "false").lower() == "true"
 
 

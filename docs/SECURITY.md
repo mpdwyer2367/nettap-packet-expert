@@ -2,7 +2,7 @@
 
 NetTAP Network Intelligence is advisory decision support. Neither assistant is a security enforcement control, live data source, or source of forensic truth.
 
-Implemented candidate controls include generated bootstrap credentials, explicit bootstrap retirement, disabled signup and risky WebUI features, an 8-hour session, secure production cookies, TLS termination, internal-only WebUI/Ollama networks, no host Ollama port, temporary-only model registry egress, dropped Linux capabilities, no-new-privileges, resource/PID limits, log rotation, immutable digest enforcement, SBOM/CVE tooling, protected backups, non-overwriting restore, and fail-closed certification gates.
+Implemented candidate controls include a documented loopback-only bootstrap credential, mandatory production rejection and explicit retirement of that credential, disabled signup and risky WebUI features, an 8-hour session, secure production cookies, TLS termination, internal-only WebUI/Ollama networks, no host Ollama port, temporary-only model registry egress, dropped Linux capabilities, no-new-privileges, resource/PID limits, log rotation, immutable digest enforcement, SBOM/CVE tooling, protected backups, non-overwriting restore, and fail-closed certification gates.
 
 Required customer controls include hardened/patch-managed hosts, customer PKI and firewalling, disk and backup encryption, named administrators, secure time, endpoint monitoring, data classification and retention, incident response, controlled evidence normalization, centralized log handling, and change approval.
 

@@ -26,7 +26,7 @@ Open:
 - <http://127.0.0.1:3100> — shared Open WebUI
 - <http://127.0.0.1:3200> — authenticated local Evidence Workspace; token in `.evidence-api-token`
 
-Use `admin@nettap.local` with the locally generated password file printed by the script. Change it immediately and verify the generated value fails. Complete administrator finalization from WSL or Git Bash as described in [authentication](AUTHENTICATION.md).
+Use `admin@nettaptech.com` with the local default password `Password!`. Change it immediately and verify the default value fails. Complete administrator finalization from WSL or Git Bash as described in [authentication](AUTHENTICATION.md). Production preflight rejects the default password.
 
 ## Verification
 

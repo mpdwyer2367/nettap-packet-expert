@@ -16,7 +16,7 @@ docker info >/dev/null 2>&1 || { echo "ERROR: Docker engine is not running." >&2
 require_digest_pins
 
 if [[ ! -f "$admin_finalized_file" ]]; then
-  echo "Production access is blocked until the generated administrator credential is changed and finalized."
+  echo "Production access is blocked until the documented local default credential is changed and finalized."
   initialize_model_with_temporary_egress bootstrap-local
   web_port="$(load_env_value WEB_PORT)"
   echo "Complete administrator activation at http://127.0.0.1:${web_port} using $bootstrap_password_file."

@@ -32,13 +32,13 @@ Open:
 - <http://127.0.0.1:3100> — shared Open WebUI
 - <http://127.0.0.1:3200> — authenticated local Evidence Workspace; token in `.evidence-api-token`
 
-Use `admin@nettap.local` with the password in the protected file printed by the script. Change it immediately, verify the generated password fails, and run:
+Use `admin@nettaptech.com` with the local default password `Password!`. Change it immediately, verify the default password fails, and run:
 
 ```bash
 ./scripts/finalize-admin.sh --confirm
 ```
 
-There is no shared default password. Existing volumes retain existing accounts and passwords.
+Production preflight rejects the local default password. Existing volumes retain existing accounts and passwords; use `./scripts/nettap-ai reset-default-admin --confirm-insecure-default` only when intentionally restoring the documented loopback credential.
 
 ## Validation
 

@@ -18,14 +18,14 @@ Deploy one NetTAP Network Intelligence instance per customer or security boundar
 
 1. Verify the signed release package, checksum and signed provenance with `scripts/verify-release.sh`.
 2. Extract it into a customer-owned directory with restricted permissions.
-3. Start the loopback profile and activate the generated administrator:
+3. Start the loopback profile and replace the documented local administrator credential:
 
 ```bash
 chmod +x scripts/* tests/*.sh
 ./scripts/start-macos.sh
 ```
 
-On native Linux, use `scripts/start-linux.sh`. On Windows, use `scripts/start-windows.ps1` and complete the Bash steps from WSL. The credential appears only in the ignored local `.bootstrap-admin-password` file. Change it, verify rejection of the generated credential, and run:
+On native Linux, use `scripts/start-linux.sh`. On Windows, use `scripts/start-windows.ps1` and complete the Bash steps from WSL. Fresh local installations use `admin@nettaptech.com` with `Password!`; the same credential appears in the ignored local `.bootstrap-admin-password` file. Change it, verify rejection of the default credential, and run:
 
 ```bash
 ./scripts/finalize-admin.sh --confirm
@@ -66,7 +66,7 @@ Complete `reports/RELEASE_ACCEPTANCE_TEMPLATE.md` against the exact commit, imag
 
 - only the TLS gateway is published;
 - no temporary registry-egress network remains;
-- generated bootstrap credential is retired;
+- default bootstrap credential is retired;
 - signup, code execution, API keys, web search, user webhooks, and admin chat access are disabled;
 - backup and restore into new volumes succeed;
 - fourteen behavioral and combined-capability smoke cases pass;

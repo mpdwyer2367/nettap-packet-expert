@@ -72,13 +72,13 @@ class ResetLocalAdminTests(unittest.TestCase):
                 connection.execute(
                     "SELECT name, email, role FROM user WHERE id = ?", ("u1",)
                 ).fetchone(),
-                ("admin", "admin@nettap.local", "admin"),
+                ("NetTAP Administrator", "admin@nettaptech.com", "admin"),
             )
             self.assertEqual(
                 connection.execute(
                     "SELECT email, password FROM auth WHERE id = ?", ("u1",)
                 ).fetchone(),
-                ("admin@nettap.local", "open-webui-compatible-hash"),
+                ("admin@nettaptech.com", "open-webui-compatible-hash"),
             )
             self.assertEqual(
                 connection.execute("SELECT title FROM chat WHERE id = ?", ("c1",)).fetchone(),

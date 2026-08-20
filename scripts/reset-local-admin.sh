@@ -25,9 +25,9 @@ docker info >/dev/null 2>&1 || {
   exit 3
 }
 
-admin_email="admin@nettap.local"
-admin_name="admin"
-admin_password="password"
+admin_email="admin@nettaptech.com"
+admin_name="NetTAP Administrator"
+admin_password="Password!"
 webui_was_running=false
 webui_id="$("${compose_local[@]}" ps -q open-webui 2>/dev/null || true)"
 if [[ -n "$webui_id" && "$(docker inspect -f '{{.State.Running}}' "$webui_id")" == true ]]; then
@@ -41,7 +41,7 @@ restart_after_failure() {
 }
 trap restart_after_failure EXIT
 
-echo "WARNING: This installs the intentionally weak local credential admin@nettap.local / password."
+echo "WARNING: This installs the documented local default credential admin@nettaptech.com / Password!."
 echo "It is refused for production mode or non-loopback binding."
 "${compose_local[@]}" stop open-webui >/dev/null 2>&1 || true
 printf '%s\n' "$admin_password" | "${compose_local[@]}" --profile provision run --rm --no-deps -T \
@@ -71,5 +71,5 @@ unset admin_password
 echo "Local administrator access restored."
 echo "Login URL: http://127.0.0.1:$(load_env_value WEB_PORT)"
 echo "Email: $admin_email"
-echo "Password: password"
+echo "Password: Password!"
 echo "Production remains blocked until this password is replaced and administrator activation is finalized."

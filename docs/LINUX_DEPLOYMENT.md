@@ -21,7 +21,7 @@ The first start downloads and verifies `qwen3.5:9b-q4_K_M` with expected Ollama 
 
 Open the Network & Visibility launcher at <http://127.0.0.1:3000>, Packet Expert at <http://127.0.0.1:3001>, shared Open WebUI at <http://127.0.0.1:3100>, and the Evidence Workspace at <http://127.0.0.1:3200>.
 
-Use `admin@nettap.local` with the password in the protected file printed by the script. Change it immediately, verify the generated password no longer works, then run:
+Use `admin@nettaptech.com` with the local default password `Password!`. Change it immediately, verify the default password no longer works, then run:
 
 ```bash
 ./scripts/finalize-admin.sh --confirm
