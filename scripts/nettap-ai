@@ -5,6 +5,7 @@ command_name="${1:-help}"
 shift || true
 case "$command_name" in
   start-local) exec "${script_dir}/start-macos.sh" "$@" ;;
+  start-linux) exec "${script_dir}/start-linux.sh" "$@" ;;
   start-wsl2) exec "${script_dir}/start-wsl2.sh" "$@" ;;
   configure-production) exec "${script_dir}/configure-production.sh" "$@" ;;
   start-production) exec "${script_dir}/start-production.sh" "$@" ;;
@@ -35,6 +36,6 @@ case "$command_name" in
   certify) exec "${script_dir}/certify-production.sh" "$@" ;;
   help|*)
     echo "NetTAP Network Intelligence administration"
-    echo "Commands: start-local, start-wsl2, configure-production, start-production, status, health, evidence, stop, update-models, retire-old-models, install-native-model, package-model-bundle, provision-assistants, lock-images, scan, backup, restore, verify-production, certify"
+    echo "Commands: start-local, start-linux, start-wsl2, configure-production, start-production, status, health, evidence, stop, update-models, retire-old-models, install-native-model, package-model-bundle, provision-assistants, lock-images, scan, backup, restore, verify-production, certify"
     ;;
 esac

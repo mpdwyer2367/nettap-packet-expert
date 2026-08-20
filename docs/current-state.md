@@ -16,7 +16,7 @@
 | Packet Expert | Branded launcher on loopback port 3001 and a distinct managed Open WebUI profile |
 | Shared administration | One Open WebUI instance on loopback port 3100 |
 | Evidence Workspace | Authenticated local service on loopback port 3200 |
-| Model | One `nettap-ai:0.3.0-rc.4` definition over `qwen2.5:7b-instruct-q4_K_M` |
+| Model | One `nettap-ai:0.4.0-rc.1` definition over `qwen3.5:9b-q4_K_M` |
 | Skills | Two managed Skills attached only to their matching profiles |
 | Knowledge and RAG | Three checksum-pinned managed collections and one pinned offline embedding revision |
 | Storage | Separate Ollama, Open WebUI, evidence, and gateway volumes |
@@ -35,7 +35,7 @@ On the macOS development host, against the baseline commit:
 - `./tests/static-checks.sh`: passed after installing PyYAML 6.0.3 in an isolated temporary virtual environment.
 - Python service/provisioning/archive suite: 17 tests passed.
 - `tests/native-model-installer-mock.sh`: passed.
-- `tests/normalized-ingestion-eval.sh`: not accepted as a pass. The shared local Ollama volume contained RC3 and RC5 but not `nettap-ai:0.3.0-rc.4`; offline execution refused the resulting registry pull.
+- `tests/normalized-ingestion-eval.sh`: the historical RC4 attempt was not accepted as a pass because that exact model was absent from the local Ollama volume. A fresh result is required for `nettap-ai:0.4.0-rc.1`.
 
 These results do not constitute clean-host macOS, Windows/WSL2, Linux, production,
 security, signing, or commercial acceptance.
@@ -71,6 +71,6 @@ resource limits, lifecycle states, derived-artifact hashing, and malicious-input
   case creation, IPFIX fixture ingestion, hashing, deterministic analysis, artifact hashing,
   minimized context, and Markdown report export. The temporary container and volume were removed.
 
-The model-backed normalized-ingestion evaluation remains not run successfully for RC4 because
-the local shared Ollama store does not contain `nettap-ai:0.3.0-rc.4`. It must not be recorded
-as a pass until that exact candidate is installed and the evaluation completes offline.
+The model-backed normalized-ingestion evaluation has not yet run successfully for
+`nettap-ai:0.4.0-rc.1`. It must not be recorded as a pass until that exact candidate is
+installed and the evaluation completes offline.

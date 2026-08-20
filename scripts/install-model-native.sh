@@ -3,14 +3,14 @@ set -euo pipefail
 
 script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 project_dir="$(cd "${script_dir}/.." && pwd)"
-base_model="qwen2.5:7b-instruct-q4_K_M"
-expected_base_id="845dbda0ea48"
-model_name="nettap-ai:0.3.0-rc.4"
+base_model="qwen3.5:9b-q4_K_M"
+expected_base_id="6488c96fa5fa"
+model_name="nettap-ai:0.4.0-rc.1"
 modelfile="${project_dir}/model/nettap-ai.Modelfile"
 
 if [[ "${1:-}" != "--confirm-download" || $# -ne 1 ]]; then
   echo "Usage: ./scripts/install-model-native.sh --confirm-download" >&2
-  echo "This downloads the pinned Qwen2.5 7B base through Ollama, verifies its ID, and creates ${model_name}." >&2
+  echo "This downloads the pinned Qwen3.5 9B Q4_K_M base through Ollama, verifies its ID, and creates ${model_name}." >&2
   exit 2
 fi
 

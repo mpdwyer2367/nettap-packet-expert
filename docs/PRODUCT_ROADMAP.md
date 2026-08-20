@@ -4,9 +4,9 @@ This roadmap separates implemented candidate capability from future commercial e
 
 ## Stage 0.3 — unified assistant integration candidate
 
-Implemented in `0.3.0-rc.4` source:
+Implemented in `0.4.0-rc.1` source:
 
-- one shared Qwen2.5 7B base, one combined `nettap-ai` model, and one Ollama volume;
+- one shared Qwen3.5 9B Q4_K_M base, one combined `nettap-ai` model, and one Ollama volume;
 - one combined Network & Visibility, Packet Expert, and cross-domain reasoning policy;
 - one Open WebUI account, chat, administration, and backup surface;
 - stateless assistant-specific launchers on local ports 3000 and 3001;
@@ -21,7 +21,7 @@ Exit: fresh and upgrade runtime reports on macOS and Windows, measured single-mo
 
 ## Stage 0.4 — local evidence and case-analysis candidate
 
-Implemented on the next-release development branch:
+Implemented in `0.4.0-rc.1` source:
 
 - authenticated loopback Evidence Workspace on port 3200;
 - persistent cases, source hashes, provenance and evidence-quality warnings;

@@ -4,14 +4,14 @@
 
 | Field | Value |
 |---|---|
-| Model name | `nettap-ai:0.3.0-rc.4` |
+| Model name | `nettap-ai:0.4.0-rc.1` |
 | Release status | Release candidate; not production-certified |
-| Base model | `qwen2.5:7b-instruct-q4_K_M` |
-| Expected Ollama base ID | `845dbda0ea48` |
+| Base model | `qwen3.5:9b-q4_K_M` |
+| Expected Ollama base ID | `6488c96fa5fa` |
 | NetTAP model definition | `model/nettap-ai.Modelfile` |
 | NetTAP copyright | Copyright 2026 NetTAP Technology Limited |
 
-The NetTAP Network Intelligence Model uses the technical tag `nettap-ai:0.3.0-rc.4`. It is one combined Ollama model definition for the Network & Visibility and Packet Expert experiences, not a separately fine-tuned weight set. Ollama creates it from the verified Qwen2.5 7B base plus the NetTAP system policy in the Modelfile, using Ollama's documented [`Modelfile` and `ollama create` workflow](https://docs.ollama.com/modelfile).
+The NetTAP Network Intelligence Model uses the technical tag `nettap-ai:0.4.0-rc.1`. It is one combined Ollama model definition for the Network & Visibility and Packet Expert experiences, not a separately fine-tuned weight set. Ollama creates it from the verified Qwen3.5 9B Q4_K_M base plus the NetTAP system policy in the Modelfile, using Ollama's documented [`Modelfile` and `ollama create` workflow](https://docs.ollama.com/modelfile).
 
 ## Included product capability
 
@@ -22,11 +22,11 @@ The NetTAP Network Intelligence Model uses the technical tag `nettap-ai:0.3.0-rc
 | Evidence boundaries, live-data disclosure, configuration safety, decryption handling and prompt-injection resistance | Shared and always active | Reinforced by both profiles |
 | Cross-domain workflow from visibility design to evidence collection and investigation | Included as Unified mode | User may select the shared technical model or move between profiles |
 
-The two Open WebUI Workspace Models are lightweight product profiles over the same Ollama model. They do not copy the 7B weights. Specialist Markdown knowledge and [Open WebUI Skills](https://docs.openwebui.com/features/workspace/skills/) remain versioned outside the weights so they can be reviewed, hashed, tested, and updated without pretending a RAG update is fine-tuning.
+The two Open WebUI Workspace Models are lightweight product profiles over the same Ollama model. They do not copy the 9B weights. Specialist Markdown knowledge and [Open WebUI Skills](https://docs.openwebui.com/features/workspace/skills/) remain versioned outside the weights so they can be reviewed, hashed, tested, and updated without pretending a RAG update is fine-tuning.
 
 ## Download and storage behavior
 
-A clean appliance downloads the approved Qwen2.5 7B base once into one
+A clean appliance downloads the approved Qwen3.5 9B Q4_K_M base once into one
 containerized Ollama volume. `ollama create` adds the versioned NetTAP policy
 manifest while reusing the base model's content-addressed weight blobs. Network
 & Visibility and Packet Expert are Open WebUI profiles, not separately
@@ -34,14 +34,14 @@ downloaded Ollama models. The offline embedding model is a smaller, separate RAG
 dependency and is not another chat LLM.
 
 Ollama model names and tags are independent manifests. Initialization creates
-`nettap-ai:0.3.0-rc.4`, provisions both Open WebUI profiles against it, verifies
+`nettap-ai:0.4.0-rc.1`, provisions both Open WebUI profiles against it, verifies
 the current model, and then retires older recognized NetTAP tags from the
 containerized appliance store. An administrator can audit or repeat retirement with
 `./scripts/nettap-ai retire-old-models` and
 `./scripts/nettap-ai retire-old-models --confirm`. The full Docker deployment
 never modifies a separate host-native store by default. Its `--include-native`
 option is explicit. The native-only installer is itself a host-store action and
-retires recognized older native NetTAP tags only after RC4 identity verification.
+retires recognized older native NetTAP tags only after `0.4.0-rc.1` identity verification.
 
 ## Installation options
 
@@ -51,14 +51,14 @@ To create only the combined model in an already running native Ollama installati
 
 ```bash
 ./scripts/install-model-native.sh --confirm-download
-ollama run nettap-ai:0.3.0-rc.4
+ollama run nettap-ai:0.4.0-rc.1
 ```
 
 On Windows PowerShell:
 
 ```powershell
 .\scripts\install-model-native.ps1 -ConfirmDownload
-ollama run nettap-ai:0.3.0-rc.4
+ollama run nettap-ai:0.4.0-rc.1
 ```
 
 The installer downloads the pinned base, requires its expected Ollama ID, creates the combined model, verifies that both product modes are present, and then removes superseded native NetTAP tags while retaining the base and non-NetTAP models. After installation, ordinary local inference does not require a model-registry download. Full-suite startup separately caches the pinned RAG embedding model and returns the supplied application to offline runtime.
@@ -71,7 +71,7 @@ An authorized release manager can build the downloadable source bundle with:
 
 ```bash
 ./scripts/package-model-bundle.sh
-./scripts/verify-model-bundle.sh dist/nettap-ai-model-0.3.0-rc.4.tar.gz
+./scripts/verify-model-bundle.sh dist/nettap-ai-model-0.4.0-rc.1.tar.gz
 ```
 
 The generated provenance explicitly records that weights are not embedded. A public Ollama registry name has not been claimed by this repository. Publishing one requires a controlled NetTAP registry account, release authorization, third-party license review, artifact signing and the same acceptance evidence as the repository release.
@@ -88,4 +88,4 @@ The generated provenance explicitly records that weights are not embedded. A pub
 
 ## Validation status
 
-Source tests cover model identity, both capability modes, managed Skill and RAG provisioning, profile isolation, one-model retirement, archive safety and fail-closed configuration. Target-host macOS and Windows/WSL2 acceptance, SBOM/CVE disposition, independent penetration testing, legal/support/commercial approval and signed release acceptance remain mandatory before production or commercial distribution. See `docs/VALIDATION_STATUS.md` and `reports/RELEASE_ACCEPTANCE_0.3.0-rc.4.md`.
+Source tests cover model identity, both capability modes, managed Skill and RAG provisioning, profile isolation, one-model retirement, archive safety and fail-closed configuration. Target-host macOS and Windows/WSL2 acceptance, SBOM/CVE disposition, independent penetration testing, legal/support/commercial approval and signed release acceptance remain mandatory before production or commercial distribution. See `docs/VALIDATION_STATUS.md` and `reports/RELEASE_ACCEPTANCE_0.4.0-rc.1.md`.
