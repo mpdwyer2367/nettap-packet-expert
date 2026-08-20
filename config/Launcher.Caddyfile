@@ -4,6 +4,8 @@
 }
 
 :3000 {
+	@health path /healthz
+	respond @health "ok" 200
 	@open path /open
 	redir @open "{$SUITE_URL}/?model={$NETTAP_VISIBILITY_PROFILE}&q=Begin%20in%20Network%20%26%20Visibility%20mode.%20Ask%20one%20simple%20question%20to%20understand%20my%20network%20goal." 302
 	@start path /start
@@ -30,6 +32,8 @@
 }
 
 :3001 {
+	@health path /healthz
+	respond @health "ok" 200
 	@open path /open
 	redir @open "{$SUITE_URL}/?model={$NETTAP_PACKET_EXPERT_PROFILE}&q=Begin%20in%20Packet%20Expert%20mode.%20Ask%20one%20simple%20question%20to%20define%20my%20authorized%20investigation." 302
 	@start path /start

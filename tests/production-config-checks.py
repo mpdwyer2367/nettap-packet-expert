@@ -31,6 +31,10 @@ assert local["services"]["assistant-launcher"]["ports"] == [
 assert local["services"]["assistant-launcher"]["networks"] == ["user-access"]
 assert local["services"]["assistant-launcher"]["security_opt"] == ["no-new-privileges:true"]
 assert local["services"]["assistant-launcher"]["cap_drop"] == ["ALL"]
+launcher_health = local["services"]["assistant-launcher"]["healthcheck"]["test"]
+assert launcher_health[0] == "CMD-SHELL"
+assert "http://127.0.0.1:3000/healthz" in launcher_health[1]
+assert "http://127.0.0.1:3001/healthz" in launcher_health[1]
 assert bootstrap["services"]["ollama"]["networks"] == ["backend", "model-egress"]
 assert bootstrap["services"]["rag-cache-init"]["networks"] == ["backend", "model-egress"]
 
@@ -152,7 +156,7 @@ assert "handle_path /evidence/*" in caddy
 assert "reverse_proxy evidence-service:8081" in caddy
 
 launcher = (root / "config/Launcher.Caddyfile").read_text(encoding="utf-8")
-for control in (":3000", ":3001", "NETTAP_VISIBILITY_PROFILE", "NETTAP_PACKET_EXPERT_PROFILE", "Content-Security-Policy"):
+for control in (":3000", ":3001", "/healthz", "NETTAP_VISIBILITY_PROFILE", "NETTAP_PACKET_EXPERT_PROFILE", "Content-Security-Policy"):
     assert control in launcher
 assert "NETTAP_AI_MODEL" not in launcher
 
