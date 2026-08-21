@@ -36,7 +36,7 @@ class ResetLocalAdminTests(unittest.TestCase):
             )
             connection.execute(
                 "CREATE TABLE auth "
-                "(id TEXT PRIMARY KEY, email TEXT UNIQUE, password TEXT)"
+                "(id TEXT PRIMARY KEY, email TEXT UNIQUE, password TEXT, active BOOLEAN)"
             )
             connection.execute(
                 "CREATE TABLE chat (id TEXT PRIMARY KEY, title TEXT)"
@@ -46,8 +46,8 @@ class ResetLocalAdminTests(unittest.TestCase):
                 ("u1", "Old Admin", "old@example.test", "admin", 1),
             )
             connection.execute(
-                "INSERT INTO auth VALUES (?, ?, ?)",
-                ("u1", "old@example.test", "old-hash"),
+                "INSERT INTO auth VALUES (?, ?, ?, ?)",
+                ("u1", "old@example.test", "old-hash", False),
             )
             connection.execute(
                 "INSERT INTO chat VALUES (?, ?)", ("c1", "Preserved chat")
@@ -63,6 +63,15 @@ class ResetLocalAdminTests(unittest.TestCase):
                     "hash_password",
                     return_value="open-webui-compatible-hash",
                 ),
+                patch.dict(
+                    "sys.modules",
+                    {
+                        "bcrypt": SimpleNamespace(
+                            checkpw=lambda password, password_hash: password == b"password"
+                            and password_hash == b"open-webui-compatible-hash"
+                        )
+                    },
+                ),
                 patch("sys.stdin", io.StringIO("password\n")),
             ):
                 reset_local_admin.main()
@@ -76,9 +85,9 @@ class ResetLocalAdminTests(unittest.TestCase):
             )
             self.assertEqual(
                 connection.execute(
-                    "SELECT email, password FROM auth WHERE id = ?", ("u1",)
+                    "SELECT email, password, active FROM auth WHERE id = ?", ("u1",)
                 ).fetchone(),
-                ("admin@nettaptech.com", "open-webui-compatible-hash"),
+                ("admin@nettaptech.com", "open-webui-compatible-hash", 1),
             )
             self.assertEqual(
                 connection.execute("SELECT title FROM chat WHERE id = ?", ("c1",)).fetchone(),

@@ -50,7 +50,7 @@ def main() -> None:
         }
         if not {"id", "name", "email", "role"}.issubset(user_columns):
             fail("The Open WebUI user table has an unsupported schema.")
-        if not {"id", "email", "password"}.issubset(auth_columns):
+        if not {"id", "email", "password", "active"}.issubset(auth_columns):
             fail("The Open WebUI auth table has an unsupported schema.")
 
         target = connection.execute(
@@ -94,13 +94,26 @@ def main() -> None:
                 (NAME, EMAIL, target["id"]),
             )
             connection.execute(
-                "UPDATE auth SET email = ?, password = ? WHERE id = ?",
+                "UPDATE auth SET email = ?, password = ?, active = 1 WHERE id = ?",
                 (EMAIL, password_hash, target["id"]),
             )
             connection.commit()
         except Exception:
             connection.rollback()
             raise
+
+        retained = connection.execute(
+            "SELECT email, password, active FROM auth WHERE id = ?", (target["id"],)
+        ).fetchone()
+        import bcrypt
+
+        if (
+            retained is None
+            or retained["email"] != EMAIL
+            or retained["active"] != 1
+            or not bcrypt.checkpw(password.encode("utf-8"), retained["password"].encode("utf-8"))
+        ):
+            fail("The administrator credential did not pass database verification after reset.")
 
         print(f"Administrator reset: {EMAIL}")
         print(f"Database backup: {backup_path}")

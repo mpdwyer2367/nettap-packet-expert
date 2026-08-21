@@ -585,7 +585,18 @@ def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--fingerprint", action="store_true")
     parser.add_argument("--installed-fingerprint", action="store_true")
+    parser.add_argument("--verify-admin", action="store_true")
     args = parser.parse_args()
+    if args.verify_admin:
+        password = sys.stdin.readline().rstrip("\r\n")
+        if not password:
+            raise ProvisioningError("a current Open WebUI administrator password is required on standard input")
+        client = ApiClient(required_env("OPEN_WEBUI_URL"))
+        client.wait()
+        client.signin(required_env("WEBUI_ADMIN_EMAIL"), password)
+        del password
+        print("Open WebUI administrator API verification: PASS")
+        return 0
     manifest = load_manifest()
     fingerprint = provisioning_fingerprint(manifest)
     if args.fingerprint:

@@ -280,6 +280,10 @@ class ProvisioningTest(unittest.TestCase):
         self.assertEqual(one, two)
         self.assertRegex(one, r"^[0-9a-f]{64}$")
 
+    def test_verifies_administrator_credentials_through_api(self):
+        result = self.run_provisioner("--verify-admin")
+        self.assertIn("Open WebUI administrator API verification: PASS", result.stdout)
+
     def test_refuses_unmanaged_collection_name_collision(self):
         Handler.state.knowledge["operator-1"] = {
             "id": "operator-1",
