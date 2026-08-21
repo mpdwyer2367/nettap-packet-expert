@@ -63,7 +63,8 @@ grep -q './functions:/source/functions:ro' "$project_dir/compose.yaml"
 grep -q 'ENABLE_PASSWORD_VALIDATION: "False"' "$project_dir/compose.local.yaml"
 grep -q '127.0.0.1:3000/healthz' "$project_dir/compose.local.yaml"
 grep -q '127.0.0.1:3001/healthz' "$project_dir/compose.local.yaml"
-[[ "$(grep -c '^[[:space:]]*handle /healthz {
+test "$(grep -Fc 'handle /healthz' "$project_dir/config/Launcher.Caddyfile")" -eq 2
+test "$(grep -Fc 'respond "ok" 200' "$project_dir/config/Launcher.Caddyfile")" -eq 2
 grep -q 'Qwen3.5 9B' "$project_dir/launchers/network-visibility/index.html"
 grep -q 'Qwen3.5 9B' "$project_dir/launchers/packet-expert/index.html"
 grep -q 'confirm-insecure-default' "$project_dir/scripts/reset-local-admin.sh"
