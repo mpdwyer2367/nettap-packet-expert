@@ -18,14 +18,14 @@ Deploy one NetTAP Network Intelligence instance per customer or security boundar
 
 1. Verify the signed release package, checksum and signed provenance with `scripts/verify-release.sh`.
 2. Extract it into a customer-owned directory with restricted permissions.
-3. Start the loopback profile and activate the generated administrator:
+3. Start the loopback profile and replace the documented local administrator credential:
 
 ```bash
 chmod +x scripts/* tests/*.sh
 ./scripts/start-macos.sh
 ```
 
-On native Linux, use `scripts/start-linux.sh`. On Windows, use `scripts/start-windows.ps1` and complete the Bash steps from WSL. The credential appears only in the ignored local `.bootstrap-admin-password` file. Change it, verify rejection of the generated credential, and run:
+On native Linux, use `scripts/start-linux.sh`. On Windows, use `scripts/start-windows.ps1` and complete the Bash steps from WSL. Fresh local installations write their login email and bootstrap password to the ignored, mode-0600 `.bootstrap-admin-password` file. Use that local file to sign in, change the password, verify rejection of the bootstrap credential, and run:
 
 ```bash
 ./scripts/finalize-admin.sh --confirm
@@ -58,7 +58,7 @@ On native Linux, use `scripts/start-linux.sh`. On Windows, use `scripts/start-wi
 
 ## Knowledge configuration
 
-Startup automatically reconciles the reviewed shared and specialist Markdown into three managed collections through supported Open WebUI APIs. It attaches shared knowledge to both Workspace Models, Network & Visibility knowledge only to its matching profile, and Packet Expert knowledge only to Packet Expert. Both profiles use `nettap-ai:0.4.0-rc.1`. Confirm the recorded provisioning fingerprint, file hashes, exact embedding revision, and `Offline RAG verification: PASS`. Knowledge and uploaded evidence remain untrusted model inputs; neither may override system policy. See [knowledge management](KNOWLEDGE_MANAGEMENT.md).
+Startup automatically reconciles the reviewed shared and specialist Markdown into three managed collections through supported Open WebUI APIs. It attaches shared knowledge to both Workspace Models, Network & Visibility knowledge only to its matching profile, Packet Expert knowledge only to Packet Expert, and the checksum-pinned evidence-ingestion filter only to Packet Expert. Both profiles use `nettap-ai:0.4.0-rc.1`. Confirm the recorded provisioning fingerprint, file hashes, exact embedding revision, managed Function identity, and `Offline RAG verification: PASS`. Knowledge and uploaded evidence remain untrusted model inputs; neither may override system policy. See [knowledge management](KNOWLEDGE_MANAGEMENT.md).
 
 ## Acceptance
 
@@ -66,7 +66,7 @@ Complete `reports/RELEASE_ACCEPTANCE_TEMPLATE.md` against the exact commit, imag
 
 - only the TLS gateway is published;
 - no temporary registry-egress network remains;
-- generated bootstrap credential is retired;
+- default bootstrap credential is retired;
 - signup, code execution, API keys, web search, user webhooks, and admin chat access are disabled;
 - backup and restore into new volumes succeed;
 - fourteen behavioral and combined-capability smoke cases pass;

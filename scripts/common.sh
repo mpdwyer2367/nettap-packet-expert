@@ -53,6 +53,7 @@ initialize_env() {
   ensure_env_default HTTPS_BIND_ADDRESS "0.0.0.0"
   ensure_env_default HTTPS_PORT "8443"
   ensure_env_default APPLIANCE_HOSTNAME "nettap-ai.local"
+  ensure_env_default OPEN_WEBUI_OLLAMA_BASE_URL "http://ollama:11434"
   ensure_env_default WEBUI_SECRET_KEY "GENERATE_ON_FIRST_START"
   ensure_env_default JWT_EXPIRES_IN "8h"
   ensure_env_default OLLAMA_CPUS "6"
@@ -61,7 +62,7 @@ initialize_env() {
   ensure_env_default WEBUI_MEMORY "3g"
   ensure_env_default EVIDENCE_CPUS "1"
   ensure_env_default EVIDENCE_MEMORY "512m"
-  ensure_env_default EVIDENCE_MAX_UPLOAD_BYTES "52428800"
+  ensure_env_default EVIDENCE_MAX_UPLOAD_BYTES "104857600"
   ensure_env_default EVIDENCE_MAX_RECORDS "100000"
   ensure_env_default GATEWAY_CPUS "1"
   ensure_env_default GATEWAY_MEMORY "512m"
@@ -93,6 +94,9 @@ initialize_env() {
   if grep -q '^WEBUI_ADMIN_PASSWORD=admin$' "$env_file"; then
     set_env_value WEBUI_ADMIN_PASSWORD "GENERATE_ON_FIRST_START"
   fi
+  if [[ -z "$(load_env_value WEBUI_SECRET_KEY)" ]]; then
+    set_env_value WEBUI_SECRET_KEY "GENERATE_ON_FIRST_START"
+  fi
   if grep -q '^WEBUI_SECRET_KEY=GENERATE_ON_FIRST_START$' "$env_file"; then
     local secret temporary
     secret="$(openssl rand -hex 32)"
@@ -104,8 +108,8 @@ initialize_env() {
   fi
 
   ensure_env_default WEBUI_ADMIN_NAME "NetTAP Administrator"
-  ensure_env_default WEBUI_ADMIN_EMAIL "admin@nettap.local"
-  ensure_env_default WEBUI_ADMIN_PASSWORD "GENERATE_ON_FIRST_START"
+  ensure_env_default WEBUI_ADMIN_EMAIL "admin@nettaptech.com"
+  ensure_env_default WEBUI_ADMIN_PASSWORD "Password!"
   ensure_env_default EVIDENCE_API_TOKEN "GENERATE_ON_FIRST_START"
   if grep -q '^WEBUI_ADMIN_PASSWORD=GENERATE_ON_FIRST_START$' "$env_file"; then
     local admin_password
@@ -119,6 +123,18 @@ initialize_env() {
     } > "$bootstrap_password_file"
     chmod 0600 "$bootstrap_password_file"
     unset admin_password
+  fi
+  if [[ "$(load_env_value DEPLOYMENT_MODE)" == local \
+    && "$(load_env_value WEBUI_ADMIN_EMAIL)" == admin@nettaptech.com \
+    && "$(load_env_value WEBUI_ADMIN_PASSWORD)" == 'Password!' \
+    && ! -f "$bootstrap_password_file" ]]; then
+    umask 077
+    {
+      printf 'Login: admin@nettaptech.com\n'
+      printf 'Bootstrap password: Password!\n'
+      printf 'Default local credential initialized UTC: %s\n' "$(date -u +%FT%TZ)"
+    } > "$bootstrap_password_file"
+    chmod 0600 "$bootstrap_password_file"
   fi
   if grep -q '^EVIDENCE_API_TOKEN=GENERATE_ON_FIRST_START$' "$env_file"; then
     local evidence_token
@@ -218,24 +234,42 @@ recover_failed_model_initialization() {
   exit 9
 }
 
+extract_provisioning_fingerprint() {
+  awk '/^[0-9a-f]{64}$/ { fingerprint=$0 } END { if (fingerprint != "") print fingerprint }'
+}
+
 provisioning_fingerprint() {
+  local output fingerprint
   local -a selected=("${compose_local[@]}")
   if [[ "$1" == production ]]; then selected=("${compose_production[@]}"); fi
-  "${selected[@]}" --profile provision run --rm --no-deps assistant-provisioner --fingerprint
+  output="$("${selected[@]}" --profile provision run --rm --no-deps assistant-provisioner --fingerprint)" || return
+  fingerprint="$(printf '%s\n' "$output" | extract_provisioning_fingerprint)"
+  [[ -n "$fingerprint" ]] || {
+    echo "ERROR: Provisioner did not return a valid SHA-256 release fingerprint." >&2
+    return 7
+  }
+  printf '%s\n' "$fingerprint"
 }
 
 installed_provisioning_fingerprint() {
+  local output
   local -a selected=("${compose_local[@]}")
   if [[ "$1" == production ]]; then selected=("${compose_production[@]}"); fi
-  "${selected[@]}" exec -T open-webui python - <<'PY'
+  output="$("${selected[@]}" --profile provision run --rm --no-deps -T \
+    --entrypoint python assistant-provisioner - <<'PY'
 import json
 from pathlib import Path
+
 path = Path('/app/backend/data/nettap-provisioning-state.json')
 try:
-    print(json.loads(path.read_text(encoding='utf-8')).get('fingerprint', ''))
+    fingerprint = json.loads(path.read_text(encoding='utf-8')).get('fingerprint', '')
 except (OSError, ValueError):
-    print('')
+    fingerprint = ''
+if isinstance(fingerprint, str):
+    print(fingerprint)
 PY
+)" || return
+  printf '%s\n' "$output" | extract_provisioning_fingerprint
 }
 
 provision_assistants() {
@@ -266,6 +300,9 @@ provision_assistants() {
   actual="$(installed_provisioning_fingerprint "$mode")"
   [[ "$actual" == "$desired" ]] || {
     echo "ERROR: Assistant provisioning state does not match the release fingerprint." >&2
+    echo "Expected fingerprint: $desired" >&2
+    echo "Installed fingerprint: ${actual:-missing}" >&2
+    echo "Run ./scripts/provision-assistants.sh --confirm, then retry startup." >&2
     return 7
   }
 }

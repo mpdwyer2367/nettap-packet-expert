@@ -26,10 +26,11 @@ flowchart TB
     V --> N["One nettap-ai:0.4.0-rc.1 model"]
     P --> N
     N --> Q["One pinned Qwen3.5 9B base"]
-    U --> E["Evidence Workspace"]
+    P --> F["Managed attachment filter"]
+    F --> E["Evidence Workspace"]
     E --> D["Deterministic case analysis"]
     D --> X["Minimized evidence context"]
-    X -. "authorized transfer" .-> W
+    X --> P
 ```
 
 The local launchers are stateless pages. The shared browser application is named **NetTAP Network Intelligence** through Open WebUI's supported `WEBUI_NAME` setting. Each launcher selects its automatically managed Open WebUI Workspace Model through documented `model` and `q` URL parameters. Both Workspace Models use the same combined Ollama model, while retaining separate prompts, suggestions, and specialist knowledge bindings. Accounts, chats, model weights, and administration remain shared.
@@ -75,7 +76,7 @@ Read [the architecture](docs/ARCHITECTURE.md), [migration procedure](docs/MIGRAT
 | <http://127.0.0.1:3100> | Shared Open WebUI and model selector |
 | <http://127.0.0.1:3200> | Local Evidence Workspace for cases and uploaded evidence |
 
-The two launchers do not run separate Open WebUI databases or duplicate model weights. The Evidence Workspace has a separate local data volume and generated bearer token so raw evidence is not placed in Open WebUI or Ollama storage.
+The two launchers do not run separate Open WebUI databases or duplicate model weights. In the Packet Expert profile, the chat attachment button accepts reviewed network-evidence formats and routes them through the local Evidence Workspace. Open WebUI stages each attachment in its local application volume and the Evidence Workspace retains the analyzed copy in its dedicated volume. Raw bytes are never sent to Ollama; only deterministic, minimized context is added to the model request.
 
 ## Requirements
 
@@ -119,11 +120,11 @@ chmod +x scripts/* tests/*.sh
 
 Startup uses temporary registry egress to retrieve the verified base model, pinned Open WebUI image, and the exact offline embedding-model revision. It then removes registry egress, starts Open WebUI in offline mode, creates three managed knowledge collections, installs two managed Skills, proves retrieval using a deterministic marker, creates both managed Workspace Models, attaches the matching Skill to each, and only then starts the launcher pages. Any failed identity, cache, ingestion, retrieval, Skill, or profile check stops installation.
 
-Startup also generates `.evidence-api-token` and starts the loopback-only Evidence Workspace. Use it to create a case, upload authorized evidence, review provenance and quality, run deterministic analysis, inspect case-scoped citations to exact normalized observations, and export the minimized case context. Raw evidence is never automatically submitted to the model. The service remains an evaluation feature and does not change the `0.4.0-rc.1` production-certification status.
+Startup also generates `.evidence-api-token`, starts the loopback-only Evidence Workspace, and installs the managed Packet Expert attachment filter. Select **NetTAP Network Intelligence — Packet Expert** in Open WebUI, then drag or attach `.pcap`, `.json`, `.jsonl`, `.ndjson`, `.log`, `.txt`, `.png`, `.jpg`, `.jpeg`, or `.webp`. Packet and text evidence is retained and parsed locally; only deterministic, minimized context is added to the chat. The separate workspace on port 3200 remains available for case review, provenance, exact citation inspection, and report export. This is an evaluation feature and does not change the `0.4.0-rc.1` production-certification status.
 
-The startup script also generates a unique bootstrap password and prints the protected local file containing it. Sign in as `admin@nettap.local`, change the password immediately, verify the generated password no longer works, and complete administrator finalization. There is no shared or committed default password.
+Fresh loopback-only installations write the local administrator login and bootstrap password to the ignored, mode-0600 `.bootstrap-admin-password` file. Read that file on the deployment host, sign in, change the password immediately, verify the bootstrap password no longer works, and complete administrator finalization. Production preflight rejects the bootstrap password.
 
-A populated Open WebUI volume retains its existing accounts and passwords; startup does not reset them.
+A populated Open WebUI volume retains its existing accounts and passwords; startup does not reset them. To restore the documented local default on an existing loopback installation, run `./scripts/nettap-ai reset-default-admin --confirm-insecure-default`.
 
 ## Upgrade from Packet Expert 0.2
 
@@ -164,7 +165,7 @@ The old `scripts/nettap-packet-expert` entry point remains as a compatibility wr
 
 ### Qwen3.5 9B promotion
 
-Qwen3.5 9B Q4_K_M is now the shared release-candidate base. Both managed profiles and direct unified use resolve to `nettap-ai:0.4.0-rc.1`; there is no parallel candidate profile or second NetTAP weight download. The change preserves NetTAP prompts, Skills, RAG sources and evidence controls. Upstream multimodal or tool capabilities are not automatically enabled in this application. See [the promotion record](docs/QWEN35_PROMOTION.md).
+Qwen3.5 9B Q4_K_M is now the shared release-candidate base. Both managed profiles and direct unified use resolve to `nettap-ai:0.4.0-rc.1`; there is no parallel candidate profile or second NetTAP weight download. The change preserves NetTAP prompts, Skills, RAG sources and evidence controls. Only the reviewed Packet Expert attachment filter enables image and evidence ingestion; arbitrary tools and external connectors remain disabled. See [the promotion record](docs/QWEN35_PROMOTION.md).
 
 ## Knowledge and customizations
 

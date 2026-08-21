@@ -178,5 +178,5 @@ printf '%s\n' "$response" | grep -Eiq \
 echo "PASS: controlled model inference returned output"
 
 echo "PASS: automated canonical runtime checks, including local evidence ingestion and analysis, completed."
-echo "Manual acceptance remains required: generated-password replacement and rejection, finalization, new-password persistence, browser rendering, and representative chat behavior."
+echo "Manual acceptance remains required: default-password replacement and rejection, finalization, new-password persistence, browser rendering, and representative chat behavior."
 echo "Report: $report_file"

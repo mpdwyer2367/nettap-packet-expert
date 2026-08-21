@@ -35,6 +35,43 @@ STATE_PATH = Path(os.environ.get("NETTAP_PROVISIONING_STATE", "/app/backend/data
 CHECKSUM_PATH = Path(os.environ.get("NETTAP_PROVISIONING_CHECKSUMS", "/provision/knowledge-sources.sha256"))
 
 
+# Exact product identities from supported pre-0.4 releases. An unmanaged model is
+# adoptable only when its stable ID, display name, and base all match this list.
+# This keeps migration automatic without turning a shared model ID into a broad
+# overwrite exception.
+LEGACY_ASSISTANT_IDENTITIES = {
+    "nettap-network-visibility": {
+        "names": {
+            "NetTAP Network & Visibility",
+            "NetTAP Network Intelligence — Network & Visibility",
+        },
+        "bases": {
+            "nettap-ai:0.3.0-rc.1",
+            "nettap-ai:0.3.0-rc.2",
+            "nettap-ai:0.3.0-rc.3",
+            "nettap-ai:0.3.0-rc.4",
+            "nettap-ai:0.3.0-rc.5",
+        },
+    },
+    "nettap-packet-expert": {
+        "names": {
+            "NetTAP Packet Expert",
+            "NetTAP Network Intelligence — Packet Expert",
+        },
+        "bases": {
+            "nettap-ai:0.3.0-rc.1",
+            "nettap-ai:0.3.0-rc.2",
+            "nettap-ai:0.3.0-rc.3",
+            "nettap-ai:0.3.0-rc.4",
+            "nettap-ai:0.3.0-rc.5",
+            "nettap-packet-expert:0.1.0-rc.7",
+            "nettap-packet-expert:0.1.0-rc.8",
+            "nettap-packet-expert:0.3.0-rc.1",
+        },
+    },
+}
+
+
 def load_manifest() -> dict:
     manifest = json.loads(MANIFEST_PATH.read_text(encoding="utf-8"))
     if manifest.get("schema_version") != 1:
@@ -76,6 +113,8 @@ def verify_source_checksums(manifest: dict) -> dict[str, str]:
         referenced.update(assistant["system_prompt_files"])
     for skill in manifest.get("skills", []):
         referenced.add(skill["file"])
+    for function in manifest.get("functions", []):
+        referenced.add(function["file"])
     if set(pinned) != referenced:
         raise ProvisioningError(
             f"pinned source set differs from manifest; missing={sorted(referenced - set(pinned))}, "
@@ -106,6 +145,8 @@ def provisioning_fingerprint(manifest: dict) -> str:
         referenced.update(assistant["system_prompt_files"])
     for skill in manifest.get("skills", []):
         referenced.add(skill["file"])
+    for function in manifest.get("functions", []):
+        referenced.add(function["file"])
     for relative in sorted(referenced):
         digest.update(relative.encode("utf-8"))
         digest.update(b"\0")
@@ -317,6 +358,65 @@ def reconcile_skill(client: ApiClient, skill: dict, fingerprint: str) -> dict:
     }
 
 
+def reconcile_function(client: ApiClient, definition: dict, fingerprint: str) -> dict:
+    """Install one reviewed, model-scoped Open WebUI attachment filter."""
+    function_id = urllib.parse.quote(definition["id"], safe="")
+    status, existing = client.request(
+        "GET", f"/api/v1/functions/id/{function_id}", allow=(401, 404)
+    )
+    if status in (401, 404):
+        existing = None
+    if existing:
+        marker = (existing.get("meta") or {}).get("nettap_managed")
+        if not marker:
+            raise ProvisioningError(
+                f"refusing to overwrite unmanaged Open WebUI Function {definition['id']}"
+            )
+    content = source_path(definition["file"]).read_text(encoding="utf-8")
+    payload = {
+        "id": definition["id"],
+        "name": definition["name"],
+        "content": content,
+        "meta": {
+            "description": definition["description"],
+            "nettap_managed": {
+                "schema_version": 1,
+                "release_version": required_env("RELEASE_VERSION"),
+                "fingerprint": fingerprint,
+            },
+        },
+    }
+    if existing:
+        _, result = client.request(
+            "POST", f"/api/v1/functions/id/{function_id}/update", payload
+        )
+        action = "updated"
+    else:
+        _, result = client.request("POST", "/api/v1/functions/create", payload)
+        action = "created"
+    if not result.get("is_active"):
+        _, result = client.request(
+            "POST", f"/api/v1/functions/id/{function_id}/toggle"
+        )
+    if (
+        result.get("type") != "filter"
+        or result.get("is_active") is not True
+        or (result.get("meta") or {}).get("nettap_managed", {}).get("fingerprint")
+        != fingerprint
+    ):
+        raise ProvisioningError(
+            f"Open WebUI Function {definition['id']} did not retain its managed identity"
+        )
+    return {
+        "key": definition["key"],
+        "id": definition["id"],
+        "name": definition["name"],
+        "source": definition["file"],
+        "sha256": hashlib.sha256(content.encode()).hexdigest(),
+        "action": action,
+    }
+
+
 def reconcile_collection(client: ApiClient, manifest: dict, collection: dict, fingerprint: str) -> dict:
     release = manifest["release_version"]
     marker = f"[nettap-managed:{collection['key']}]"
@@ -388,7 +488,14 @@ def reconcile_collection(client: ApiClient, manifest: dict, collection: dict, fi
     }
 
 
-def assistant_payload(assistant: dict, knowledge: dict, skills: dict, fingerprint: str, existing=None) -> dict:
+def assistant_payload(
+    assistant: dict,
+    knowledge: dict,
+    skills: dict,
+    functions: dict,
+    fingerprint: str,
+    existing=None,
+) -> dict:
     runtime_model = required_env("NETTAP_AI_MODEL")
     prompt = "\n\n".join(source_path(path).read_text(encoding="utf-8").strip() for path in assistant["system_prompt_files"])
     existing = existing or {}
@@ -404,10 +511,13 @@ def assistant_payload(assistant: dict, knowledge: dict, skills: dict, fingerprin
             for key in assistant["knowledge_keys"]
         ],
         "skillIds": [skills[key]["id"] for key in assistant.get("skill_keys", [])],
+        "filterIds": [
+            functions[key]["id"] for key in assistant.get("function_keys", [])
+        ],
         "capabilities": {
-            "file_context": True,
-            "vision": False,
-            "file_upload": False,
+            "file_context": False,
+            "vision": bool(assistant.get("function_keys")),
+            "file_upload": bool(assistant.get("function_keys")),
             "web_search": False,
             "image_generation": False,
             "code_interpreter": False,
@@ -436,24 +546,37 @@ def assistant_payload(assistant: dict, knowledge: dict, skills: dict, fingerprin
     }
 
 
-def reconcile_assistant(client: ApiClient, assistant: dict, knowledge: dict, skills: dict, fingerprint: str) -> dict:
+def is_adoptable_legacy_assistant(existing: dict, assistant: dict) -> bool:
+    identity = LEGACY_ASSISTANT_IDENTITIES.get(assistant["id"])
+    if not identity:
+        return False
+    names = identity["names"] | {assistant["name"]}
+    bases = identity["bases"] | {required_env("NETTAP_AI_MODEL")}
+    return existing.get("name") in names and existing.get("base_model_id") in bases
+
+
+def reconcile_assistant(
+    client: ApiClient,
+    assistant: dict,
+    knowledge: dict,
+    skills: dict,
+    functions: dict,
+    fingerprint: str,
+) -> dict:
     query = urllib.parse.urlencode({"id": assistant["id"]})
     status, existing = client.request("GET", f"/api/v1/models/model?{query}", allow=(404,))
     if status == 404:
         existing = None
     if existing:
         managed = (existing.get("meta") or {}).get("nettap_managed")
-        adoptable_bases = {
-            "nettap-ai:0.3.0-rc.1",
-            "nettap-ai:0.3.0-rc.2",
-            required_env("NETTAP_AI_MODEL"),
-        }
-        if not managed and (
-            existing.get("name") != assistant["name"]
-            or existing.get("base_model_id") not in adoptable_bases
-        ):
-            raise ProvisioningError(f"refusing to overwrite unmanaged Workspace Model {assistant['id']}")
-    payload = assistant_payload(assistant, knowledge, skills, fingerprint, existing)
+        if not managed and not is_adoptable_legacy_assistant(existing, assistant):
+            raise ProvisioningError(
+                f"refusing to overwrite unmanaged Workspace Model {assistant['id']} "
+                f"(name={existing.get('name')!r}, base_model_id={existing.get('base_model_id')!r})"
+            )
+    payload = assistant_payload(
+        assistant, knowledge, skills, functions, fingerprint, existing
+    )
     if existing:
         _, result = client.request("POST", "/api/v1/models/model/update", payload)
         action = "updated"
@@ -468,6 +591,7 @@ def reconcile_assistant(client: ApiClient, assistant: dict, knowledge: dict, ski
         "action": action,
         "knowledge_ids": [item["id"] for item in payload["meta"]["knowledge"]],
         "skill_ids": payload["meta"]["skillIds"],
+        "filter_ids": payload["meta"]["filterIds"],
     }
 
 
@@ -525,14 +649,44 @@ def write_state(state: dict):
     os.replace(temporary, STATE_PATH)
 
 
+def installed_fingerprint() -> str:
+    try:
+        state = json.loads(STATE_PATH.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return ""
+    fingerprint = state.get("fingerprint", "")
+    if not isinstance(fingerprint, str) or len(fingerprint) != 64:
+        return ""
+    try:
+        int(fingerprint, 16)
+    except ValueError:
+        return ""
+    return fingerprint
+
+
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--fingerprint", action="store_true")
+    parser.add_argument("--installed-fingerprint", action="store_true")
+    parser.add_argument("--verify-admin", action="store_true")
     args = parser.parse_args()
+    if args.verify_admin:
+        password = sys.stdin.readline().rstrip("\r\n")
+        if not password:
+            raise ProvisioningError("a current Open WebUI administrator password is required on standard input")
+        client = ApiClient(required_env("OPEN_WEBUI_URL"))
+        client.wait()
+        client.signin(required_env("WEBUI_ADMIN_EMAIL"), password)
+        del password
+        print("Open WebUI administrator API verification: PASS")
+        return 0
     manifest = load_manifest()
     fingerprint = provisioning_fingerprint(manifest)
     if args.fingerprint:
         print(fingerprint)
+        return 0
+    if args.installed_fingerprint:
+        print(installed_fingerprint())
         return 0
 
     password = sys.stdin.readline().rstrip("\r\n")
@@ -559,9 +713,20 @@ def main() -> int:
         skills[result["key"]] = result
         print(f"Open WebUI Skill {result['action']}: {result['name']} ({result['id']})")
 
+    functions = {}
+    for definition in manifest.get("functions", []):
+        result = reconcile_function(client, definition, fingerprint)
+        functions[result["key"]] = result
+        print(
+            f"Open WebUI Function {result['action']}: "
+            f"{result['name']} ({result['id']})"
+        )
+
     assistants = []
     for assistant in manifest["assistants"]:
-        result = reconcile_assistant(client, assistant, knowledge, skills, fingerprint)
+        result = reconcile_assistant(
+            client, assistant, knowledge, skills, functions, fingerprint
+        )
         assistants.append(result)
         print(f"Workspace Model {result['action']}: {result['name']} ({result['id']})")
 
@@ -576,11 +741,14 @@ def main() -> int:
         "completed_utc": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
         "knowledge": knowledge,
         "skills": skills,
+        "functions": functions,
         "assistants": assistants,
         "model_defaults": model_defaults,
         "offline_rag": rag,
     }
     write_state(state)
+    if installed_fingerprint() != fingerprint:
+        raise ProvisioningError("provisioning state could not be read back after it was written")
     print(f"Provisioning state: {STATE_PATH}")
     return 0
 

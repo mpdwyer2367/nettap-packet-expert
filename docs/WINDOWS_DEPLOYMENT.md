@@ -26,7 +26,13 @@ Open:
 - <http://127.0.0.1:3100> — shared Open WebUI
 - <http://127.0.0.1:3200> — authenticated local Evidence Workspace; token in `.evidence-api-token`
 
-Use `admin@nettap.local` with the locally generated password file printed by the script. Change it immediately and verify the generated value fails. Complete administrator finalization from WSL or Git Bash as described in [authentication](AUTHENTICATION.md).
+Read the local login from `.bootstrap-admin-password`. Change its bootstrap password immediately and verify the old value fails. Complete administrator finalization from WSL or Git Bash as described in [authentication](AUTHENTICATION.md). Production preflight rejects the bootstrap password.
+
+To verify restored evidence upload, open port 3100, select **NetTAP Network
+Intelligence — Packet Expert**, attach a small authorized `.pcap`, `.jsonl`, or
+`.log` file, and ask for an evidence-supported analysis. The response must cite
+Evidence Workspace IDs and limitations. `.pcapng` still requires external
+TShark normalization and is rejected by the built-in parser.
 
 ## Verification
 

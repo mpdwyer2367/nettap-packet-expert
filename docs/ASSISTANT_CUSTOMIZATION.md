@@ -4,7 +4,7 @@
 
 | Layer | Network & Visibility | Packet Expert | Update method |
 |---|---|---|---|
-| Base weights | Shared Qwen2.5 7B | Shared Qwen2.5 7B | Approved product release only |
+| Base weights | Shared Qwen3.5 9B Q4_K_M | Shared Qwen3.5 9B Q4_K_M | Approved product release only |
 | Ollama policy | `model/nettap-ai.Modelfile` | Same combined model | Reviewed source change and one model rebuild |
 | Manifest | `assistants/network-visibility/assistant.yaml` | `assistants/packet-expert/assistant.yaml` | Reviewed source change |
 | Shared knowledge | `knowledge/NetTAP_AI_Knowledge.md` | Same reviewed shared collection | Version, review, hash, automatic reconciliation |
@@ -24,7 +24,7 @@
 
 ## Automatic Workspace Model setup
 
-The `assistant-provisioner` creates or updates both Skills and both profiles through the pinned Open WebUI HTTP APIs. It preserves existing access grants, refuses unmanaged Skill identity collisions, verifies installed Skill content, attaches only the matching Skill and manifest-approved collections, disables optional tools, selects legacy function calling for deterministic attached-knowledge injection in Open WebUI v0.11.0, pins both profiles, and makes Network & Visibility the default. A Workspace Model and Skill are lightweight application configuration; neither duplicates model weights.
+The `assistant-provisioner` creates or updates both Skills, both profiles and the reviewed evidence-ingestion filter through the pinned Open WebUI HTTP APIs. It preserves existing access grants, refuses unmanaged Skill or Function identity collisions, verifies installed source identity, attaches only the matching Skill and manifest-approved collections, attaches the filter only to Packet Expert, disables optional external tools, selects legacy function calling for deterministic attached-knowledge injection in Open WebUI v0.11.0, pins both profiles, and makes Network & Visibility the default. A Workspace Model, Skill and filter are lightweight application configuration; none duplicates model weights.
 
 ### Network & Visibility
 
@@ -50,7 +50,7 @@ The `assistant-provisioner` creates or updates both Skills and both profiles thr
 
 The unwrapped `nettap-ai:0.4.0-rc.1` entry may be used for authorized unified workflows spanning architecture, acquisition, packet evidence, and remediation planning.
 
-The source of truth is `provisioning/open-webui.json` plus its referenced prompt, Skill and knowledge files. Installation validates every source against `provisioning/knowledge-sources.sha256`, calculates a fingerprint, synchronously uploads and embeds each managed file, performs a retrieval proof, reconciles both Skills and Workspace Models, and records `/app/backend/data/nettap-provisioning-state.json`. The provisioner refuses to overwrite an unmanaged collection or Skill with a managed identity, an unrecognized Workspace Model, or unmanaged files inside a managed collection.
+The source of truth is `provisioning/open-webui.json` plus its referenced prompt, Skill, Function and knowledge files. Installation validates every source against `provisioning/knowledge-sources.sha256`, calculates a fingerprint, synchronously uploads and embeds each managed file, performs a retrieval proof, reconciles both Skills, the attachment filter and both Workspace Models, and records `/app/backend/data/nettap-provisioning-state.json`. The provisioner can adopt a Workspace Model only when its stable ID, current or historical NetTAP display name, and known NetTAP 0.1 or 0.3 base tag form an exact recognized legacy identity. It preserves that profile's access grants while updating it to the current managed name, base, prompt, knowledge, Skill, filter binding, and fingerprint. It refuses to overwrite an unmanaged collection, Skill or Function with a managed identity, an unrecognized Workspace Model, or unmanaged files inside a managed collection.
 
 After changing a reviewed source, run `./scripts/nettap-ai provision-assistants --confirm`. If the bootstrap credential has been retired, the command requests the current administrator password without storing it. Back up Open WebUI before a production change. Customer-created collections remain outside this managed lifecycle.
 

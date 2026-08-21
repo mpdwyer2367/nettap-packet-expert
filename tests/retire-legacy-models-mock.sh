@@ -38,6 +38,9 @@ elif [[ "$*" == *" exec -T ollama ollama list" ]]; then
     echo 'nettap-packet-expert:latest         legacy-three    4.7 GB'
   fi
   echo 'qwen3.5:9b-q4_K_M                   base            6.6 GB'
+  if ! grep -Fqx 'container:qwen2.5:7b-instruct-q4_K_M' "$NETTAP_RETIRE_TEST_LOG" 2>/dev/null; then
+    echo 'qwen2.5:7b-instruct-q4_K_M          retired-base    4.7 GB'
+  fi
   if ! grep -Fqx 'container:nettap-ai:0.3.0-rc.4' "$NETTAP_RETIRE_TEST_LOG" 2>/dev/null; then
     echo 'nettap-ai:0.3.0-rc.4                prior-release   4.7 GB'
   fi
@@ -80,6 +83,7 @@ dry_run="$("${test_root}/project/scripts/retire-legacy-models.sh" --include-nati
 [[ "$dry_run" == *"Legacy container tag: nettap-ai:latest"* ]]
 [[ "$dry_run" == *"Legacy native tag: nettap-packet-expert:latest"* ]]
 [[ "$dry_run" == *"Legacy container tag: nettap-ai:0.4.0-qwen35-9b-rc.1"* ]]
+[[ "$dry_run" != *"Recognized retired container base:"* ]]
 [[ ! -e "$NETTAP_RETIRE_TEST_LOG" ]]
 
 printf '%s\n' 'NETTAP_AI_MODEL=nettap-ai:unexpected' > "$test_root/project/.env.example"
@@ -90,18 +94,24 @@ fi
 [[ ! -e "$NETTAP_RETIRE_TEST_LOG" ]]
 printf '%s\n' 'NETTAP_AI_MODEL=nettap-ai:0.4.0-rc.1' > "$test_root/project/.env.example"
 
-"${test_root}/project/scripts/retire-legacy-models.sh" --confirm --include-native >/dev/null
+"${test_root}/project/scripts/retire-legacy-models.sh" --confirm --include-native \
+  --remove-recognized-legacy-bases >/dev/null
 
 grep -Fqx 'container:nettap-ai:latest' "$NETTAP_RETIRE_TEST_LOG"
 grep -Fqx 'container:nettap-ai-backup-20260730:latest' "$NETTAP_RETIRE_TEST_LOG"
 grep -Fqx 'container:nettap-packet-expert:latest' "$NETTAP_RETIRE_TEST_LOG"
 grep -Fqx 'container:nettap-ai:0.3.0-rc.4' "$NETTAP_RETIRE_TEST_LOG"
 grep -Fqx 'container:nettap-ai:0.4.0-qwen35-9b-rc.1' "$NETTAP_RETIRE_TEST_LOG"
+grep -Fqx 'container:qwen2.5:7b-instruct-q4_K_M' "$NETTAP_RETIRE_TEST_LOG"
 grep -Fqx 'native:nettap-ai:latest' "$NETTAP_RETIRE_TEST_LOG"
 grep -Fqx 'native:nettap-packet-expert:latest' "$NETTAP_RETIRE_TEST_LOG"
 if grep -Eq '0\.4\.0-rc\.1|qwen3\.5|kimi|qwen3:8b' "$NETTAP_RETIRE_TEST_LOG"; then
   echo "Retirement attempted to remove a protected model." >&2
   exit 1
 fi
+
+second_run="$("${test_root}/project/scripts/retire-legacy-models.sh" --confirm)"
+[[ "$second_run" == *"Legacy container tags: none"* ]]
+[[ "$second_run" == *"PASS: nettap-ai:0.4.0-rc.1 is the only selected NetTAP release tag."* ]]
 
 echo "Legacy model retirement regression test passed."

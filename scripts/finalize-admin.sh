@@ -26,7 +26,7 @@ PY
 )"
 [[ "$admin_count" -ge 1 ]] || { echo "ERROR: No administrator account exists." >&2; exit 4; }
 
-echo "Confirm that you changed the generated password, signed out, and verified the generated password no longer works."
+echo "Confirm that you changed the default password, signed out, and verified the default password no longer works."
 printf 'Type FINALIZE to retire the local bootstrap credential: '
 read -r confirmation
 [[ "$confirmation" == "FINALIZE" ]] || { echo "Finalization cancelled."; exit 5; }
@@ -37,7 +37,7 @@ umask 077
 {
   printf 'Administrator bootstrap finalized UTC: %s\n' "$(date -u +%FT%TZ)"
   printf 'Administrator email: %s\n' "$(load_env_value WEBUI_ADMIN_EMAIL)"
-  printf 'Operator confirmed old bootstrap credential rejection.\n'
+  printf 'Operator confirmed default bootstrap credential rejection.\n'
 } > "$admin_finalized_file"
 chmod 0600 "$admin_finalized_file"
 echo "Administrator bootstrap retired. Production gateway activation is now permitted after the remaining preflight gates pass."

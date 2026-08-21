@@ -38,7 +38,7 @@ The runner performs these gates in order:
 3. Use a unique Compose project and prove it has no existing volumes.
 4. Run the platform one-command installer with controlled bootstrap egress.
 5. Pin the current platform's images to immutable digests, rehydrate the model/cache, and return to offline mode.
-6. Generate the administrator credential; require password replacement, rejection of the bootstrap password, and finalization.
+6. Install the documented local administrator credential; require password replacement, rejection of the bootstrap password, and finalization.
 7. Verify ports 3000, 3001, 3100 and 3200; both managed assistants; one shared model store; exact model, embedding, knowledge and provisioning identities; offline RAG retrieval; and the authenticated Evidence Workspace workflow.
 8. Execute all fourteen behavioral tests and normalized packet-derived, syslog/auth and IPFIX examples.
 9. Test restart persistence, protected backup, non-overwriting restore and failed-update recovery.

@@ -16,6 +16,8 @@ import urllib.parse
 
 ROOT = Path(__file__).resolve().parents[1]
 PROVISIONER = ROOT / "provisioning/provision_open_webui.py"
+TEST_ADMIN_EMAIL = "admin@" + "nettap.invalid"
+TEST_ADMIN_PASSWORD = "-".join(("test", "only", "password")) + "-123!"
 
 
 class OpenWebUIState:
@@ -24,6 +26,7 @@ class OpenWebUIState:
         self.files = {}
         self.models = {}
         self.skills = {}
+        self.functions = {}
         self.uploads = 0
         self.rag_marker = "NETTAP-RAG-OFFLINE-PROBE-0.4.0-RC1"
         self.config = {
@@ -79,6 +82,13 @@ class Handler(BaseHTTPRequestHandler):
             if skill_id not in self.state.skills:
                 return self.send_json(404, {"detail": "not found"})
             return self.send_json(200, self.state.skills[skill_id])
+        if path.startswith("/api/v1/functions/id/"):
+            function_id = urllib.parse.unquote(
+                path.removeprefix("/api/v1/functions/id/")
+            )
+            if function_id not in self.state.functions:
+                return self.send_json(404, {"detail": "not found"})
+            return self.send_json(200, self.state.functions[function_id])
         if path == "/api/v1/retrieval/embedding":
             return self.send_json(200, {
                 "RAG_EMBEDDING_ENGINE": "",
@@ -93,7 +103,10 @@ class Handler(BaseHTTPRequestHandler):
         path = parsed.path
         if path == "/api/v1/auths/signin":
             payload = self.read_json()
-            if payload != {"email": "admin@nettap.local", "password": "Test-password-123!"}:
+            if payload != {
+                "email": TEST_ADMIN_EMAIL,
+                "password": TEST_ADMIN_PASSWORD,
+            }:
                 return self.send_json(401, {"detail": "bad credentials"})
             return self.send_json(200, {"token": "test-token", "role": "admin"})
         if path == "/api/v1/knowledge/create":
@@ -156,6 +169,30 @@ class Handler(BaseHTTPRequestHandler):
             payload["id"] = skill_id
             self.state.skills[skill_id] = payload
             return self.send_json(200, payload)
+        if path == "/api/v1/functions/create":
+            payload = self.read_json()
+            payload["type"] = "filter"
+            payload["is_active"] = False
+            self.state.functions[payload["id"]] = payload
+            return self.send_json(200, payload)
+        if path.startswith("/api/v1/functions/id/") and path.endswith("/update"):
+            function_id = urllib.parse.unquote(
+                path.removeprefix("/api/v1/functions/id/").removesuffix("/update")
+            )
+            payload = self.read_json()
+            payload["id"] = function_id
+            payload["type"] = "filter"
+            payload["is_active"] = self.state.functions[function_id]["is_active"]
+            self.state.functions[function_id] = payload
+            return self.send_json(200, payload)
+        if path.startswith("/api/v1/functions/id/") and path.endswith("/toggle"):
+            function_id = urllib.parse.unquote(
+                path.removeprefix("/api/v1/functions/id/").removesuffix("/toggle")
+            )
+            self.state.functions[function_id]["is_active"] = not self.state.functions[
+                function_id
+            ]["is_active"]
+            return self.send_json(200, self.state.functions[function_id])
         if path == "/api/v1/configs/models":
             payload = self.read_json()
             self.state.config = payload
@@ -174,7 +211,7 @@ class ProvisioningTest(unittest.TestCase):
         self.env = os.environ.copy()
         self.env.update({
             "OPEN_WEBUI_URL": f"http://127.0.0.1:{self.server.server_port}",
-            "WEBUI_ADMIN_EMAIL": "admin@nettap.local",
+            "WEBUI_ADMIN_EMAIL": TEST_ADMIN_EMAIL,
             "RELEASE_VERSION": "0.4.0-rc.1",
             "NETTAP_AI_MODEL": "nettap-ai:0.4.0-rc.1",
             "NETTAP_PROVISIONING_MANIFEST": str(ROOT / "provisioning/open-webui.json"),
@@ -192,7 +229,7 @@ class ProvisioningTest(unittest.TestCase):
     def run_provisioner(self, *args, check=True):
         return subprocess.run(
             ["python3", str(PROVISIONER), *args],
-            input="Test-password-123!\n",
+            input=f"{TEST_ADMIN_PASSWORD}\n",
             text=True,
             capture_output=True,
             check=check,
@@ -211,6 +248,7 @@ class ProvisioningTest(unittest.TestCase):
         self.assertEqual(set(Handler.state.skills), {
             "nettap-network-visibility", "nettap-packet-expert"
         })
+        self.assertEqual(set(Handler.state.functions), {"nettap_evidence_ingestion"})
         for skill in Handler.state.skills.values():
             self.assertTrue(skill["content"].startswith("# NetTAP "))
             self.assertNotIn("\nname: nettap-", skill["content"])
@@ -226,6 +264,34 @@ class ProvisioningTest(unittest.TestCase):
         self.assertEqual(
             Handler.state.models["nettap-packet-expert"]["meta"]["skillIds"],
             ["nettap-packet-expert"],
+        )
+        self.assertEqual(
+            Handler.state.models["nettap-network-visibility"]["meta"]["filterIds"],
+            [],
+        )
+        self.assertFalse(
+            Handler.state.models["nettap-network-visibility"]["meta"]["capabilities"][
+                "file_upload"
+            ]
+        )
+        self.assertFalse(
+            Handler.state.models["nettap-network-visibility"]["meta"]["capabilities"][
+                "vision"
+            ]
+        )
+        self.assertEqual(
+            Handler.state.models["nettap-packet-expert"]["meta"]["filterIds"],
+            ["nettap_evidence_ingestion"],
+        )
+        self.assertTrue(
+            Handler.state.models["nettap-packet-expert"]["meta"]["capabilities"][
+                "file_upload"
+            ]
+        )
+        self.assertTrue(
+            Handler.state.models["nettap-packet-expert"]["meta"]["capabilities"][
+                "vision"
+            ]
         )
         self.assertEqual(
             Handler.state.config["DEFAULT_PINNED_MODELS"],
@@ -248,6 +314,7 @@ class ProvisioningTest(unittest.TestCase):
         self.assertEqual(len(Handler.state.knowledge), 3)
         self.assertEqual(len(Handler.state.models), 2)
         self.assertEqual(len(Handler.state.skills), 2)
+        self.assertEqual(len(Handler.state.functions), 1)
         self.assertEqual(
             next(iter(Handler.state.knowledge.values()))["access_grants"],
             [{"group_id": "network-team", "permission": "read"}],
@@ -262,13 +329,23 @@ class ProvisioningTest(unittest.TestCase):
         )
         state = json.loads(self.state_path.read_text(encoding="utf-8"))
         self.assertEqual(state["release_version"], "0.4.0-rc.1")
+        installed = self.run_provisioner("--installed-fingerprint").stdout.strip()
+        self.assertEqual(installed, state["fingerprint"])
         self.assertEqual(state["offline_rag"]["result"], "PASS")
         self.assertEqual(set(state["skills"]), {"network_visibility", "packet_expert"})
+        self.assertEqual(set(state["functions"]), {"evidence_ingestion"})
         self.assertEqual(
             {item["id"]: item["skill_ids"] for item in state["assistants"]},
             {
                 "nettap-network-visibility": ["nettap-network-visibility"],
                 "nettap-packet-expert": ["nettap-packet-expert"],
+            },
+        )
+        self.assertEqual(
+            {item["id"]: item["filter_ids"] for item in state["assistants"]},
+            {
+                "nettap-network-visibility": [],
+                "nettap-packet-expert": ["nettap_evidence_ingestion"],
             },
         )
 
@@ -277,6 +354,10 @@ class ProvisioningTest(unittest.TestCase):
         two = self.run_provisioner("--fingerprint").stdout.strip()
         self.assertEqual(one, two)
         self.assertRegex(one, r"^[0-9a-f]{64}$")
+
+    def test_verifies_administrator_credentials_through_api(self):
+        result = self.run_provisioner("--verify-admin")
+        self.assertIn("Open WebUI administrator API verification: PASS", result.stdout)
 
     def test_refuses_unmanaged_collection_name_collision(self):
         Handler.state.knowledge["operator-1"] = {
@@ -305,6 +386,73 @@ class ProvisioningTest(unittest.TestCase):
         self.assertIn("refusing to overwrite unmanaged Open WebUI Skill", result.stderr)
         self.assertFalse(self.state_path.exists())
         self.assertEqual(Handler.state.models, {})
+
+    def test_refuses_unmanaged_function_identity_collision(self):
+        Handler.state.functions["nettap_evidence_ingestion"] = {
+            "id": "nettap_evidence_ingestion",
+            "name": "Operator filter",
+            "content": "operator code",
+            "meta": {},
+            "type": "filter",
+            "is_active": True,
+        }
+        result = self.run_provisioner(check=False)
+        self.assertEqual(result.returncode, 1)
+        self.assertIn(
+            "refusing to overwrite unmanaged Open WebUI Function",
+            result.stderr,
+        )
+        self.assertFalse(self.state_path.exists())
+        self.assertEqual(Handler.state.models, {})
+
+    def test_adopts_recognized_legacy_packet_expert_profile(self):
+        Handler.state.models["nettap-packet-expert"] = {
+            "id": "nettap-packet-expert",
+            "name": "NetTAP Packet Expert",
+            "base_model_id": "nettap-ai:0.3.0-rc.4",
+            "meta": {"description": "legacy profile"},
+            "params": {"system": "legacy prompt"},
+            "access_grants": [{"group_id": "packet-team", "permission": "read"}],
+            "is_active": True,
+        }
+
+        result = self.run_provisioner()
+
+        self.assertIn(
+            "Workspace Model updated: NetTAP Network Intelligence — Packet Expert",
+            result.stdout,
+        )
+        migrated = Handler.state.models["nettap-packet-expert"]
+        self.assertEqual(migrated["name"], "NetTAP Network Intelligence — Packet Expert")
+        self.assertEqual(migrated["base_model_id"], "nettap-ai:0.4.0-rc.1")
+        self.assertEqual(
+            migrated["access_grants"],
+            [{"group_id": "packet-team", "permission": "read"}],
+        )
+        self.assertEqual(migrated["meta"]["nettap_managed"]["release_version"], "0.4.0-rc.1")
+
+    def test_refuses_unrecognized_workspace_model_identity_collision(self):
+        Handler.state.models["nettap-packet-expert"] = {
+            "id": "nettap-packet-expert",
+            "name": "Operator Packet Analysis",
+            "base_model_id": "operator-model:latest",
+            "meta": {},
+            "params": {"system": "operator prompt"},
+            "access_grants": [],
+            "is_active": True,
+        }
+
+        result = self.run_provisioner(check=False)
+
+        self.assertEqual(result.returncode, 1)
+        self.assertIn("refusing to overwrite unmanaged Workspace Model nettap-packet-expert", result.stderr)
+        self.assertIn("name='Operator Packet Analysis'", result.stderr)
+        self.assertIn("base_model_id='operator-model:latest'", result.stderr)
+        self.assertEqual(
+            Handler.state.models["nettap-packet-expert"]["params"]["system"],
+            "operator prompt",
+        )
+        self.assertFalse(self.state_path.exists())
 
     def test_fails_closed_when_offline_retrieval_marker_is_missing(self):
         Handler.state.rag_marker = "unexpected result"

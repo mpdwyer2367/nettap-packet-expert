@@ -67,6 +67,18 @@ retired NetTAP tags from the containerized appliance store:
 ./scripts/nettap-ai retire-old-models --confirm
 ```
 
+After verifying the Qwen3.5 candidate, remove both retired NetTAP tags and the
+recognized Qwen2.5 base with an explicit dry run followed by confirmation:
+
+```bash
+./scripts/nettap-ai retire-old-models --remove-recognized-legacy-bases
+./scripts/nettap-ai retire-old-models --confirm --remove-recognized-legacy-bases
+```
+
+This option is deliberately limited to base tags recognized as retired by the
+current release. It does not remove `qwen3.5:9b-q4_K_M`, the current NetTAP
+model, Open WebUI data, knowledge, chats, evidence, or Docker volumes.
+
 On Windows PowerShell use:
 
 ```powershell

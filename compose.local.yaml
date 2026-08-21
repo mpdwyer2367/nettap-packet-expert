@@ -1,5 +1,9 @@
 services:
   open-webui:
+    environment:
+      # Local recovery may intentionally use a simple development credential.
+      # The production overlay retains the strong-password policy from compose.yaml.
+      ENABLE_PASSWORD_VALIDATION: "False"
     ports:
       - "${BIND_ADDRESS}:${WEB_PORT}:8080"
 
@@ -28,8 +32,16 @@ services:
     security_opt:
       - no-new-privileges:true
     cap_drop: [ALL]
+    # The official Caddy binary carries CAP_NET_BIND_SERVICE as a file
+    # capability. Retain only that capability so Docker Desktop can execute
+    # the binary; the launcher still binds solely to unprivileged ports.
+    cap_add: [NET_BIND_SERVICE]
     healthcheck:
-      test: ["CMD", "wget", "--quiet", "--spider", "http://127.0.0.1:3000/"]
+      test:
+        - CMD-SHELL
+        - >-
+          wget --quiet --spider http://127.0.0.1:3000/healthz &&
+          wget --quiet --spider http://127.0.0.1:3001/healthz
       interval: 15s
       timeout: 5s
       retries: 10
@@ -39,3 +51,11 @@ services:
       options:
         max-size: "5m"
         max-file: "3"
+
+# Local services publish only to BIND_ADDRESS, which defaults to 127.0.0.1.
+# Docker Desktop requires this network to accept the explicitly published host
+# ports. Production does not load this override and keeps user-access internal
+# behind the TLS gateway.
+networks:
+  user-access:
+    internal: false

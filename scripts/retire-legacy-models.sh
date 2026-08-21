@@ -7,14 +7,17 @@ source "${script_dir}/common.sh"
 
 confirm=false
 include_native=false
+remove_legacy_bases=false
 
 usage() {
   cat <<'EOF'
-Usage: ./scripts/retire-legacy-models.sh [--confirm] [--include-native]
+Usage: ./scripts/retire-legacy-models.sh [--confirm] [--include-native] [--remove-recognized-legacy-bases]
 
 Without --confirm, prints the legacy NetTAP model tags that would be removed.
 --include-native also retires NetTAP tags from the host's native Ollama store
 after the current containerized NetTAP Network Intelligence Model is verified.
+--remove-recognized-legacy-bases also removes retired base tags explicitly
+recognized by this release. It never removes the current Qwen3.5 base.
 
 The current model, base model, non-NetTAP models, Open WebUI data, knowledge,
 chats, and Docker volumes are never removed by this command.
@@ -25,6 +28,7 @@ while [[ $# -gt 0 ]]; do
   case "$1" in
     --confirm) confirm=true ;;
     --include-native) include_native=true ;;
+    --remove-recognized-legacy-bases) remove_legacy_bases=true ;;
     -h|--help) usage; exit 0 ;;
     *) echo "ERROR: Unknown argument: $1" >&2; usage >&2; exit 2 ;;
   esac
@@ -34,6 +38,13 @@ done
 is_nettap_tag() {
   case "$1" in
     nettap-ai:*|nettap-ai-backup-*|nettap-packet-expert:*|nettap-network-visibility:*) return 0 ;;
+    *) return 1 ;;
+  esac
+}
+
+is_recognized_legacy_base() {
+  case "$1" in
+    qwen2.5:7b-instruct-q4_K_M) return 0 ;;
     *) return 1 ;;
   esac
 }
@@ -72,9 +83,13 @@ printf '%s\n' "$container_rows" | awk -v model="$current_model" 'NR > 1 && $1 ==
 }
 
 container_candidates=()
+legacy_base_candidates=()
 while IFS= read -r model; do
   if [[ "$model" != "$current_model" ]] && is_nettap_tag "$model"; then
     container_candidates+=("$model")
+  fi
+  if [[ "$remove_legacy_bases" == true && "$model" != "$base_model" ]] && is_recognized_legacy_base "$model"; then
+    legacy_base_candidates+=("$model")
   fi
 done <<< "$(printf '%s\n' "$container_rows" | model_names)"
 
@@ -98,6 +113,13 @@ if [[ ${#container_candidates[@]} -eq 0 ]]; then
 else
   printf 'Legacy container tag: %s\n' "${container_candidates[@]}"
 fi
+if [[ "$remove_legacy_bases" == true ]]; then
+  if [[ ${#legacy_base_candidates[@]} -eq 0 ]]; then
+    echo "Recognized retired container bases: none"
+  else
+    printf 'Recognized retired container base: %s\n' "${legacy_base_candidates[@]}"
+  fi
+fi
 if [[ "$include_native" == true ]]; then
   if [[ ${#native_candidates[@]} -eq 0 ]]; then
     echo "Legacy native tags: none"
@@ -111,11 +133,18 @@ if [[ "$confirm" != true ]]; then
   exit 0
 fi
 
-for model in "${container_candidates[@]}"; do
-  "${selected[@]}" exec -T ollama ollama rm "$model"
-done
+if [[ ${#container_candidates[@]} -gt 0 ]]; then
+  for model in "${container_candidates[@]}"; do
+    "${selected[@]}" exec -T ollama ollama rm "$model"
+  done
+fi
+if [[ ${#legacy_base_candidates[@]} -gt 0 ]]; then
+  for model in "${legacy_base_candidates[@]}"; do
+    "${selected[@]}" exec -T ollama ollama rm "$model"
+  done
+fi
 
-if [[ "$include_native" == true ]]; then
+if [[ "$include_native" == true && ${#native_candidates[@]} -gt 0 ]]; then
   for model in "${native_candidates[@]}"; do
     env -u OLLAMA_HOST ollama rm "$model"
   done
@@ -132,6 +161,14 @@ while IFS= read -r model; do
     exit 7
   fi
 done <<< "$(printf '%s\n' "$remaining_rows" | model_names)"
+if [[ "$remove_legacy_bases" == true ]]; then
+  while IFS= read -r model; do
+    if [[ "$model" != "$base_model" ]] && is_recognized_legacy_base "$model"; then
+      echo "ERROR: Recognized retired container base remains: $model" >&2
+      exit 7
+    fi
+  done <<< "$(printf '%s\n' "$remaining_rows" | model_names)"
+fi
 
 echo "PASS: $current_model is the only selected NetTAP release tag."
 echo "The two Open WebUI experiences remain lightweight profiles over this one model."
