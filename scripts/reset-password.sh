@@ -98,6 +98,8 @@ chmod 0600 "$bootstrap_password_file"
 rm -f "$admin_finalized_file"
 
 "${compose_local[@]}" up -d --wait open-webui
+printf '%s\n' "$password" | "${compose_local[@]}" --profile provision run --rm -T \
+  assistant-provisioner --verify-admin
 provision_assistants local
 trap - EXIT
 unset password
