@@ -10,6 +10,14 @@ services:
     cpus: ${OLLAMA_CPUS}
     mem_limit: ${OLLAMA_MEMORY}
     pids_limit: 1024
+    environment:
+      # Keep laptop inference bounded: the managed Open WebUI profiles both
+      # resolve to the same NetTAP runtime model.
+      OLLAMA_MAX_LOADED_MODELS: ${OLLAMA_MAX_LOADED_MODELS}
+      OLLAMA_NUM_PARALLEL: ${OLLAMA_NUM_PARALLEL}
+      OLLAMA_MAX_QUEUE: ${OLLAMA_MAX_QUEUE}
+      OLLAMA_KEEP_ALIVE: ${OLLAMA_KEEP_ALIVE}
+      OLLAMA_NO_CLOUD: "1"
     volumes:
       - packet-expert-ollama-data:/root/.ollama
     networks: [backend]
