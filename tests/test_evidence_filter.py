@@ -9,6 +9,58 @@ from functions.nettap_evidence_ingestion import Filter
 
 
 class EvidenceFilterTests(unittest.TestCase):
+    def test_open_webui_wrapper_uses_top_level_name_for_pcap(self):
+        with tempfile.TemporaryDirectory() as directory, patch.dict(
+            os.environ,
+            {
+                "EVIDENCE_API_TOKEN": "a" * 64,
+                "NETTAP_OPEN_WEBUI_UPLOAD_DIR": directory,
+            },
+            clear=False,
+        ):
+            filename = "unistim_phone_startup.pcap"
+            Path(directory, f"pcap-1_{filename}").write_bytes(
+                b"\xd4\xc3\xb2\xa1" + b"synthetic-pcap-fixture"
+            )
+            calls = []
+            managed_filter = Filter()
+
+            def fake_request(method, path, token, body, headers):
+                calls.append((method, path, token, body, headers))
+                if path == "/v1/cases":
+                    return {"id": "case-pcap"}
+                if path.endswith("/context"):
+                    return {
+                        "context_contract": "nettap-evidence-context/v1",
+                        "evidence_ids": ["evidence-pcap"],
+                    }
+                return {"status": "ok"}
+
+            managed_filter._json_request = fake_request
+            body = {
+                "messages": [{"role": "user", "content": "Read capture"}],
+                "files": [
+                    {
+                        "type": "file",
+                        "id": "pcap-1",
+                        "name": filename,
+                        "file": {"id": "pcap-1"},
+                    }
+                ],
+            }
+
+            result = asyncio.run(managed_filter.inlet(body))
+            upload = next(call for call in calls if "/evidence?" in call[1])
+            self.assertIn("source_type=pcap", upload[1])
+            self.assertIn("filename=unistim_phone_startup.pcap", upload[1])
+            self.assertIn(
+                "evidence-pcap",
+                "\n".join(
+                    part.get("text", "")
+                    for part in result["messages"][-1]["content"]
+                ),
+            )
+
     def test_chat_attachment_is_sent_to_internal_service_and_minimized(self):
         with tempfile.TemporaryDirectory() as directory, patch.dict(
             os.environ,

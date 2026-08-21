@@ -147,8 +147,7 @@ class Filter:
     def _partition(self, files: list) -> tuple[list, list]:
         evidence_files, image_files = [], []
         for item in files:
-            record = item.get("file") or item.get("files") or item
-            filename = Path(str(record.get("filename") or "attachment.bin")).name
+            _, filename = self._attachment_info(item)
             suffix = Path(filename).suffix.lower()
             if suffix in IMAGE_TYPES:
                 image_files.append(item)
@@ -164,9 +163,7 @@ class Filter:
     def _image_parts(self, files: list) -> list[dict]:
         parts = []
         for item in files:
-            record = item.get("file") or item.get("files") or item
-            file_id = str(record.get("id") or "")
-            filename = Path(str(record.get("filename") or "image.bin")).name
+            file_id, filename = self._attachment_info(item)
             if not file_id:
                 raise ValueError("Open WebUI image metadata is incomplete")
             path = self._upload_path(file_id, filename)
@@ -230,9 +227,7 @@ class Filter:
             {"Content-Type": "application/json"},
         )
         for item in files:
-            record = item.get("file") or item.get("files") or item
-            file_id = str(record.get("id") or "")
-            filename = Path(str(record.get("filename") or "evidence.bin")).name
+            file_id, filename = self._attachment_info(item)
             if not file_id or not filename:
                 raise ValueError("Open WebUI attachment metadata is incomplete")
             path = self._upload_path(file_id, filename)
@@ -271,6 +266,32 @@ class Filter:
         return self._json_request(
             "GET", f"/v1/cases/{case['id']}/context", token, None, {}
         )
+
+    @staticmethod
+    def _attachment_info(item: dict) -> tuple[str, str]:
+        if not isinstance(item, dict):
+            raise ValueError("Open WebUI attachment metadata is incomplete")
+        record = item.get("file")
+        if not isinstance(record, dict):
+            record = {}
+        alternate = item.get("files")
+        if not isinstance(alternate, dict):
+            alternate = {}
+        file_id = str(
+            item.get("id") or record.get("id") or alternate.get("id") or ""
+        )
+        filename = Path(
+            str(
+                item.get("name")
+                or item.get("filename")
+                or record.get("filename")
+                or record.get("name")
+                or alternate.get("filename")
+                or alternate.get("name")
+                or "attachment.bin"
+            )
+        ).name
+        return file_id, filename
 
     def _upload_path(self, file_id: str, filename: str) -> Path:
         root = Path(
