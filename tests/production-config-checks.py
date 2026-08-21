@@ -64,7 +64,7 @@ assert "ports" not in evidence_service
 assert "./case_service:/service/case_service:ro" in evidence_service["volumes"]
 assert "packet-expert-evidence-data:/data" in evidence_service["volumes"]
 assert evidence_service["environment"]["EVIDENCE_API_TOKEN"] == "${EVIDENCE_API_TOKEN}"
-assert evidence_service["environment"]["NETTAP_EVIDENCE_MAX_UPLOAD_BYTES"] == "${EVIDENCE_MAX_UPLOAD_BYTES}"
+assert evidence_service["environment"]["NETTAP_EVIDENCE_MAX_UPLOAD_BYTES"] == "${EVIDENCE_MAX_UPLOAD_BYTES:-104857600}"
 
 for service_name in ("ollama", "open-webui"):
     service = base["services"][service_name]
@@ -74,6 +74,9 @@ for service_name in ("ollama", "open-webui"):
     assert service["logging"]["options"]["max-size"]
 
 env = base["services"]["open-webui"]["environment"]
+assert env["RAG_FILE_MAX_SIZE"] == "100"
+assert env["RAG_FILE_MAX_COUNT"] == "8"
+assert env["NETTAP_EVIDENCE_MAX_UPLOAD_BYTES"] == "${EVIDENCE_MAX_UPLOAD_BYTES:-104857600}"
 for key in (
     "ENABLE_SIGNUP",
     "ENABLE_CODE_EXECUTION",
