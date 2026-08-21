@@ -75,6 +75,7 @@ grep -q 'bcrypt.hashpw(password_bytes, bcrypt.gensalt())' "$project_dir/provisio
 grep -q 'active = 1' "$project_dir/provisioning/reset_local_admin.py"
 grep -q 'parser.add_argument("--verify-admin"' "$project_dir/provisioning/provision_open_webui.py"
 grep -q 'assistant-provisioner --verify-admin' "$project_dir/scripts/reset-local-admin.sh"
+grep -q 'assistant-provisioner --verify-admin' "$project_dir/scripts/reset-password.sh"
 if grep -q 'passlib' "$project_dir/provisioning/reset_local_admin.py"; then
   echo "ERROR: Open WebUI v0.11.0 administrator reset depends on unavailable passlib." >&2
   exit 1
