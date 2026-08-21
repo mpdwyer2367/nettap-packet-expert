@@ -49,6 +49,10 @@ Supported chat attachments are `.pcap`, `.json`, `.jsonl`, `.ndjson`, `.log`,
 built-in metadata decode documented below. Images are signature-validated and
 passed to the multimodal model with explicit untrusted-input instructions.
 
+The governed upload ceiling is 100 MiB (104,857,600 bytes) per file. Evidence
+files are hashed in bounded chunks and streamed from Open WebUI to the Evidence
+Workspace instead of being loaded into memory as a second complete copy.
+
 ### Evidence Workspace case workflow
 
 1. Create a case with a clear objective and environment.
