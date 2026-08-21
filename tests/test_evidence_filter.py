@@ -9,6 +9,58 @@ from functions.nettap_evidence_ingestion import Filter
 
 
 class EvidenceFilterTests(unittest.TestCase):
+    def test_pcap_upload_preserves_virtual_knowledge_sources(self):
+        with tempfile.TemporaryDirectory() as directory, patch.dict(
+            os.environ,
+            {
+                "EVIDENCE_API_TOKEN": "a" * 64,
+                "NETTAP_OPEN_WEBUI_UPLOAD_DIR": directory,
+            },
+            clear=False,
+        ):
+            filename = "unistim_phone_startup.pcap"
+            Path(directory, f"pcap-knowledge_{filename}").write_bytes(
+                b"\xd4\xc3\xb2\xa1" + b"synthetic-pcap-fixture"
+            )
+            managed_filter = Filter()
+
+            def fake_request(method, path, token, body, headers):
+                if path == "/v1/cases":
+                    return {"id": "case-knowledge"}
+                if path.endswith("/context"):
+                    return {
+                        "context_contract": "nettap-evidence-context/v1",
+                        "evidence_ids": ["evidence-knowledge"],
+                    }
+                return {"status": "ok"}
+
+            managed_filter._json_request = fake_request
+            knowledge = {
+                "id": "nettap-packet-expert-knowledge",
+                "name": "NetTAP Packet Expert Managed",
+                "collection_name": "nettap-packet-expert-knowledge",
+                "legacy": True,
+            }
+            body = {
+                "messages": [{"role": "user", "content": "Read capture"}],
+                "files": [
+                    knowledge,
+                    {
+                        "type": "file",
+                        "id": "pcap-knowledge",
+                        "name": filename,
+                        "file": {"id": "pcap-knowledge"},
+                    },
+                ],
+            }
+
+            result = asyncio.run(managed_filter.inlet(body))
+            self.assertEqual(result["files"], [knowledge])
+            rendered = "\n".join(
+                part.get("text", "") for part in result["messages"][-1]["content"]
+            )
+            self.assertIn("evidence-knowledge", rendered)
+
     def test_open_webui_wrapper_uses_top_level_name_for_pcap(self):
         with tempfile.TemporaryDirectory() as directory, patch.dict(
             os.environ,

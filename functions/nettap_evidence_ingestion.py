@@ -22,9 +22,9 @@ import urllib.request
 from pydantic import BaseModel
 
 
-# This reviewed filter owns attachment handling for the managed Packet Expert
-# profile. It keeps binary packet data out of Open WebUI's text RAG path.
-file_handler = True
+# This reviewed filter removes managed binary uploads from the request while
+# preserving Open WebUI's virtual knowledge sources for the normal RAG path.
+file_handler = False
 
 IMAGE_TYPES = {
     ".png": "image/png",
@@ -68,7 +68,9 @@ class Filter:
             raise ValueError(
                 f"Attach no more than {self.valves.max_files_per_turn} files per message"
             )
-        evidence_files, image_files = self._partition(files)
+        evidence_files, image_files, passthrough_files = self._partition(files)
+        if not evidence_files and not image_files:
+            return body
         if len(image_files) > self.valves.max_images_per_turn:
             raise ValueError(
                 f"Attach no more than {self.valves.max_images_per_turn} images per message"
@@ -130,6 +132,7 @@ class Filter:
                 }
             )
             parts.extend(image_parts)
+        self._preserve_virtual_sources(body, __metadata__, passthrough_files)
         user_message["content"] = parts
         body["messages"] = messages
         if __event_emitter__:
@@ -144,9 +147,12 @@ class Filter:
             )
         return body
 
-    def _partition(self, files: list) -> tuple[list, list]:
-        evidence_files, image_files = [], []
+    def _partition(self, files: list) -> tuple[list, list, list]:
+        evidence_files, image_files, passthrough_files = [], [], []
         for item in files:
+            if not self._is_upload(item):
+                passthrough_files.append(item)
+                continue
             _, filename = self._attachment_info(item)
             suffix = Path(filename).suffix.lower()
             if suffix in IMAGE_TYPES:
@@ -158,7 +164,37 @@ class Filter:
                     "Unsupported attachment. Use .pcap, .json, .jsonl, .ndjson, "
                     ".log, .txt, .png, .jpg, .jpeg or .webp"
                 )
-        return evidence_files, image_files
+        return evidence_files, image_files, passthrough_files
+
+    @staticmethod
+    def _is_upload(item: dict) -> bool:
+        if not isinstance(item, dict):
+            return False
+        if item.get("type") == "file":
+            return True
+        if item.get("filename"):
+            return True
+        record = item.get("file")
+        if isinstance(record, dict) and (
+            record.get("filename") or record.get("name")
+        ):
+            return True
+        alternate = item.get("files")
+        return isinstance(alternate, dict) and (
+            alternate.get("filename") or alternate.get("name")
+        )
+
+    @staticmethod
+    def _preserve_virtual_sources(
+        body: dict, metadata: Optional[dict], passthrough_files: list
+    ) -> None:
+        if "files" in body:
+            body["files"] = passthrough_files
+        body_metadata = body.get("metadata")
+        if isinstance(body_metadata, dict) and "files" in body_metadata:
+            body_metadata["files"] = passthrough_files
+        if isinstance(metadata, dict) and "files" in metadata:
+            metadata["files"] = passthrough_files
 
     def _image_parts(self, files: list) -> list[dict]:
         parts = []
