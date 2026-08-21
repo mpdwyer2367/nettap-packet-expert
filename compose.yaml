@@ -13,10 +13,10 @@ services:
     environment:
       # Keep laptop inference bounded: the managed Open WebUI profiles both
       # resolve to the same NetTAP runtime model.
-      OLLAMA_MAX_LOADED_MODELS: ${OLLAMA_MAX_LOADED_MODELS}
-      OLLAMA_NUM_PARALLEL: ${OLLAMA_NUM_PARALLEL}
-      OLLAMA_MAX_QUEUE: ${OLLAMA_MAX_QUEUE}
-      OLLAMA_KEEP_ALIVE: ${OLLAMA_KEEP_ALIVE}
+      OLLAMA_MAX_LOADED_MODELS: ${OLLAMA_MAX_LOADED_MODELS:-1}
+      OLLAMA_NUM_PARALLEL: ${OLLAMA_NUM_PARALLEL:-1}
+      OLLAMA_MAX_QUEUE: ${OLLAMA_MAX_QUEUE:-8}
+      OLLAMA_KEEP_ALIVE: ${OLLAMA_KEEP_ALIVE:-2m}
       OLLAMA_NO_CLOUD: "1"
     volumes:
       - packet-expert-ollama-data:/root/.ollama
