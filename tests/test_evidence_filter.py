@@ -66,6 +66,7 @@ class EvidenceFilterTests(unittest.TestCase):
         ):
             Path(directory, "file-large_sample.log").write_bytes(b"x" * 11)
             managed_filter = Filter()
+            managed_filter.valves.max_evidence_bytes = 10
             calls = []
             managed_filter._json_request = lambda *args: calls.append(args) or {"id": "case-large"}
             body = {
