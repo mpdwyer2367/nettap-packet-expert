@@ -29,7 +29,1020 @@ grep -q 'You are the NetTAP Network Intelligence Model' "$model_file"
 grep -q '^RELEASE_VERSION=0.4.0-rc.1$' "$project_dir/.env.example"
 grep -q '^BASE_MODEL=qwen3.5:9b-q4_K_M$' "$project_dir/.env.example"
 grep -q '^NETTAP_AI_MODEL=nettap-ai:0.4.0-rc.1$' "$project_dir/.env.example"
-grep -q '^EXPECTED_BASE_MODEL_ID=6488c96fa5fa$' "$project_dir/.env.example"
+grep -q '^EXPECTED_BASE_MODEL_ID=6488c96fa5fagrep -q '^RETIRE_LEGACY_NETTAP_MODELS=true$' "$project_dir/.env.example"
+grep -q '^NETTAP_VISIBILITY_PROFILE=nettap-network-visibility$' "$project_dir/.env.example"
+grep -q '^NETTAP_PACKET_EXPERT_PROFILE=nettap-packet-expert$' "$project_dir/.env.example"
+grep -q '^RAG_EMBEDDING_MODEL_REVISION=1110a243fdf4706b3f48f1d95db1a4f5529b4d41$' "$project_dir/.env.example"
+# shellcheck disable=SC2016 # literal Compose interpolation is the test subject
+grep -q 'test "$$actual_id" = "${EXPECTED_BASE_MODEL_ID}"' "$project_dir/compose.yaml"
+grep -q '^BIND_ADDRESS=127.0.0.1$' "$project_dir/.env.example"
+grep -q '^WEB_PORT=3100$' "$project_dir/.env.example"
+grep -q '^VISIBILITY_LAUNCHER_PORT=3000$' "$project_dir/.env.example"
+grep -q '^PACKET_EXPERT_LAUNCHER_PORT=3001$' "$project_dir/.env.example"
+grep -q '^EVIDENCE_PORT=3200$' "$project_dir/.env.example"
+grep -q '^EVIDENCE_API_TOKEN=GENERATE_ON_FIRST_START$' "$project_dir/.env.example"
+grep -Fqx '# NetTAP Network Intelligence' "$project_dir/README.md"
+grep -Fq 'NetTAP Network Intelligence — Network & Visibility' "$project_dir/README.md"
+grep -Fq 'NetTAP Network Intelligence — Packet Expert' "$project_dir/README.md"
+grep -Fq 'NetTAP Network Intelligence — Evidence Workspace' "$project_dir/README.md"
+grep -Fq "Ollama model tag | \`nettap-ai:0.4.0-rc.1\`" "$project_dir/docs/NAMING_CONVENTIONS.md"
+grep -Fq "Backup format identifiers | \`NetTAP AI Suite volume backup v2\` and \`v3\`" "$project_dir/docs/NAMING_CONVENTIONS.md"
+grep -Fq 'experiences or Open WebUI profiles, not as separate LLMs or model downloads' "$project_dir/docs/NAMING_CONVENTIONS.md"
+grep -Fq 'Historical naming:' "$project_dir/reports/PRODUCTION_CERTIFICATION_STATUS_0.3.0-rc.2.md"
+grep -Fq 'Historical naming:' "$project_dir/reports/RELEASE_ACCEPTANCE_0.2.0-rc.1.md"
+grep -q 'retire-old-models)' "$project_dir/scripts/nettap-ai"
+grep -q 'nettap-ai-backup-\*' "$project_dir/scripts/retire-legacy-models.sh"
+grep -q '^WEBUI_ADMIN_EMAIL=.' "$project_dir/.env.example"
+grep -q '^WEBUI_ADMIN_PASSWORD=.' "$project_dir/.env.example"
+grep -Fq 'load_env_value WEBUI_ADMIN_PASSWORD' "$project_dir/scripts/production-preflight.sh"
+grep -q 'ENABLE_SIGNUP: "False"' "$project_dir/compose.yaml"
+grep -q 'USER_PERMISSIONS_CHAT_FILE_UPLOAD: "True"' "$project_dir/compose.yaml"
+grep -q 'NETTAP_EVIDENCE_URL: http://evidence-service:8081' "$project_dir/compose.yaml"
+grep -q './functions:/source/functions:ro' "$project_dir/compose.yaml"
+grep -q 'ENABLE_PASSWORD_VALIDATION: "False"' "$project_dir/compose.local.yaml"
+grep -q '127.0.0.1:3000/healthz' "$project_dir/compose.local.yaml"
+grep -q '127.0.0.1:3001/healthz' "$project_dir/compose.local.yaml"
+test "$(grep -Fc 'handle /healthz' "$project_dir/config/Launcher.Caddyfile")" -eq 2
+test "$(grep -Fc 'respond "ok" 200' "$project_dir/config/Launcher.Caddyfile")" -eq 2
+grep -q 'Qwen3.5 9B' "$project_dir/launchers/network-visibility/index.html"
+grep -q 'Qwen3.5 9B' "$project_dir/launchers/packet-expert/index.html"
+grep -q 'confirm-insecure-default' "$project_dir/scripts/reset-local-admin.sh"
+grep -q '^admin_email=".' "$project_dir/scripts/reset-local-admin.sh"
+grep -q '^admin_password=".' "$project_dir/scripts/reset-local-admin.sh"
+grep -q 'reset-default-admin)' "$project_dir/scripts/nettap-ai"
+grep -q 'reset-password)' "$project_dir/scripts/nettap-ai"
+grep -q 'NETTAP_RESET_CREATE_IF_MISSING' "$project_dir/scripts/reset-password.sh"
+grep -q 'NETTAP_RESET_ADMIN_EMAIL' "$project_dir/provisioning/reset_local_admin.py"
+grep -q 'import bcrypt' "$project_dir/provisioning/reset_local_admin.py"
+grep -q 'bcrypt.hashpw(password_bytes, bcrypt.gensalt())' "$project_dir/provisioning/reset_local_admin.py"
+grep -q 'active = 1' "$project_dir/provisioning/reset_local_admin.py"
+grep -q 'parser.add_argument("--verify-admin"' "$project_dir/provisioning/provision_open_webui.py"
+grep -q 'assistant-provisioner --verify-admin' "$project_dir/scripts/reset-local-admin.sh"
+grep -q 'assistant-provisioner --verify-admin' "$project_dir/scripts/reset-password.sh"
+if grep -q 'passlib' "$project_dir/provisioning/reset_local_admin.py"; then
+  echo "ERROR: Open WebUI v0.11.0 administrator reset depends on unavailable passlib." >&2
+  exit 1
+fi
+if grep -q 'from open_webui.utils.auth import get_password_hash' "$project_dir/provisioning/reset_local_admin.py"; then
+  echo "ERROR: Local administrator reset imports application auth configuration." >&2
+  exit 1
+fi
+grep -q 'load_env_value WEBUI_SECRET_KEY' "$project_dir/scripts/common.sh"
+grep -Fq "WEBUI_SECRET_KEY=$'" "$project_dir/scripts/start-windows.ps1"
+grep -q 'WEBUI_NAME: "NetTAP Network Intelligence"' "$project_dir/compose.yaml"
+grep -q 'nettap-network-intelligence-admin-activation-040rc1' "$project_dir/compose.yaml"
+grep -q 'internal: true' "$project_dir/compose.yaml"
+grep -q 'HF_HUB_OFFLINE: "1"' "$project_dir/compose.yaml"
+grep -q 'RAG_EMBEDDING_MODEL_TRUST_REMOTE_CODE: "False"' "$project_dir/compose.yaml"
+grep -q 'force_download=True' "$project_dir/provisioning/cache_embedding_model.py"
+grep -q 'files_metadata=True' "$project_dir/provisioning/cache_embedding_model.py"
+grep -q 'local_files_only=True' "$project_dir/provisioning/cache_embedding_model.py"
+grep -q 'assistant-provisioner:' "$project_dir/compose.yaml"
+grep -q 'NETTAP_PROVISIONING_CHECKSUMS: /provision/knowledge-sources.sha256' "$project_dir/compose.yaml"
+grep -q 'rag-cache-init:' "$project_dir/compose.yaml"
+grep -q 'provision_assistants local' "$project_dir/scripts/common.sh"
+grep -q 'parser.add_argument("--installed-fingerprint"' "$project_dir/provisioning/provision_open_webui.py"
+grep -q "Path('/app/backend/data/nettap-provisioning-state.json')" "$project_dir/scripts/common.sh"
+fingerprint_sample='0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef'
+[[ "$(printf 'compose status\n%s\n' "$fingerprint_sample" | bash -c 'source "$1"; extract_provisioning_fingerprint' _ "$project_dir/scripts/common.sh")" == "$fingerprint_sample" ]]
+grep -q 'require_digest_pins' "$project_dir/scripts/start-production.sh"
+grep -q 'production-preflight.sh' "$project_dir/scripts/start-production.sh"
+grep -q 'NOT CERTIFIED' "$project_dir/scripts/certify-production.sh"
+
+required_files=(
+  LICENSE NOTICE SECURITY.md THIRD_PARTY_NOTICES.md
+  compose.bootstrap.yaml compose.local.yaml compose.production.yaml
+  config/Caddyfile config/Launcher.Caddyfile
+  assistants/shared/core-policy.md
+  assistants/network-visibility/assistant.yaml assistants/packet-expert/assistant.yaml
+  assistants/network-visibility/system-prompt.md assistants/packet-expert/system-prompt.md
+  skills/nettap-network-visibility/SKILL.md skills/nettap-packet-expert/SKILL.md
+  functions/nettap_evidence_ingestion.py
+  case_service/__init__.py case_service/__main__.py case_service/config.py
+  case_service/database.py case_service/parsers.py case_service/analysis.py
+  case_service/service.py case_service/http_api.py
+  case_service/web/index.html case_service/web/app.css case_service/web/app.js
+  api/openapi.json
+  knowledge/NetTAP_AI_Knowledge.md knowledge/NetTAP_Ingestion_Analysis_Guidance.md
+  knowledge/NetTAP_Provisioning_Probe.md provisioning/open-webui.json
+  provisioning/cache_embedding_model.py provisioning/provision_open_webui.py
+  provisioning/reset_local_admin.py
+  provisioning/knowledge-sources.sha256
+  knowledge/NetTAP_Network_Visibility_Knowledge.md
+  knowledge/NetTAP_Packet_Expert_Knowledge.md model/nettap-ai.Modelfile
+  model/MODEL_CARD.md model/releases/0.4.0-rc.1.json
+  launchers/network-visibility/index.html launchers/packet-expert/index.html launchers/shared.css
+  docs/AUTHENTICATION.md docs/COMMERCIAL_RELEASE_GATES.md
+  docs/CUSTOMER_DEPLOYMENT_GUIDE.md docs/PRODUCTION_ARCHITECTURE.md
+  docs/MACOS_DEPLOYMENT.md docs/WINDOWS_DEPLOYMENT.md docs/LINUX_DEPLOYMENT.md
+  docs/PRODUCT_ROADMAP.md docs/THREAT_MODEL.md docs/VALIDATION_STATUS.md
+  docs/RC3_ACCEPTANCE_PLAN.md docs/RC4_ACCEPTANCE_PLAN.md docs/0.4.0_RC1_ACCEPTANCE_PLAN.md
+  docs/EVIDENCE_CASE_SERVICE.md
+  docs/QWEN35_PROMOTION.md
+  docs/current-state.md docs/release-gates.md docs/open-questions.md
+  docs/decisions/0001-resolvable-evidence-citations.md
+  docs/NAMING_CONVENTIONS.md
+  scripts/backup.sh scripts/restore.sh scripts/lock-images.sh
+  scripts/provision-assistants.sh scripts/reset-local-admin.sh scripts/reset-password.sh
+  scripts/security-scan.sh scripts/production-preflight.sh
+  scripts/verify-production-deployment.sh scripts/package-release.sh
+  scripts/install-model-native.sh scripts/install-model-native.ps1
+  scripts/retire-legacy-models.sh scripts/retire-legacy-models.ps1
+  scripts/package-model-bundle.sh scripts/verify-model-bundle.sh
+  scripts/verify-release.sh scripts/verify-archive-tree.py scripts/certify-production.sh
+  scripts/start-wsl2.sh scripts/start-linux.sh
+  tests/model-behavior-eval.sh tests/model-storage-sharing.sh tests/backup-restore-e2e.sh
+  tests/normalized-ingestion-eval.sh tests/failed-update-rollback-e2e.sh
+  tests/evidence-runtime-e2e.sh
+  tests/clean-package-acceptance.sh tests/compare-platform-acceptance.sh
+  tests/native-model-installer-mock.sh
+  tests/retire-legacy-models-mock.sh
+  tests/fixtures/normalized-pcap.json tests/fixtures/normalized-logs.jsonl
+  tests/fixtures/normalized-ipfix.jsonl
+  tests/production-config-checks.py tests/test_reset_local_admin.py
+  tests/test_evidence_filter.py
+  tests/test_provision_open_webui.py tests/test_verify_archive_tree.py tests/test_case_service.py
+  reports/PRODUCTION_CERTIFICATION_STATUS_0.2.0-rc.1.md
+  reports/RELEASE_ACCEPTANCE_0.2.0-rc.1.md
+  reports/PRODUCTION_CERTIFICATION_STATUS_0.3.0-rc.2.md
+  reports/RELEASE_ACCEPTANCE_0.3.0-rc.2.md
+  reports/STATIC_VALIDATION_2026-08-05_0.3.0-rc.2.md
+  reports/PRODUCTION_CERTIFICATION_STATUS_0.3.0-rc.3.md
+  reports/RELEASE_ACCEPTANCE_0.3.0-rc.3.md
+  reports/STATIC_VALIDATION_2026-08-05_0.3.0-rc.3.md
+  reports/RC3_ACCEPTANCE_AUTOMATION_STATUS.md
+  reports/NATIVE_MODEL_CREATION_2026-08-05_0.3.0-rc.3.md
+  reports/PRODUCTION_CERTIFICATION_STATUS_0.3.0-rc.4.md
+  reports/RELEASE_ACCEPTANCE_0.3.0-rc.4.md
+  reports/STATIC_VALIDATION_2026-08-05_0.3.0-rc.4.md
+  reports/PRODUCTION_CERTIFICATION_STATUS_0.4.0-rc.1.md
+  reports/RELEASE_ACCEPTANCE_0.4.0-rc.1.md
+  reports/STATIC_VALIDATION_2026-08-20_0.4.0-rc.1.md
+)
+for file in "${required_files[@]}"; do test -f "${project_dir}/${file}"; done
+
+ingestion_guidance="$project_dir/knowledge/NetTAP_Ingestion_Analysis_Guidance.md"
+grep -q 'Raw sources require a supported parser and validated schema; normalized excerpts can be analyzed directly' "$ingestion_guidance"
+grep -q 'Never ask the user to paste, upload, or store TLS' "$ingestion_guidance"
+grep -q -- 'tcpdump --sslkeylog' "$ingestion_guidance"
+grep -q 'GRE and VXLAN are encapsulation technologies and do not themselves provide encryption' "$ingestion_guidance"
+grep -q 'IPsec is a security suite; its ESP mode can provide confidentiality through encryption' "$ingestion_guidance"
+grep -q 'source timezone and UTC offset' "$ingestion_guidance"
+grep -q 'clock-synchronization status' "$ingestion_guidance"
+grep -q 'exporter identity' "$ingestion_guidance"
+grep -q 'IPFIX template status' "$ingestion_guidance"
+grep -q 'sampling rate' "$ingestion_guidance"
+grep -q 'capture drops' "$ingestion_guidance"
+grep -q 'observation point' "$ingestion_guidance"
+grep -q 'schema version' "$ingestion_guidance"
+grep -q 'chain of custody' "$ingestion_guidance"
+grep -q 'indicators or hypotheses' "$ingestion_guidance"
+
+python3 - "$project_dir" <<'PY'
+import hashlib
+import json
+import sys
+from pathlib import Path
+import yaml
+
+root = Path(sys.argv[1])
+checksums = {}
+for line in (root / "provisioning/knowledge-sources.sha256").read_text(encoding="utf-8").splitlines():
+    if not line.strip():
+        continue
+    digest, relative = line.split("  ", 1)
+    assert len(digest) == 64 and relative not in checksums
+    source = root / relative
+    assert source.is_file()
+    assert hashlib.sha256(source.read_bytes()).hexdigest() == digest
+    checksums[relative] = digest
+
+json.loads((root / "tests/fixtures/normalized-pcap.json").read_text(encoding="utf-8"))
+openapi = json.loads((root / "api/openapi.json").read_text(encoding="utf-8"))
+assert openapi["openapi"] == "3.1.0"
+assert "/v1/cases/{case_id}/observations/{observation_id}" in openapi["paths"]
+assert "/v1/cases/{case_id}/analyses/{analysis_id}" in openapi["paths"]
+for fixture in ("normalized-logs.jsonl", "normalized-ipfix.jsonl"):
+    lines = (root / "tests/fixtures" / fixture).read_text(encoding="utf-8").splitlines()
+    assert lines
+    for line in lines:
+        json.loads(line)
+
+assistants = []
+for manifest_path in sorted((root / "assistants").glob("*/assistant.yaml")):
+    manifest = yaml.safe_load(manifest_path.read_text(encoding="utf-8"))
+    assistants.append(manifest)
+    assert manifest["base_model"] == "qwen3.5:9b-q4_K_M"
+    assert (root / manifest["modelfile"]).is_file()
+    for knowledge in manifest["knowledge"]:
+        assert (root / knowledge).is_file()
+    for skill in manifest["skills"]:
+        skill_path = root / skill
+        assert skill_path.is_file()
+        content = skill_path.read_text(encoding="utf-8")
+        assert content.startswith("---\nname: ")
+        assert "\ndescription: " in content
+assert {item["id"] for item in assistants} == {"nettap-network-visibility", "nettap-packet-expert"}
+assert {item["display_name"] for item in assistants} == {
+    "NetTAP Network Intelligence — Network & Visibility",
+    "NetTAP Network Intelligence — Packet Expert",
+}
+assert len({item["launcher_port"] for item in assistants}) == 2
+assert {item["runtime_model"] for item in assistants} == {"nettap-ai:0.4.0-rc.1"}
+assert {item["modelfile"] for item in assistants} == {"model/nettap-ai.Modelfile"}
+assert {tuple(item["skills"]) for item in assistants} == {
+    ("skills/nettap-network-visibility/SKILL.md",),
+    ("skills/nettap-packet-expert/SKILL.md",),
+}
+assert {item["workspace_model_id"] for item in assistants} == {"nettap-network-visibility", "nettap-packet-expert"}
+assert {item["mode"] for item in assistants} == {"network_visibility", "packet_expert"}
+provisioning = json.loads((root / "provisioning/open-webui.json").read_text(encoding="utf-8"))
+release = json.loads((root / "model/releases/0.4.0-rc.1.json").read_text(encoding="utf-8"))
+assert release == {
+    "schema_version": 1,
+    "release_version": "0.4.0-rc.1",
+    "base_model": "qwen3.5:9b-q4_K_M",
+    "expected_base_model_id": "6488c96fa5fa",
+    "runtime_model": "nettap-ai:0.4.0-rc.1",
+    "source_policy": "model/nettap-ai.Modelfile",
+    "temperature": 0.1,
+    "num_ctx": 16384,
+    "status": "release-candidate",
+    "source": "https://ollama.com/library/qwen3.5:9b-q4_K_M",
+    "license": "Apache-2.0",
+}
+assert {item["name"] for item in provisioning["assistants"]} == {
+    "NetTAP Network Intelligence — Network & Visibility",
+    "NetTAP Network Intelligence — Packet Expert",
+}
+assert {item["name"] for item in provisioning["skills"]} == {
+    "NetTAP Network Intelligence — Network & Visibility",
+    "NetTAP Network Intelligence — Packet Expert",
+}
+assert {item["id"] for item in provisioning["functions"]} == {
+    "nettap_evidence_ingestion",
+}
+provisioned_assistants = {item["id"]: item for item in provisioning["assistants"]}
+assert provisioned_assistants["nettap-network-visibility"].get("function_keys", []) == []
+assert provisioned_assistants["nettap-packet-expert"]["function_keys"] == [
+    "evidence_ingestion"
+]
+expected_sources = {
+    "assistants/shared/core-policy.md",
+    "assistants/network-visibility/system-prompt.md",
+    "assistants/packet-expert/system-prompt.md",
+    "functions/nettap_evidence_ingestion.py",
+}
+for assistant in assistants:
+    expected_sources.update(assistant["knowledge"])
+    expected_sources.update(assistant["skills"])
+assert set(checksums) == expected_sources
+print("Assistant manifests passed.")
+PY
+
+grep -Fqx "Apache License" "$project_dir/LICENSE"
+grep -Fqx "Version 2.0, January 2004" "$project_dir/LICENSE"
+grep -Fqx "Copyright 2026 NetTAP Technology Limited" "$project_dir/NOTICE"
+grep -q 'VALID PRODUCTION CANDIDATE' "$project_dir/reports/PRODUCTION_CERTIFICATION_STATUS_0.2.0-rc.1.md"
+grep -q 'Production certification decision: \*\*NOT GRANTED' "$project_dir/reports/PRODUCTION_CERTIFICATION_STATUS_0.2.0-rc.1.md"
+grep -q 'Release disposition: \*\*EVALUATION ONLY' "$project_dir/reports/RELEASE_ACCEPTANCE_0.2.0-rc.1.md"
+grep -q 'Production/customer deployment approval: \*\*NOT GRANTED' "$project_dir/reports/RELEASE_ACCEPTANCE_0.2.0-rc.1.md"
+grep -q 'Commercial distribution approval: \*\*NOT GRANTED' "$project_dir/reports/RELEASE_ACCEPTANCE_0.2.0-rc.1.md"
+grep -q 'Production certification decision: \*\*NOT GRANTED' "$project_dir/reports/PRODUCTION_CERTIFICATION_STATUS_0.3.0-rc.2.md"
+grep -q 'Release disposition: \*\*EVALUATION ONLY' "$project_dir/reports/RELEASE_ACCEPTANCE_0.3.0-rc.2.md"
+grep -q 'Production/customer deployment approval: \*\*NOT GRANTED' "$project_dir/reports/RELEASE_ACCEPTANCE_0.3.0-rc.2.md"
+grep -q 'Commercial distribution approval: \*\*NOT GRANTED' "$project_dir/reports/RELEASE_ACCEPTANCE_0.3.0-rc.2.md"
+grep -q 'Production certification decision: \*\*NOT GRANTED' "$project_dir/reports/PRODUCTION_CERTIFICATION_STATUS_0.3.0-rc.3.md"
+grep -q 'Release disposition: \*\*EVALUATION ONLY' "$project_dir/reports/RELEASE_ACCEPTANCE_0.3.0-rc.3.md"
+grep -q 'Production/customer deployment approval: \*\*NOT GRANTED' "$project_dir/reports/RELEASE_ACCEPTANCE_0.3.0-rc.3.md"
+grep -q 'Commercial distribution approval: \*\*NOT GRANTED' "$project_dir/reports/RELEASE_ACCEPTANCE_0.3.0-rc.3.md"
+grep -q 'Production certification decision: \*\*NOT GRANTED' "$project_dir/reports/PRODUCTION_CERTIFICATION_STATUS_0.3.0-rc.4.md"
+grep -q 'Release disposition: \*\*EVALUATION ONLY' "$project_dir/reports/RELEASE_ACCEPTANCE_0.3.0-rc.4.md"
+grep -q 'Production/customer deployment approval: \*\*NOT GRANTED' "$project_dir/reports/RELEASE_ACCEPTANCE_0.3.0-rc.4.md"
+grep -q 'Commercial distribution approval: \*\*NOT GRANTED' "$project_dir/reports/RELEASE_ACCEPTANCE_0.3.0-rc.4.md"
+grep -q 'Production certification decision: \*\*NOT GRANTED' "$project_dir/reports/PRODUCTION_CERTIFICATION_STATUS_0.4.0-rc.1.md"
+grep -q 'Release disposition: \*\*EVALUATION ONLY' "$project_dir/reports/RELEASE_ACCEPTANCE_0.4.0-rc.1.md"
+grep -q 'Production/customer deployment approval: \*\*NOT GRANTED' "$project_dir/reports/RELEASE_ACCEPTANCE_0.4.0-rc.1.md"
+grep -q 'Commercial distribution approval: \*\*NOT GRANTED' "$project_dir/reports/RELEASE_ACCEPTANCE_0.4.0-rc.1.md"
+
+if grep -RInE --exclude=static-checks.sh '(^|[^A-Za-z])(admin/admin|admin@nettap[.]local[[:space:]]*/[[:space:]]*admin)([^A-Za-z]|$)' \
+  "$project_dir/README.md" "$project_dir/docs" "$project_dir/scripts" "$project_dir/tests"; then
+  echo "ERROR: Shared default administrator credential found in active source." >&2
+  exit 1
+fi
+if grep -RInE --exclude=static-checks.sh 'local -n|mapfile' "$project_dir/scripts" "$project_dir/tests"; then
+  echo "ERROR: Bash feature unavailable in the Bash 3.2 shipped with macOS." >&2
+  exit 1
+fi
+if grep -RInE '(BEGIN (RSA |EC |OPENSSH )?PRIVATE KEY|ghp_[A-Za-z0-9]{30,}|github_pat_[A-Za-z0-9_]{30,})' \
+  --exclude-dir=.git "$project_dir"; then
+  echo "ERROR: Possible private key or GitHub token found." >&2
+  exit 1
+fi
+if grep -InE 'no license (has|has yet) been selected|must select and add a license' \
+  "$project_dir/README.md" "$project_dir/docs/"*.md "$project_dir/THIRD_PARTY_NOTICES.md"; then
+  echo "ERROR: Stale project-license warning found." >&2
+  exit 1
+fi
+
+python3 "$project_dir/tests/production-config-checks.py"
+python3 - "$project_dir" <<'PY'
+import re
+import sys
+from pathlib import Path
+root = Path(sys.argv[1])
+missing = []
+pattern = re.compile(r'\[[^]]+\]\(([^)]+)\)')
+for document in list(root.rglob('*.md')):
+    for target in pattern.findall(document.read_text(encoding='utf-8')):
+        if target.startswith(('http://', 'https://', '#', 'mailto:')):
+            continue
+        path = target.split('#', 1)[0]
+        if path and not (document.parent / path).resolve().exists():
+            missing.append(f'{document.relative_to(root)} -> {target}')
+if missing:
+    raise SystemExit('Missing relative documentation targets:\n' + '\n'.join(missing))
+print('Documentation links passed.')
+PY
+echo "Static checks passed."
+ "$project_dir/.env.example"
+grep -q '^OLLAMA_MAX_LOADED_MODELS=1grep -q '^RETIRE_LEGACY_NETTAP_MODELS=true$' "$project_dir/.env.example"
+grep -q '^NETTAP_VISIBILITY_PROFILE=nettap-network-visibility$' "$project_dir/.env.example"
+grep -q '^NETTAP_PACKET_EXPERT_PROFILE=nettap-packet-expert$' "$project_dir/.env.example"
+grep -q '^RAG_EMBEDDING_MODEL_REVISION=1110a243fdf4706b3f48f1d95db1a4f5529b4d41$' "$project_dir/.env.example"
+# shellcheck disable=SC2016 # literal Compose interpolation is the test subject
+grep -q 'test "$$actual_id" = "${EXPECTED_BASE_MODEL_ID}"' "$project_dir/compose.yaml"
+grep -q '^BIND_ADDRESS=127.0.0.1$' "$project_dir/.env.example"
+grep -q '^WEB_PORT=3100$' "$project_dir/.env.example"
+grep -q '^VISIBILITY_LAUNCHER_PORT=3000$' "$project_dir/.env.example"
+grep -q '^PACKET_EXPERT_LAUNCHER_PORT=3001$' "$project_dir/.env.example"
+grep -q '^EVIDENCE_PORT=3200$' "$project_dir/.env.example"
+grep -q '^EVIDENCE_API_TOKEN=GENERATE_ON_FIRST_START$' "$project_dir/.env.example"
+grep -Fqx '# NetTAP Network Intelligence' "$project_dir/README.md"
+grep -Fq 'NetTAP Network Intelligence — Network & Visibility' "$project_dir/README.md"
+grep -Fq 'NetTAP Network Intelligence — Packet Expert' "$project_dir/README.md"
+grep -Fq 'NetTAP Network Intelligence — Evidence Workspace' "$project_dir/README.md"
+grep -Fq "Ollama model tag | \`nettap-ai:0.4.0-rc.1\`" "$project_dir/docs/NAMING_CONVENTIONS.md"
+grep -Fq "Backup format identifiers | \`NetTAP AI Suite volume backup v2\` and \`v3\`" "$project_dir/docs/NAMING_CONVENTIONS.md"
+grep -Fq 'experiences or Open WebUI profiles, not as separate LLMs or model downloads' "$project_dir/docs/NAMING_CONVENTIONS.md"
+grep -Fq 'Historical naming:' "$project_dir/reports/PRODUCTION_CERTIFICATION_STATUS_0.3.0-rc.2.md"
+grep -Fq 'Historical naming:' "$project_dir/reports/RELEASE_ACCEPTANCE_0.2.0-rc.1.md"
+grep -q 'retire-old-models)' "$project_dir/scripts/nettap-ai"
+grep -q 'nettap-ai-backup-\*' "$project_dir/scripts/retire-legacy-models.sh"
+grep -q '^WEBUI_ADMIN_EMAIL=.' "$project_dir/.env.example"
+grep -q '^WEBUI_ADMIN_PASSWORD=.' "$project_dir/.env.example"
+grep -Fq 'load_env_value WEBUI_ADMIN_PASSWORD' "$project_dir/scripts/production-preflight.sh"
+grep -q 'ENABLE_SIGNUP: "False"' "$project_dir/compose.yaml"
+grep -q 'USER_PERMISSIONS_CHAT_FILE_UPLOAD: "True"' "$project_dir/compose.yaml"
+grep -q 'NETTAP_EVIDENCE_URL: http://evidence-service:8081' "$project_dir/compose.yaml"
+grep -q './functions:/source/functions:ro' "$project_dir/compose.yaml"
+grep -q 'ENABLE_PASSWORD_VALIDATION: "False"' "$project_dir/compose.local.yaml"
+grep -q '127.0.0.1:3000/healthz' "$project_dir/compose.local.yaml"
+grep -q '127.0.0.1:3001/healthz' "$project_dir/compose.local.yaml"
+test "$(grep -Fc 'handle /healthz' "$project_dir/config/Launcher.Caddyfile")" -eq 2
+test "$(grep -Fc 'respond "ok" 200' "$project_dir/config/Launcher.Caddyfile")" -eq 2
+grep -q 'Qwen3.5 9B' "$project_dir/launchers/network-visibility/index.html"
+grep -q 'Qwen3.5 9B' "$project_dir/launchers/packet-expert/index.html"
+grep -q 'confirm-insecure-default' "$project_dir/scripts/reset-local-admin.sh"
+grep -q '^admin_email=".' "$project_dir/scripts/reset-local-admin.sh"
+grep -q '^admin_password=".' "$project_dir/scripts/reset-local-admin.sh"
+grep -q 'reset-default-admin)' "$project_dir/scripts/nettap-ai"
+grep -q 'reset-password)' "$project_dir/scripts/nettap-ai"
+grep -q 'NETTAP_RESET_CREATE_IF_MISSING' "$project_dir/scripts/reset-password.sh"
+grep -q 'NETTAP_RESET_ADMIN_EMAIL' "$project_dir/provisioning/reset_local_admin.py"
+grep -q 'import bcrypt' "$project_dir/provisioning/reset_local_admin.py"
+grep -q 'bcrypt.hashpw(password_bytes, bcrypt.gensalt())' "$project_dir/provisioning/reset_local_admin.py"
+grep -q 'active = 1' "$project_dir/provisioning/reset_local_admin.py"
+grep -q 'parser.add_argument("--verify-admin"' "$project_dir/provisioning/provision_open_webui.py"
+grep -q 'assistant-provisioner --verify-admin' "$project_dir/scripts/reset-local-admin.sh"
+grep -q 'assistant-provisioner --verify-admin' "$project_dir/scripts/reset-password.sh"
+if grep -q 'passlib' "$project_dir/provisioning/reset_local_admin.py"; then
+  echo "ERROR: Open WebUI v0.11.0 administrator reset depends on unavailable passlib." >&2
+  exit 1
+fi
+if grep -q 'from open_webui.utils.auth import get_password_hash' "$project_dir/provisioning/reset_local_admin.py"; then
+  echo "ERROR: Local administrator reset imports application auth configuration." >&2
+  exit 1
+fi
+grep -q 'load_env_value WEBUI_SECRET_KEY' "$project_dir/scripts/common.sh"
+grep -Fq "WEBUI_SECRET_KEY=$'" "$project_dir/scripts/start-windows.ps1"
+grep -q 'WEBUI_NAME: "NetTAP Network Intelligence"' "$project_dir/compose.yaml"
+grep -q 'nettap-network-intelligence-admin-activation-040rc1' "$project_dir/compose.yaml"
+grep -q 'internal: true' "$project_dir/compose.yaml"
+grep -q 'HF_HUB_OFFLINE: "1"' "$project_dir/compose.yaml"
+grep -q 'RAG_EMBEDDING_MODEL_TRUST_REMOTE_CODE: "False"' "$project_dir/compose.yaml"
+grep -q 'force_download=True' "$project_dir/provisioning/cache_embedding_model.py"
+grep -q 'files_metadata=True' "$project_dir/provisioning/cache_embedding_model.py"
+grep -q 'local_files_only=True' "$project_dir/provisioning/cache_embedding_model.py"
+grep -q 'assistant-provisioner:' "$project_dir/compose.yaml"
+grep -q 'NETTAP_PROVISIONING_CHECKSUMS: /provision/knowledge-sources.sha256' "$project_dir/compose.yaml"
+grep -q 'rag-cache-init:' "$project_dir/compose.yaml"
+grep -q 'provision_assistants local' "$project_dir/scripts/common.sh"
+grep -q 'parser.add_argument("--installed-fingerprint"' "$project_dir/provisioning/provision_open_webui.py"
+grep -q "Path('/app/backend/data/nettap-provisioning-state.json')" "$project_dir/scripts/common.sh"
+fingerprint_sample='0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef'
+[[ "$(printf 'compose status\n%s\n' "$fingerprint_sample" | bash -c 'source "$1"; extract_provisioning_fingerprint' _ "$project_dir/scripts/common.sh")" == "$fingerprint_sample" ]]
+grep -q 'require_digest_pins' "$project_dir/scripts/start-production.sh"
+grep -q 'production-preflight.sh' "$project_dir/scripts/start-production.sh"
+grep -q 'NOT CERTIFIED' "$project_dir/scripts/certify-production.sh"
+
+required_files=(
+  LICENSE NOTICE SECURITY.md THIRD_PARTY_NOTICES.md
+  compose.bootstrap.yaml compose.local.yaml compose.production.yaml
+  config/Caddyfile config/Launcher.Caddyfile
+  assistants/shared/core-policy.md
+  assistants/network-visibility/assistant.yaml assistants/packet-expert/assistant.yaml
+  assistants/network-visibility/system-prompt.md assistants/packet-expert/system-prompt.md
+  skills/nettap-network-visibility/SKILL.md skills/nettap-packet-expert/SKILL.md
+  functions/nettap_evidence_ingestion.py
+  case_service/__init__.py case_service/__main__.py case_service/config.py
+  case_service/database.py case_service/parsers.py case_service/analysis.py
+  case_service/service.py case_service/http_api.py
+  case_service/web/index.html case_service/web/app.css case_service/web/app.js
+  api/openapi.json
+  knowledge/NetTAP_AI_Knowledge.md knowledge/NetTAP_Ingestion_Analysis_Guidance.md
+  knowledge/NetTAP_Provisioning_Probe.md provisioning/open-webui.json
+  provisioning/cache_embedding_model.py provisioning/provision_open_webui.py
+  provisioning/reset_local_admin.py
+  provisioning/knowledge-sources.sha256
+  knowledge/NetTAP_Network_Visibility_Knowledge.md
+  knowledge/NetTAP_Packet_Expert_Knowledge.md model/nettap-ai.Modelfile
+  model/MODEL_CARD.md model/releases/0.4.0-rc.1.json
+  launchers/network-visibility/index.html launchers/packet-expert/index.html launchers/shared.css
+  docs/AUTHENTICATION.md docs/COMMERCIAL_RELEASE_GATES.md
+  docs/CUSTOMER_DEPLOYMENT_GUIDE.md docs/PRODUCTION_ARCHITECTURE.md
+  docs/MACOS_DEPLOYMENT.md docs/WINDOWS_DEPLOYMENT.md docs/LINUX_DEPLOYMENT.md
+  docs/PRODUCT_ROADMAP.md docs/THREAT_MODEL.md docs/VALIDATION_STATUS.md
+  docs/RC3_ACCEPTANCE_PLAN.md docs/RC4_ACCEPTANCE_PLAN.md docs/0.4.0_RC1_ACCEPTANCE_PLAN.md
+  docs/EVIDENCE_CASE_SERVICE.md
+  docs/QWEN35_PROMOTION.md
+  docs/current-state.md docs/release-gates.md docs/open-questions.md
+  docs/decisions/0001-resolvable-evidence-citations.md
+  docs/NAMING_CONVENTIONS.md
+  scripts/backup.sh scripts/restore.sh scripts/lock-images.sh
+  scripts/provision-assistants.sh scripts/reset-local-admin.sh scripts/reset-password.sh
+  scripts/security-scan.sh scripts/production-preflight.sh
+  scripts/verify-production-deployment.sh scripts/package-release.sh
+  scripts/install-model-native.sh scripts/install-model-native.ps1
+  scripts/retire-legacy-models.sh scripts/retire-legacy-models.ps1
+  scripts/package-model-bundle.sh scripts/verify-model-bundle.sh
+  scripts/verify-release.sh scripts/verify-archive-tree.py scripts/certify-production.sh
+  scripts/start-wsl2.sh scripts/start-linux.sh
+  tests/model-behavior-eval.sh tests/model-storage-sharing.sh tests/backup-restore-e2e.sh
+  tests/normalized-ingestion-eval.sh tests/failed-update-rollback-e2e.sh
+  tests/evidence-runtime-e2e.sh
+  tests/clean-package-acceptance.sh tests/compare-platform-acceptance.sh
+  tests/native-model-installer-mock.sh
+  tests/retire-legacy-models-mock.sh
+  tests/fixtures/normalized-pcap.json tests/fixtures/normalized-logs.jsonl
+  tests/fixtures/normalized-ipfix.jsonl
+  tests/production-config-checks.py tests/test_reset_local_admin.py
+  tests/test_evidence_filter.py
+  tests/test_provision_open_webui.py tests/test_verify_archive_tree.py tests/test_case_service.py
+  reports/PRODUCTION_CERTIFICATION_STATUS_0.2.0-rc.1.md
+  reports/RELEASE_ACCEPTANCE_0.2.0-rc.1.md
+  reports/PRODUCTION_CERTIFICATION_STATUS_0.3.0-rc.2.md
+  reports/RELEASE_ACCEPTANCE_0.3.0-rc.2.md
+  reports/STATIC_VALIDATION_2026-08-05_0.3.0-rc.2.md
+  reports/PRODUCTION_CERTIFICATION_STATUS_0.3.0-rc.3.md
+  reports/RELEASE_ACCEPTANCE_0.3.0-rc.3.md
+  reports/STATIC_VALIDATION_2026-08-05_0.3.0-rc.3.md
+  reports/RC3_ACCEPTANCE_AUTOMATION_STATUS.md
+  reports/NATIVE_MODEL_CREATION_2026-08-05_0.3.0-rc.3.md
+  reports/PRODUCTION_CERTIFICATION_STATUS_0.3.0-rc.4.md
+  reports/RELEASE_ACCEPTANCE_0.3.0-rc.4.md
+  reports/STATIC_VALIDATION_2026-08-05_0.3.0-rc.4.md
+  reports/PRODUCTION_CERTIFICATION_STATUS_0.4.0-rc.1.md
+  reports/RELEASE_ACCEPTANCE_0.4.0-rc.1.md
+  reports/STATIC_VALIDATION_2026-08-20_0.4.0-rc.1.md
+)
+for file in "${required_files[@]}"; do test -f "${project_dir}/${file}"; done
+
+ingestion_guidance="$project_dir/knowledge/NetTAP_Ingestion_Analysis_Guidance.md"
+grep -q 'Raw sources require a supported parser and validated schema; normalized excerpts can be analyzed directly' "$ingestion_guidance"
+grep -q 'Never ask the user to paste, upload, or store TLS' "$ingestion_guidance"
+grep -q -- 'tcpdump --sslkeylog' "$ingestion_guidance"
+grep -q 'GRE and VXLAN are encapsulation technologies and do not themselves provide encryption' "$ingestion_guidance"
+grep -q 'IPsec is a security suite; its ESP mode can provide confidentiality through encryption' "$ingestion_guidance"
+grep -q 'source timezone and UTC offset' "$ingestion_guidance"
+grep -q 'clock-synchronization status' "$ingestion_guidance"
+grep -q 'exporter identity' "$ingestion_guidance"
+grep -q 'IPFIX template status' "$ingestion_guidance"
+grep -q 'sampling rate' "$ingestion_guidance"
+grep -q 'capture drops' "$ingestion_guidance"
+grep -q 'observation point' "$ingestion_guidance"
+grep -q 'schema version' "$ingestion_guidance"
+grep -q 'chain of custody' "$ingestion_guidance"
+grep -q 'indicators or hypotheses' "$ingestion_guidance"
+
+python3 - "$project_dir" <<'PY'
+import hashlib
+import json
+import sys
+from pathlib import Path
+import yaml
+
+root = Path(sys.argv[1])
+checksums = {}
+for line in (root / "provisioning/knowledge-sources.sha256").read_text(encoding="utf-8").splitlines():
+    if not line.strip():
+        continue
+    digest, relative = line.split("  ", 1)
+    assert len(digest) == 64 and relative not in checksums
+    source = root / relative
+    assert source.is_file()
+    assert hashlib.sha256(source.read_bytes()).hexdigest() == digest
+    checksums[relative] = digest
+
+json.loads((root / "tests/fixtures/normalized-pcap.json").read_text(encoding="utf-8"))
+openapi = json.loads((root / "api/openapi.json").read_text(encoding="utf-8"))
+assert openapi["openapi"] == "3.1.0"
+assert "/v1/cases/{case_id}/observations/{observation_id}" in openapi["paths"]
+assert "/v1/cases/{case_id}/analyses/{analysis_id}" in openapi["paths"]
+for fixture in ("normalized-logs.jsonl", "normalized-ipfix.jsonl"):
+    lines = (root / "tests/fixtures" / fixture).read_text(encoding="utf-8").splitlines()
+    assert lines
+    for line in lines:
+        json.loads(line)
+
+assistants = []
+for manifest_path in sorted((root / "assistants").glob("*/assistant.yaml")):
+    manifest = yaml.safe_load(manifest_path.read_text(encoding="utf-8"))
+    assistants.append(manifest)
+    assert manifest["base_model"] == "qwen3.5:9b-q4_K_M"
+    assert (root / manifest["modelfile"]).is_file()
+    for knowledge in manifest["knowledge"]:
+        assert (root / knowledge).is_file()
+    for skill in manifest["skills"]:
+        skill_path = root / skill
+        assert skill_path.is_file()
+        content = skill_path.read_text(encoding="utf-8")
+        assert content.startswith("---\nname: ")
+        assert "\ndescription: " in content
+assert {item["id"] for item in assistants} == {"nettap-network-visibility", "nettap-packet-expert"}
+assert {item["display_name"] for item in assistants} == {
+    "NetTAP Network Intelligence — Network & Visibility",
+    "NetTAP Network Intelligence — Packet Expert",
+}
+assert len({item["launcher_port"] for item in assistants}) == 2
+assert {item["runtime_model"] for item in assistants} == {"nettap-ai:0.4.0-rc.1"}
+assert {item["modelfile"] for item in assistants} == {"model/nettap-ai.Modelfile"}
+assert {tuple(item["skills"]) for item in assistants} == {
+    ("skills/nettap-network-visibility/SKILL.md",),
+    ("skills/nettap-packet-expert/SKILL.md",),
+}
+assert {item["workspace_model_id"] for item in assistants} == {"nettap-network-visibility", "nettap-packet-expert"}
+assert {item["mode"] for item in assistants} == {"network_visibility", "packet_expert"}
+provisioning = json.loads((root / "provisioning/open-webui.json").read_text(encoding="utf-8"))
+release = json.loads((root / "model/releases/0.4.0-rc.1.json").read_text(encoding="utf-8"))
+assert release == {
+    "schema_version": 1,
+    "release_version": "0.4.0-rc.1",
+    "base_model": "qwen3.5:9b-q4_K_M",
+    "expected_base_model_id": "6488c96fa5fa",
+    "runtime_model": "nettap-ai:0.4.0-rc.1",
+    "source_policy": "model/nettap-ai.Modelfile",
+    "temperature": 0.1,
+    "num_ctx": 16384,
+    "status": "release-candidate",
+    "source": "https://ollama.com/library/qwen3.5:9b-q4_K_M",
+    "license": "Apache-2.0",
+}
+assert {item["name"] for item in provisioning["assistants"]} == {
+    "NetTAP Network Intelligence — Network & Visibility",
+    "NetTAP Network Intelligence — Packet Expert",
+}
+assert {item["name"] for item in provisioning["skills"]} == {
+    "NetTAP Network Intelligence — Network & Visibility",
+    "NetTAP Network Intelligence — Packet Expert",
+}
+assert {item["id"] for item in provisioning["functions"]} == {
+    "nettap_evidence_ingestion",
+}
+provisioned_assistants = {item["id"]: item for item in provisioning["assistants"]}
+assert provisioned_assistants["nettap-network-visibility"].get("function_keys", []) == []
+assert provisioned_assistants["nettap-packet-expert"]["function_keys"] == [
+    "evidence_ingestion"
+]
+expected_sources = {
+    "assistants/shared/core-policy.md",
+    "assistants/network-visibility/system-prompt.md",
+    "assistants/packet-expert/system-prompt.md",
+    "functions/nettap_evidence_ingestion.py",
+}
+for assistant in assistants:
+    expected_sources.update(assistant["knowledge"])
+    expected_sources.update(assistant["skills"])
+assert set(checksums) == expected_sources
+print("Assistant manifests passed.")
+PY
+
+grep -Fqx "Apache License" "$project_dir/LICENSE"
+grep -Fqx "Version 2.0, January 2004" "$project_dir/LICENSE"
+grep -Fqx "Copyright 2026 NetTAP Technology Limited" "$project_dir/NOTICE"
+grep -q 'VALID PRODUCTION CANDIDATE' "$project_dir/reports/PRODUCTION_CERTIFICATION_STATUS_0.2.0-rc.1.md"
+grep -q 'Production certification decision: \*\*NOT GRANTED' "$project_dir/reports/PRODUCTION_CERTIFICATION_STATUS_0.2.0-rc.1.md"
+grep -q 'Release disposition: \*\*EVALUATION ONLY' "$project_dir/reports/RELEASE_ACCEPTANCE_0.2.0-rc.1.md"
+grep -q 'Production/customer deployment approval: \*\*NOT GRANTED' "$project_dir/reports/RELEASE_ACCEPTANCE_0.2.0-rc.1.md"
+grep -q 'Commercial distribution approval: \*\*NOT GRANTED' "$project_dir/reports/RELEASE_ACCEPTANCE_0.2.0-rc.1.md"
+grep -q 'Production certification decision: \*\*NOT GRANTED' "$project_dir/reports/PRODUCTION_CERTIFICATION_STATUS_0.3.0-rc.2.md"
+grep -q 'Release disposition: \*\*EVALUATION ONLY' "$project_dir/reports/RELEASE_ACCEPTANCE_0.3.0-rc.2.md"
+grep -q 'Production/customer deployment approval: \*\*NOT GRANTED' "$project_dir/reports/RELEASE_ACCEPTANCE_0.3.0-rc.2.md"
+grep -q 'Commercial distribution approval: \*\*NOT GRANTED' "$project_dir/reports/RELEASE_ACCEPTANCE_0.3.0-rc.2.md"
+grep -q 'Production certification decision: \*\*NOT GRANTED' "$project_dir/reports/PRODUCTION_CERTIFICATION_STATUS_0.3.0-rc.3.md"
+grep -q 'Release disposition: \*\*EVALUATION ONLY' "$project_dir/reports/RELEASE_ACCEPTANCE_0.3.0-rc.3.md"
+grep -q 'Production/customer deployment approval: \*\*NOT GRANTED' "$project_dir/reports/RELEASE_ACCEPTANCE_0.3.0-rc.3.md"
+grep -q 'Commercial distribution approval: \*\*NOT GRANTED' "$project_dir/reports/RELEASE_ACCEPTANCE_0.3.0-rc.3.md"
+grep -q 'Production certification decision: \*\*NOT GRANTED' "$project_dir/reports/PRODUCTION_CERTIFICATION_STATUS_0.3.0-rc.4.md"
+grep -q 'Release disposition: \*\*EVALUATION ONLY' "$project_dir/reports/RELEASE_ACCEPTANCE_0.3.0-rc.4.md"
+grep -q 'Production/customer deployment approval: \*\*NOT GRANTED' "$project_dir/reports/RELEASE_ACCEPTANCE_0.3.0-rc.4.md"
+grep -q 'Commercial distribution approval: \*\*NOT GRANTED' "$project_dir/reports/RELEASE_ACCEPTANCE_0.3.0-rc.4.md"
+grep -q 'Production certification decision: \*\*NOT GRANTED' "$project_dir/reports/PRODUCTION_CERTIFICATION_STATUS_0.4.0-rc.1.md"
+grep -q 'Release disposition: \*\*EVALUATION ONLY' "$project_dir/reports/RELEASE_ACCEPTANCE_0.4.0-rc.1.md"
+grep -q 'Production/customer deployment approval: \*\*NOT GRANTED' "$project_dir/reports/RELEASE_ACCEPTANCE_0.4.0-rc.1.md"
+grep -q 'Commercial distribution approval: \*\*NOT GRANTED' "$project_dir/reports/RELEASE_ACCEPTANCE_0.4.0-rc.1.md"
+
+if grep -RInE --exclude=static-checks.sh '(^|[^A-Za-z])(admin/admin|admin@nettap[.]local[[:space:]]*/[[:space:]]*admin)([^A-Za-z]|$)' \
+  "$project_dir/README.md" "$project_dir/docs" "$project_dir/scripts" "$project_dir/tests"; then
+  echo "ERROR: Shared default administrator credential found in active source." >&2
+  exit 1
+fi
+if grep -RInE --exclude=static-checks.sh 'local -n|mapfile' "$project_dir/scripts" "$project_dir/tests"; then
+  echo "ERROR: Bash feature unavailable in the Bash 3.2 shipped with macOS." >&2
+  exit 1
+fi
+if grep -RInE '(BEGIN (RSA |EC |OPENSSH )?PRIVATE KEY|ghp_[A-Za-z0-9]{30,}|github_pat_[A-Za-z0-9_]{30,})' \
+  --exclude-dir=.git "$project_dir"; then
+  echo "ERROR: Possible private key or GitHub token found." >&2
+  exit 1
+fi
+if grep -InE 'no license (has|has yet) been selected|must select and add a license' \
+  "$project_dir/README.md" "$project_dir/docs/"*.md "$project_dir/THIRD_PARTY_NOTICES.md"; then
+  echo "ERROR: Stale project-license warning found." >&2
+  exit 1
+fi
+
+python3 "$project_dir/tests/production-config-checks.py"
+python3 - "$project_dir" <<'PY'
+import re
+import sys
+from pathlib import Path
+root = Path(sys.argv[1])
+missing = []
+pattern = re.compile(r'\[[^]]+\]\(([^)]+)\)')
+for document in list(root.rglob('*.md')):
+    for target in pattern.findall(document.read_text(encoding='utf-8')):
+        if target.startswith(('http://', 'https://', '#', 'mailto:')):
+            continue
+        path = target.split('#', 1)[0]
+        if path and not (document.parent / path).resolve().exists():
+            missing.append(f'{document.relative_to(root)} -> {target}')
+if missing:
+    raise SystemExit('Missing relative documentation targets:\n' + '\n'.join(missing))
+print('Documentation links passed.')
+PY
+echo "Static checks passed."
+ "$project_dir/.env.example"
+grep -q '^OLLAMA_NUM_PARALLEL=1grep -q '^RETIRE_LEGACY_NETTAP_MODELS=true$' "$project_dir/.env.example"
+grep -q '^NETTAP_VISIBILITY_PROFILE=nettap-network-visibility$' "$project_dir/.env.example"
+grep -q '^NETTAP_PACKET_EXPERT_PROFILE=nettap-packet-expert$' "$project_dir/.env.example"
+grep -q '^RAG_EMBEDDING_MODEL_REVISION=1110a243fdf4706b3f48f1d95db1a4f5529b4d41$' "$project_dir/.env.example"
+# shellcheck disable=SC2016 # literal Compose interpolation is the test subject
+grep -q 'test "$$actual_id" = "${EXPECTED_BASE_MODEL_ID}"' "$project_dir/compose.yaml"
+grep -q '^BIND_ADDRESS=127.0.0.1$' "$project_dir/.env.example"
+grep -q '^WEB_PORT=3100$' "$project_dir/.env.example"
+grep -q '^VISIBILITY_LAUNCHER_PORT=3000$' "$project_dir/.env.example"
+grep -q '^PACKET_EXPERT_LAUNCHER_PORT=3001$' "$project_dir/.env.example"
+grep -q '^EVIDENCE_PORT=3200$' "$project_dir/.env.example"
+grep -q '^EVIDENCE_API_TOKEN=GENERATE_ON_FIRST_START$' "$project_dir/.env.example"
+grep -Fqx '# NetTAP Network Intelligence' "$project_dir/README.md"
+grep -Fq 'NetTAP Network Intelligence — Network & Visibility' "$project_dir/README.md"
+grep -Fq 'NetTAP Network Intelligence — Packet Expert' "$project_dir/README.md"
+grep -Fq 'NetTAP Network Intelligence — Evidence Workspace' "$project_dir/README.md"
+grep -Fq "Ollama model tag | \`nettap-ai:0.4.0-rc.1\`" "$project_dir/docs/NAMING_CONVENTIONS.md"
+grep -Fq "Backup format identifiers | \`NetTAP AI Suite volume backup v2\` and \`v3\`" "$project_dir/docs/NAMING_CONVENTIONS.md"
+grep -Fq 'experiences or Open WebUI profiles, not as separate LLMs or model downloads' "$project_dir/docs/NAMING_CONVENTIONS.md"
+grep -Fq 'Historical naming:' "$project_dir/reports/PRODUCTION_CERTIFICATION_STATUS_0.3.0-rc.2.md"
+grep -Fq 'Historical naming:' "$project_dir/reports/RELEASE_ACCEPTANCE_0.2.0-rc.1.md"
+grep -q 'retire-old-models)' "$project_dir/scripts/nettap-ai"
+grep -q 'nettap-ai-backup-\*' "$project_dir/scripts/retire-legacy-models.sh"
+grep -q '^WEBUI_ADMIN_EMAIL=.' "$project_dir/.env.example"
+grep -q '^WEBUI_ADMIN_PASSWORD=.' "$project_dir/.env.example"
+grep -Fq 'load_env_value WEBUI_ADMIN_PASSWORD' "$project_dir/scripts/production-preflight.sh"
+grep -q 'ENABLE_SIGNUP: "False"' "$project_dir/compose.yaml"
+grep -q 'USER_PERMISSIONS_CHAT_FILE_UPLOAD: "True"' "$project_dir/compose.yaml"
+grep -q 'NETTAP_EVIDENCE_URL: http://evidence-service:8081' "$project_dir/compose.yaml"
+grep -q './functions:/source/functions:ro' "$project_dir/compose.yaml"
+grep -q 'ENABLE_PASSWORD_VALIDATION: "False"' "$project_dir/compose.local.yaml"
+grep -q '127.0.0.1:3000/healthz' "$project_dir/compose.local.yaml"
+grep -q '127.0.0.1:3001/healthz' "$project_dir/compose.local.yaml"
+test "$(grep -Fc 'handle /healthz' "$project_dir/config/Launcher.Caddyfile")" -eq 2
+test "$(grep -Fc 'respond "ok" 200' "$project_dir/config/Launcher.Caddyfile")" -eq 2
+grep -q 'Qwen3.5 9B' "$project_dir/launchers/network-visibility/index.html"
+grep -q 'Qwen3.5 9B' "$project_dir/launchers/packet-expert/index.html"
+grep -q 'confirm-insecure-default' "$project_dir/scripts/reset-local-admin.sh"
+grep -q '^admin_email=".' "$project_dir/scripts/reset-local-admin.sh"
+grep -q '^admin_password=".' "$project_dir/scripts/reset-local-admin.sh"
+grep -q 'reset-default-admin)' "$project_dir/scripts/nettap-ai"
+grep -q 'reset-password)' "$project_dir/scripts/nettap-ai"
+grep -q 'NETTAP_RESET_CREATE_IF_MISSING' "$project_dir/scripts/reset-password.sh"
+grep -q 'NETTAP_RESET_ADMIN_EMAIL' "$project_dir/provisioning/reset_local_admin.py"
+grep -q 'import bcrypt' "$project_dir/provisioning/reset_local_admin.py"
+grep -q 'bcrypt.hashpw(password_bytes, bcrypt.gensalt())' "$project_dir/provisioning/reset_local_admin.py"
+grep -q 'active = 1' "$project_dir/provisioning/reset_local_admin.py"
+grep -q 'parser.add_argument("--verify-admin"' "$project_dir/provisioning/provision_open_webui.py"
+grep -q 'assistant-provisioner --verify-admin' "$project_dir/scripts/reset-local-admin.sh"
+grep -q 'assistant-provisioner --verify-admin' "$project_dir/scripts/reset-password.sh"
+if grep -q 'passlib' "$project_dir/provisioning/reset_local_admin.py"; then
+  echo "ERROR: Open WebUI v0.11.0 administrator reset depends on unavailable passlib." >&2
+  exit 1
+fi
+if grep -q 'from open_webui.utils.auth import get_password_hash' "$project_dir/provisioning/reset_local_admin.py"; then
+  echo "ERROR: Local administrator reset imports application auth configuration." >&2
+  exit 1
+fi
+grep -q 'load_env_value WEBUI_SECRET_KEY' "$project_dir/scripts/common.sh"
+grep -Fq "WEBUI_SECRET_KEY=$'" "$project_dir/scripts/start-windows.ps1"
+grep -q 'WEBUI_NAME: "NetTAP Network Intelligence"' "$project_dir/compose.yaml"
+grep -q 'nettap-network-intelligence-admin-activation-040rc1' "$project_dir/compose.yaml"
+grep -q 'internal: true' "$project_dir/compose.yaml"
+grep -q 'HF_HUB_OFFLINE: "1"' "$project_dir/compose.yaml"
+grep -q 'RAG_EMBEDDING_MODEL_TRUST_REMOTE_CODE: "False"' "$project_dir/compose.yaml"
+grep -q 'force_download=True' "$project_dir/provisioning/cache_embedding_model.py"
+grep -q 'files_metadata=True' "$project_dir/provisioning/cache_embedding_model.py"
+grep -q 'local_files_only=True' "$project_dir/provisioning/cache_embedding_model.py"
+grep -q 'assistant-provisioner:' "$project_dir/compose.yaml"
+grep -q 'NETTAP_PROVISIONING_CHECKSUMS: /provision/knowledge-sources.sha256' "$project_dir/compose.yaml"
+grep -q 'rag-cache-init:' "$project_dir/compose.yaml"
+grep -q 'provision_assistants local' "$project_dir/scripts/common.sh"
+grep -q 'parser.add_argument("--installed-fingerprint"' "$project_dir/provisioning/provision_open_webui.py"
+grep -q "Path('/app/backend/data/nettap-provisioning-state.json')" "$project_dir/scripts/common.sh"
+fingerprint_sample='0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef'
+[[ "$(printf 'compose status\n%s\n' "$fingerprint_sample" | bash -c 'source "$1"; extract_provisioning_fingerprint' _ "$project_dir/scripts/common.sh")" == "$fingerprint_sample" ]]
+grep -q 'require_digest_pins' "$project_dir/scripts/start-production.sh"
+grep -q 'production-preflight.sh' "$project_dir/scripts/start-production.sh"
+grep -q 'NOT CERTIFIED' "$project_dir/scripts/certify-production.sh"
+
+required_files=(
+  LICENSE NOTICE SECURITY.md THIRD_PARTY_NOTICES.md
+  compose.bootstrap.yaml compose.local.yaml compose.production.yaml
+  config/Caddyfile config/Launcher.Caddyfile
+  assistants/shared/core-policy.md
+  assistants/network-visibility/assistant.yaml assistants/packet-expert/assistant.yaml
+  assistants/network-visibility/system-prompt.md assistants/packet-expert/system-prompt.md
+  skills/nettap-network-visibility/SKILL.md skills/nettap-packet-expert/SKILL.md
+  functions/nettap_evidence_ingestion.py
+  case_service/__init__.py case_service/__main__.py case_service/config.py
+  case_service/database.py case_service/parsers.py case_service/analysis.py
+  case_service/service.py case_service/http_api.py
+  case_service/web/index.html case_service/web/app.css case_service/web/app.js
+  api/openapi.json
+  knowledge/NetTAP_AI_Knowledge.md knowledge/NetTAP_Ingestion_Analysis_Guidance.md
+  knowledge/NetTAP_Provisioning_Probe.md provisioning/open-webui.json
+  provisioning/cache_embedding_model.py provisioning/provision_open_webui.py
+  provisioning/reset_local_admin.py
+  provisioning/knowledge-sources.sha256
+  knowledge/NetTAP_Network_Visibility_Knowledge.md
+  knowledge/NetTAP_Packet_Expert_Knowledge.md model/nettap-ai.Modelfile
+  model/MODEL_CARD.md model/releases/0.4.0-rc.1.json
+  launchers/network-visibility/index.html launchers/packet-expert/index.html launchers/shared.css
+  docs/AUTHENTICATION.md docs/COMMERCIAL_RELEASE_GATES.md
+  docs/CUSTOMER_DEPLOYMENT_GUIDE.md docs/PRODUCTION_ARCHITECTURE.md
+  docs/MACOS_DEPLOYMENT.md docs/WINDOWS_DEPLOYMENT.md docs/LINUX_DEPLOYMENT.md
+  docs/PRODUCT_ROADMAP.md docs/THREAT_MODEL.md docs/VALIDATION_STATUS.md
+  docs/RC3_ACCEPTANCE_PLAN.md docs/RC4_ACCEPTANCE_PLAN.md docs/0.4.0_RC1_ACCEPTANCE_PLAN.md
+  docs/EVIDENCE_CASE_SERVICE.md
+  docs/QWEN35_PROMOTION.md
+  docs/current-state.md docs/release-gates.md docs/open-questions.md
+  docs/decisions/0001-resolvable-evidence-citations.md
+  docs/NAMING_CONVENTIONS.md
+  scripts/backup.sh scripts/restore.sh scripts/lock-images.sh
+  scripts/provision-assistants.sh scripts/reset-local-admin.sh scripts/reset-password.sh
+  scripts/security-scan.sh scripts/production-preflight.sh
+  scripts/verify-production-deployment.sh scripts/package-release.sh
+  scripts/install-model-native.sh scripts/install-model-native.ps1
+  scripts/retire-legacy-models.sh scripts/retire-legacy-models.ps1
+  scripts/package-model-bundle.sh scripts/verify-model-bundle.sh
+  scripts/verify-release.sh scripts/verify-archive-tree.py scripts/certify-production.sh
+  scripts/start-wsl2.sh scripts/start-linux.sh
+  tests/model-behavior-eval.sh tests/model-storage-sharing.sh tests/backup-restore-e2e.sh
+  tests/normalized-ingestion-eval.sh tests/failed-update-rollback-e2e.sh
+  tests/evidence-runtime-e2e.sh
+  tests/clean-package-acceptance.sh tests/compare-platform-acceptance.sh
+  tests/native-model-installer-mock.sh
+  tests/retire-legacy-models-mock.sh
+  tests/fixtures/normalized-pcap.json tests/fixtures/normalized-logs.jsonl
+  tests/fixtures/normalized-ipfix.jsonl
+  tests/production-config-checks.py tests/test_reset_local_admin.py
+  tests/test_evidence_filter.py
+  tests/test_provision_open_webui.py tests/test_verify_archive_tree.py tests/test_case_service.py
+  reports/PRODUCTION_CERTIFICATION_STATUS_0.2.0-rc.1.md
+  reports/RELEASE_ACCEPTANCE_0.2.0-rc.1.md
+  reports/PRODUCTION_CERTIFICATION_STATUS_0.3.0-rc.2.md
+  reports/RELEASE_ACCEPTANCE_0.3.0-rc.2.md
+  reports/STATIC_VALIDATION_2026-08-05_0.3.0-rc.2.md
+  reports/PRODUCTION_CERTIFICATION_STATUS_0.3.0-rc.3.md
+  reports/RELEASE_ACCEPTANCE_0.3.0-rc.3.md
+  reports/STATIC_VALIDATION_2026-08-05_0.3.0-rc.3.md
+  reports/RC3_ACCEPTANCE_AUTOMATION_STATUS.md
+  reports/NATIVE_MODEL_CREATION_2026-08-05_0.3.0-rc.3.md
+  reports/PRODUCTION_CERTIFICATION_STATUS_0.3.0-rc.4.md
+  reports/RELEASE_ACCEPTANCE_0.3.0-rc.4.md
+  reports/STATIC_VALIDATION_2026-08-05_0.3.0-rc.4.md
+  reports/PRODUCTION_CERTIFICATION_STATUS_0.4.0-rc.1.md
+  reports/RELEASE_ACCEPTANCE_0.4.0-rc.1.md
+  reports/STATIC_VALIDATION_2026-08-20_0.4.0-rc.1.md
+)
+for file in "${required_files[@]}"; do test -f "${project_dir}/${file}"; done
+
+ingestion_guidance="$project_dir/knowledge/NetTAP_Ingestion_Analysis_Guidance.md"
+grep -q 'Raw sources require a supported parser and validated schema; normalized excerpts can be analyzed directly' "$ingestion_guidance"
+grep -q 'Never ask the user to paste, upload, or store TLS' "$ingestion_guidance"
+grep -q -- 'tcpdump --sslkeylog' "$ingestion_guidance"
+grep -q 'GRE and VXLAN are encapsulation technologies and do not themselves provide encryption' "$ingestion_guidance"
+grep -q 'IPsec is a security suite; its ESP mode can provide confidentiality through encryption' "$ingestion_guidance"
+grep -q 'source timezone and UTC offset' "$ingestion_guidance"
+grep -q 'clock-synchronization status' "$ingestion_guidance"
+grep -q 'exporter identity' "$ingestion_guidance"
+grep -q 'IPFIX template status' "$ingestion_guidance"
+grep -q 'sampling rate' "$ingestion_guidance"
+grep -q 'capture drops' "$ingestion_guidance"
+grep -q 'observation point' "$ingestion_guidance"
+grep -q 'schema version' "$ingestion_guidance"
+grep -q 'chain of custody' "$ingestion_guidance"
+grep -q 'indicators or hypotheses' "$ingestion_guidance"
+
+python3 - "$project_dir" <<'PY'
+import hashlib
+import json
+import sys
+from pathlib import Path
+import yaml
+
+root = Path(sys.argv[1])
+checksums = {}
+for line in (root / "provisioning/knowledge-sources.sha256").read_text(encoding="utf-8").splitlines():
+    if not line.strip():
+        continue
+    digest, relative = line.split("  ", 1)
+    assert len(digest) == 64 and relative not in checksums
+    source = root / relative
+    assert source.is_file()
+    assert hashlib.sha256(source.read_bytes()).hexdigest() == digest
+    checksums[relative] = digest
+
+json.loads((root / "tests/fixtures/normalized-pcap.json").read_text(encoding="utf-8"))
+openapi = json.loads((root / "api/openapi.json").read_text(encoding="utf-8"))
+assert openapi["openapi"] == "3.1.0"
+assert "/v1/cases/{case_id}/observations/{observation_id}" in openapi["paths"]
+assert "/v1/cases/{case_id}/analyses/{analysis_id}" in openapi["paths"]
+for fixture in ("normalized-logs.jsonl", "normalized-ipfix.jsonl"):
+    lines = (root / "tests/fixtures" / fixture).read_text(encoding="utf-8").splitlines()
+    assert lines
+    for line in lines:
+        json.loads(line)
+
+assistants = []
+for manifest_path in sorted((root / "assistants").glob("*/assistant.yaml")):
+    manifest = yaml.safe_load(manifest_path.read_text(encoding="utf-8"))
+    assistants.append(manifest)
+    assert manifest["base_model"] == "qwen3.5:9b-q4_K_M"
+    assert (root / manifest["modelfile"]).is_file()
+    for knowledge in manifest["knowledge"]:
+        assert (root / knowledge).is_file()
+    for skill in manifest["skills"]:
+        skill_path = root / skill
+        assert skill_path.is_file()
+        content = skill_path.read_text(encoding="utf-8")
+        assert content.startswith("---\nname: ")
+        assert "\ndescription: " in content
+assert {item["id"] for item in assistants} == {"nettap-network-visibility", "nettap-packet-expert"}
+assert {item["display_name"] for item in assistants} == {
+    "NetTAP Network Intelligence — Network & Visibility",
+    "NetTAP Network Intelligence — Packet Expert",
+}
+assert len({item["launcher_port"] for item in assistants}) == 2
+assert {item["runtime_model"] for item in assistants} == {"nettap-ai:0.4.0-rc.1"}
+assert {item["modelfile"] for item in assistants} == {"model/nettap-ai.Modelfile"}
+assert {tuple(item["skills"]) for item in assistants} == {
+    ("skills/nettap-network-visibility/SKILL.md",),
+    ("skills/nettap-packet-expert/SKILL.md",),
+}
+assert {item["workspace_model_id"] for item in assistants} == {"nettap-network-visibility", "nettap-packet-expert"}
+assert {item["mode"] for item in assistants} == {"network_visibility", "packet_expert"}
+provisioning = json.loads((root / "provisioning/open-webui.json").read_text(encoding="utf-8"))
+release = json.loads((root / "model/releases/0.4.0-rc.1.json").read_text(encoding="utf-8"))
+assert release == {
+    "schema_version": 1,
+    "release_version": "0.4.0-rc.1",
+    "base_model": "qwen3.5:9b-q4_K_M",
+    "expected_base_model_id": "6488c96fa5fa",
+    "runtime_model": "nettap-ai:0.4.0-rc.1",
+    "source_policy": "model/nettap-ai.Modelfile",
+    "temperature": 0.1,
+    "num_ctx": 16384,
+    "status": "release-candidate",
+    "source": "https://ollama.com/library/qwen3.5:9b-q4_K_M",
+    "license": "Apache-2.0",
+}
+assert {item["name"] for item in provisioning["assistants"]} == {
+    "NetTAP Network Intelligence — Network & Visibility",
+    "NetTAP Network Intelligence — Packet Expert",
+}
+assert {item["name"] for item in provisioning["skills"]} == {
+    "NetTAP Network Intelligence — Network & Visibility",
+    "NetTAP Network Intelligence — Packet Expert",
+}
+assert {item["id"] for item in provisioning["functions"]} == {
+    "nettap_evidence_ingestion",
+}
+provisioned_assistants = {item["id"]: item for item in provisioning["assistants"]}
+assert provisioned_assistants["nettap-network-visibility"].get("function_keys", []) == []
+assert provisioned_assistants["nettap-packet-expert"]["function_keys"] == [
+    "evidence_ingestion"
+]
+expected_sources = {
+    "assistants/shared/core-policy.md",
+    "assistants/network-visibility/system-prompt.md",
+    "assistants/packet-expert/system-prompt.md",
+    "functions/nettap_evidence_ingestion.py",
+}
+for assistant in assistants:
+    expected_sources.update(assistant["knowledge"])
+    expected_sources.update(assistant["skills"])
+assert set(checksums) == expected_sources
+print("Assistant manifests passed.")
+PY
+
+grep -Fqx "Apache License" "$project_dir/LICENSE"
+grep -Fqx "Version 2.0, January 2004" "$project_dir/LICENSE"
+grep -Fqx "Copyright 2026 NetTAP Technology Limited" "$project_dir/NOTICE"
+grep -q 'VALID PRODUCTION CANDIDATE' "$project_dir/reports/PRODUCTION_CERTIFICATION_STATUS_0.2.0-rc.1.md"
+grep -q 'Production certification decision: \*\*NOT GRANTED' "$project_dir/reports/PRODUCTION_CERTIFICATION_STATUS_0.2.0-rc.1.md"
+grep -q 'Release disposition: \*\*EVALUATION ONLY' "$project_dir/reports/RELEASE_ACCEPTANCE_0.2.0-rc.1.md"
+grep -q 'Production/customer deployment approval: \*\*NOT GRANTED' "$project_dir/reports/RELEASE_ACCEPTANCE_0.2.0-rc.1.md"
+grep -q 'Commercial distribution approval: \*\*NOT GRANTED' "$project_dir/reports/RELEASE_ACCEPTANCE_0.2.0-rc.1.md"
+grep -q 'Production certification decision: \*\*NOT GRANTED' "$project_dir/reports/PRODUCTION_CERTIFICATION_STATUS_0.3.0-rc.2.md"
+grep -q 'Release disposition: \*\*EVALUATION ONLY' "$project_dir/reports/RELEASE_ACCEPTANCE_0.3.0-rc.2.md"
+grep -q 'Production/customer deployment approval: \*\*NOT GRANTED' "$project_dir/reports/RELEASE_ACCEPTANCE_0.3.0-rc.2.md"
+grep -q 'Commercial distribution approval: \*\*NOT GRANTED' "$project_dir/reports/RELEASE_ACCEPTANCE_0.3.0-rc.2.md"
+grep -q 'Production certification decision: \*\*NOT GRANTED' "$project_dir/reports/PRODUCTION_CERTIFICATION_STATUS_0.3.0-rc.3.md"
+grep -q 'Release disposition: \*\*EVALUATION ONLY' "$project_dir/reports/RELEASE_ACCEPTANCE_0.3.0-rc.3.md"
+grep -q 'Production/customer deployment approval: \*\*NOT GRANTED' "$project_dir/reports/RELEASE_ACCEPTANCE_0.3.0-rc.3.md"
+grep -q 'Commercial distribution approval: \*\*NOT GRANTED' "$project_dir/reports/RELEASE_ACCEPTANCE_0.3.0-rc.3.md"
+grep -q 'Production certification decision: \*\*NOT GRANTED' "$project_dir/reports/PRODUCTION_CERTIFICATION_STATUS_0.3.0-rc.4.md"
+grep -q 'Release disposition: \*\*EVALUATION ONLY' "$project_dir/reports/RELEASE_ACCEPTANCE_0.3.0-rc.4.md"
+grep -q 'Production/customer deployment approval: \*\*NOT GRANTED' "$project_dir/reports/RELEASE_ACCEPTANCE_0.3.0-rc.4.md"
+grep -q 'Commercial distribution approval: \*\*NOT GRANTED' "$project_dir/reports/RELEASE_ACCEPTANCE_0.3.0-rc.4.md"
+grep -q 'Production certification decision: \*\*NOT GRANTED' "$project_dir/reports/PRODUCTION_CERTIFICATION_STATUS_0.4.0-rc.1.md"
+grep -q 'Release disposition: \*\*EVALUATION ONLY' "$project_dir/reports/RELEASE_ACCEPTANCE_0.4.0-rc.1.md"
+grep -q 'Production/customer deployment approval: \*\*NOT GRANTED' "$project_dir/reports/RELEASE_ACCEPTANCE_0.4.0-rc.1.md"
+grep -q 'Commercial distribution approval: \*\*NOT GRANTED' "$project_dir/reports/RELEASE_ACCEPTANCE_0.4.0-rc.1.md"
+
+if grep -RInE --exclude=static-checks.sh '(^|[^A-Za-z])(admin/admin|admin@nettap[.]local[[:space:]]*/[[:space:]]*admin)([^A-Za-z]|$)' \
+  "$project_dir/README.md" "$project_dir/docs" "$project_dir/scripts" "$project_dir/tests"; then
+  echo "ERROR: Shared default administrator credential found in active source." >&2
+  exit 1
+fi
+if grep -RInE --exclude=static-checks.sh 'local -n|mapfile' "$project_dir/scripts" "$project_dir/tests"; then
+  echo "ERROR: Bash feature unavailable in the Bash 3.2 shipped with macOS." >&2
+  exit 1
+fi
+if grep -RInE '(BEGIN (RSA |EC |OPENSSH )?PRIVATE KEY|ghp_[A-Za-z0-9]{30,}|github_pat_[A-Za-z0-9_]{30,})' \
+  --exclude-dir=.git "$project_dir"; then
+  echo "ERROR: Possible private key or GitHub token found." >&2
+  exit 1
+fi
+if grep -InE 'no license (has|has yet) been selected|must select and add a license' \
+  "$project_dir/README.md" "$project_dir/docs/"*.md "$project_dir/THIRD_PARTY_NOTICES.md"; then
+  echo "ERROR: Stale project-license warning found." >&2
+  exit 1
+fi
+
+python3 "$project_dir/tests/production-config-checks.py"
+python3 - "$project_dir" <<'PY'
+import re
+import sys
+from pathlib import Path
+root = Path(sys.argv[1])
+missing = []
+pattern = re.compile(r'\[[^]]+\]\(([^)]+)\)')
+for document in list(root.rglob('*.md')):
+    for target in pattern.findall(document.read_text(encoding='utf-8')):
+        if target.startswith(('http://', 'https://', '#', 'mailto:')):
+            continue
+        path = target.split('#', 1)[0]
+        if path and not (document.parent / path).resolve().exists():
+            missing.append(f'{document.relative_to(root)} -> {target}')
+if missing:
+    raise SystemExit('Missing relative documentation targets:\n' + '\n'.join(missing))
+print('Documentation links passed.')
+PY
+echo "Static checks passed."
+ "$project_dir/.env.example"
+grep -q 'OLLAMA_MAX_LOADED_MODELS: ${OLLAMA_MAX_LOADED_MODELS:-1}' "$project_dir/compose.yaml"
+grep -q 'OLLAMA_NUM_PARALLEL: ${OLLAMA_NUM_PARALLEL:-1}' "$project_dir/compose.yaml"
+grep -q 'OLLAMA_NO_CLOUD: "1"' "$project_dir/compose.yaml"
 grep -q '^RETIRE_LEGACY_NETTAP_MODELS=true$' "$project_dir/.env.example"
 grep -q '^NETTAP_VISIBILITY_PROFILE=nettap-network-visibility$' "$project_dir/.env.example"
 grep -q '^NETTAP_PACKET_EXPERT_PROFILE=nettap-packet-expert$' "$project_dir/.env.example"
