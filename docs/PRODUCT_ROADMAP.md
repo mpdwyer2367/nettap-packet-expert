@@ -26,13 +26,14 @@ Implemented in `0.4.0-rc.1` source:
 - authenticated loopback Evidence Workspace on port 3200;
 - persistent cases, source hashes, provenance and evidence-quality warnings;
 - classic PCAP metadata plus normalized JSON/JSONL, syslog, IPFIX, NetFlow, sFlow and cloud-flow inputs;
+- managed Packet Expert chat attachments for classic PCAP, JSON/JSONL, logs, text and supported network images;
 - deterministic protocol, endpoint, conversation, reset, truncation, dominance and regular-timing analysis;
 - evidence-bound findings that distinguish observations from hypotheses;
 - minimized LLM-safe context and reviewable Markdown case reports;
 - dedicated evidence volume with backup-v3 and non-overwriting restore support; and
 - dependency-free parser, API, authentication, traversal, redaction and case-flow tests.
 
-Exit: clean macOS and Windows runtime evidence, browser workflow acceptance, parser fuzzing and isolation, retention/legal-hold design, enterprise user-to-case RBAC, Open WebUI read-only tool attachment, encrypted-storage policy, SBOM/CVE disposition and penetration testing.
+Exit: clean macOS and Windows runtime evidence, browser workflow acceptance, parser fuzzing and isolation, retention/legal-hold design, enterprise user-to-case RBAC for the managed attachment path, encrypted-storage policy, SBOM/CVE disposition and penetration testing.
 
 ## Stage 1 — hardened advisory candidate
 

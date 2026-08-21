@@ -113,6 +113,8 @@ def verify_source_checksums(manifest: dict) -> dict[str, str]:
         referenced.update(assistant["system_prompt_files"])
     for skill in manifest.get("skills", []):
         referenced.add(skill["file"])
+    for function in manifest.get("functions", []):
+        referenced.add(function["file"])
     if set(pinned) != referenced:
         raise ProvisioningError(
             f"pinned source set differs from manifest; missing={sorted(referenced - set(pinned))}, "
@@ -143,6 +145,8 @@ def provisioning_fingerprint(manifest: dict) -> str:
         referenced.update(assistant["system_prompt_files"])
     for skill in manifest.get("skills", []):
         referenced.add(skill["file"])
+    for function in manifest.get("functions", []):
+        referenced.add(function["file"])
     for relative in sorted(referenced):
         digest.update(relative.encode("utf-8"))
         digest.update(b"\0")
@@ -354,6 +358,65 @@ def reconcile_skill(client: ApiClient, skill: dict, fingerprint: str) -> dict:
     }
 
 
+def reconcile_function(client: ApiClient, definition: dict, fingerprint: str) -> dict:
+    """Install one reviewed, model-scoped Open WebUI attachment filter."""
+    function_id = urllib.parse.quote(definition["id"], safe="")
+    status, existing = client.request(
+        "GET", f"/api/v1/functions/id/{function_id}", allow=(401, 404)
+    )
+    if status in (401, 404):
+        existing = None
+    if existing:
+        marker = (existing.get("meta") or {}).get("nettap_managed")
+        if not marker:
+            raise ProvisioningError(
+                f"refusing to overwrite unmanaged Open WebUI Function {definition['id']}"
+            )
+    content = source_path(definition["file"]).read_text(encoding="utf-8")
+    payload = {
+        "id": definition["id"],
+        "name": definition["name"],
+        "content": content,
+        "meta": {
+            "description": definition["description"],
+            "nettap_managed": {
+                "schema_version": 1,
+                "release_version": required_env("RELEASE_VERSION"),
+                "fingerprint": fingerprint,
+            },
+        },
+    }
+    if existing:
+        _, result = client.request(
+            "POST", f"/api/v1/functions/id/{function_id}/update", payload
+        )
+        action = "updated"
+    else:
+        _, result = client.request("POST", "/api/v1/functions/create", payload)
+        action = "created"
+    if not result.get("is_active"):
+        _, result = client.request(
+            "POST", f"/api/v1/functions/id/{function_id}/toggle"
+        )
+    if (
+        result.get("type") != "filter"
+        or result.get("is_active") is not True
+        or (result.get("meta") or {}).get("nettap_managed", {}).get("fingerprint")
+        != fingerprint
+    ):
+        raise ProvisioningError(
+            f"Open WebUI Function {definition['id']} did not retain its managed identity"
+        )
+    return {
+        "key": definition["key"],
+        "id": definition["id"],
+        "name": definition["name"],
+        "source": definition["file"],
+        "sha256": hashlib.sha256(content.encode()).hexdigest(),
+        "action": action,
+    }
+
+
 def reconcile_collection(client: ApiClient, manifest: dict, collection: dict, fingerprint: str) -> dict:
     release = manifest["release_version"]
     marker = f"[nettap-managed:{collection['key']}]"
@@ -425,7 +488,14 @@ def reconcile_collection(client: ApiClient, manifest: dict, collection: dict, fi
     }
 
 
-def assistant_payload(assistant: dict, knowledge: dict, skills: dict, fingerprint: str, existing=None) -> dict:
+def assistant_payload(
+    assistant: dict,
+    knowledge: dict,
+    skills: dict,
+    functions: dict,
+    fingerprint: str,
+    existing=None,
+) -> dict:
     runtime_model = required_env("NETTAP_AI_MODEL")
     prompt = "\n\n".join(source_path(path).read_text(encoding="utf-8").strip() for path in assistant["system_prompt_files"])
     existing = existing or {}
@@ -441,10 +511,13 @@ def assistant_payload(assistant: dict, knowledge: dict, skills: dict, fingerprin
             for key in assistant["knowledge_keys"]
         ],
         "skillIds": [skills[key]["id"] for key in assistant.get("skill_keys", [])],
+        "filterIds": [
+            functions[key]["id"] for key in assistant.get("function_keys", [])
+        ],
         "capabilities": {
-            "file_context": True,
-            "vision": False,
-            "file_upload": False,
+            "file_context": False,
+            "vision": bool(assistant.get("function_keys")),
+            "file_upload": bool(assistant.get("function_keys")),
             "web_search": False,
             "image_generation": False,
             "code_interpreter": False,
@@ -482,7 +555,14 @@ def is_adoptable_legacy_assistant(existing: dict, assistant: dict) -> bool:
     return existing.get("name") in names and existing.get("base_model_id") in bases
 
 
-def reconcile_assistant(client: ApiClient, assistant: dict, knowledge: dict, skills: dict, fingerprint: str) -> dict:
+def reconcile_assistant(
+    client: ApiClient,
+    assistant: dict,
+    knowledge: dict,
+    skills: dict,
+    functions: dict,
+    fingerprint: str,
+) -> dict:
     query = urllib.parse.urlencode({"id": assistant["id"]})
     status, existing = client.request("GET", f"/api/v1/models/model?{query}", allow=(404,))
     if status == 404:
@@ -494,7 +574,9 @@ def reconcile_assistant(client: ApiClient, assistant: dict, knowledge: dict, ski
                 f"refusing to overwrite unmanaged Workspace Model {assistant['id']} "
                 f"(name={existing.get('name')!r}, base_model_id={existing.get('base_model_id')!r})"
             )
-    payload = assistant_payload(assistant, knowledge, skills, fingerprint, existing)
+    payload = assistant_payload(
+        assistant, knowledge, skills, functions, fingerprint, existing
+    )
     if existing:
         _, result = client.request("POST", "/api/v1/models/model/update", payload)
         action = "updated"
@@ -509,6 +591,7 @@ def reconcile_assistant(client: ApiClient, assistant: dict, knowledge: dict, ski
         "action": action,
         "knowledge_ids": [item["id"] for item in payload["meta"]["knowledge"]],
         "skill_ids": payload["meta"]["skillIds"],
+        "filter_ids": payload["meta"]["filterIds"],
     }
 
 
@@ -630,9 +713,20 @@ def main() -> int:
         skills[result["key"]] = result
         print(f"Open WebUI Skill {result['action']}: {result['name']} ({result['id']})")
 
+    functions = {}
+    for definition in manifest.get("functions", []):
+        result = reconcile_function(client, definition, fingerprint)
+        functions[result["key"]] = result
+        print(
+            f"Open WebUI Function {result['action']}: "
+            f"{result['name']} ({result['id']})"
+        )
+
     assistants = []
     for assistant in manifest["assistants"]:
-        result = reconcile_assistant(client, assistant, knowledge, skills, fingerprint)
+        result = reconcile_assistant(
+            client, assistant, knowledge, skills, functions, fingerprint
+        )
         assistants.append(result)
         print(f"Workspace Model {result['action']}: {result['name']} ({result['id']})")
 
@@ -647,6 +741,7 @@ def main() -> int:
         "completed_utc": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
         "knowledge": knowledge,
         "skills": skills,
+        "functions": functions,
         "assistants": assistants,
         "model_defaults": model_defaults,
         "offline_rag": rag,

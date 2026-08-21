@@ -27,10 +27,29 @@ workspace shell do not disclose case data.
 The production Compose profile keeps the service off direct host ports and
 routes `https://<approved-hostname>:8443/evidence/` through the existing TLS
 gateway. The same independent bearer token is still required for every case and
-evidence API. Open WebUI tool attachment remains blocked until a separate
-authorization and connector acceptance decision is completed.
+evidence API. Open WebUI does not expose that token to the browser: the managed
+Packet Expert attachment filter uses it only on the private Docker network.
 
 ## Workflow
+
+### Packet Expert chat upload
+
+1. Sign in to Open WebUI at `http://127.0.0.1:3100`.
+2. Select **NetTAP Network Intelligence — Packet Expert**.
+3. Drag a supported file onto the chat or use the attachment button.
+4. Ask Packet Expert to analyze the attached evidence.
+5. Review the returned evidence IDs, quality warnings, limitations and findings.
+
+The managed filter creates a case, hashes and uploads the source to the Evidence
+Workspace, runs deterministic analysis, and adds only the minimized context to
+the model request. It is not attached to the Network & Visibility profile.
+
+Supported chat attachments are `.pcap`, `.json`, `.jsonl`, `.ndjson`, `.log`,
+`.txt`, `.png`, `.jpg`, `.jpeg`, and `.webp`. The classic PCAP path performs the
+built-in metadata decode documented below. Images are signature-validated and
+passed to the multimodal model with explicit untrusted-input instructions.
+
+### Evidence Workspace case workflow
 
 1. Create a case with a clear objective and environment.
 2. Select the source type and upload authorized evidence.
@@ -101,6 +120,12 @@ Raw source bytes are stored under server-generated UUID paths in the dedicated
 evidence volume with restrictive permissions. Original filenames never determine
 storage paths. The API does not provide a raw-evidence download endpoint.
 
+For a chat attachment, Open WebUI first stages the source in its own local upload
+directory so the managed filter can read it. The Evidence Workspace then retains
+its analyzed copy. Both the Open WebUI and evidence volumes must therefore be
+handled as sensitive evidence stores for backup, retention and deletion. The raw
+bytes are not included in the Ollama request.
+
 The LLM context contains only:
 
 - case objective and environment;
@@ -168,8 +193,9 @@ without an evidence volume.
 
 ## Next integration gate
 
-The next connector increment should attach the context endpoint to both Open
-WebUI assistants through a reviewed read-only tool contract. It must enforce the
-user's case authorization independently of model selection. URL parameters are
-not authorization. No write-capable NetTAP NPB or device connector should be
-added until read-only acquisition, audit, validation and rollback controls pass.
+The next decoder increment should package a resource-isolated, version-pinned
+TShark worker for PCAPNG and deeper protocol normalization, with derived-artifact
+hashing and malicious-input tests. The current managed chat path uses the
+built-in classic-PCAP metadata parser and does not claim packaged TShark or
+PCAPNG support. No write-capable NetTAP NPB or device connector should be added
+until read-only acquisition, audit, validation and rollback controls pass.

@@ -52,7 +52,7 @@ Initialization performs these bounded changes:
 3. Pulls the approved Qwen3.5 9B Q4_K_M base model and verifies its expected ID.
 4. Creates one combined `nettap-ai:0.4.0-rc.1` model.
 5. Caches the exact approved embedding-model revision during temporary egress, then removes that egress.
-6. Starts Open WebUI in offline mode, reconciles three managed knowledge collections and two Workspace Models through supported APIs, and proves local retrieval.
+6. Starts Open WebUI in offline mode, reconciles three managed knowledge collections, two Workspace Models and the Packet Expert attachment filter through supported APIs, and proves local retrieval.
 7. Starts the two stateless launcher pages only after provisioning succeeds.
 8. Verifies the new model is installed, then removes older recognized NetTAP tags from the containerized appliance store when `RETIRE_LEGACY_NETTAP_MODELS=true`.
 

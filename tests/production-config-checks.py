@@ -52,6 +52,7 @@ assert provisioner["cap_drop"] == ["ALL"]
 assert "ports" not in provisioner
 assert provisioner["environment"]["NETTAP_PROVISIONING_CHECKSUMS"] == "/provision/knowledge-sources.sha256"
 assert "./skills:/source/skills:ro" in provisioner["volumes"]
+assert "./functions:/source/functions:ro" in provisioner["volumes"]
 
 evidence_service = base["services"]["evidence-service"]
 assert evidence_service["networks"] == ["backend", "user-access"]
@@ -88,7 +89,6 @@ for key in (
     "ENABLE_DIRECT_CONNECTIONS",
     "ENABLE_RAG_LOCAL_WEB_FETCH",
     "ENABLE_SUBAGENTS",
-    "USER_PERMISSIONS_CHAT_FILE_UPLOAD",
     "USER_PERMISSIONS_CHAT_WEB_UPLOAD",
     "USER_PERMISSIONS_CHAT_EXPORT",
     "USER_PERMISSIONS_CHAT_IMPORT",
@@ -101,6 +101,10 @@ for key in (
     "USER_PERMISSIONS_FEATURES_API_KEYS",
 ):
     assert env[key] == "False", f"{key} must be False"
+assert env["USER_PERMISSIONS_CHAT_FILE_UPLOAD"] == "True"
+assert env["NETTAP_EVIDENCE_URL"] == "http://evidence-service:8081"
+assert env["EVIDENCE_API_TOKEN"] == "${EVIDENCE_API_TOKEN}"
+assert base["services"]["open-webui"]["depends_on"]["evidence-service"]["condition"] == "service_healthy"
 assert env["WEBUI_AUTH"] == "True"
 assert env["WEBUI_NAME"] == "NetTAP Network Intelligence"
 assert env["JWT_EXPIRES_IN"] == "${JWT_EXPIRES_IN}"
@@ -127,6 +131,11 @@ assert gateway["environment"]["NETTAP_PACKET_EXPERT_PROFILE"] == "${NETTAP_PACKE
 assert gateway["depends_on"]["evidence-service"]["condition"] == "service_healthy"
 
 env_example = (root / ".env.example").read_text(encoding="utf-8")
+example_settings = dict(
+    line.split("=", 1)
+    for line in env_example.splitlines()
+    if line and not line.startswith("#") and "=" in line
+)
 assert "RELEASE_VERSION=0.4.0-rc.1" in env_example
 assert "BASE_MODEL=qwen3.5:9b-q4_K_M" in env_example
 assert "NETTAP_AI_MODEL=nettap-ai:0.4.0-rc.1" in env_example
@@ -135,13 +144,15 @@ assert "EXPECTED_BASE_MODEL_ID=6488c96fa5fa" in env_example
 assert "NETTAP_VISIBILITY_PROFILE=nettap-network-visibility" in env_example
 assert "NETTAP_PACKET_EXPERT_PROFILE=nettap-packet-expert" in env_example
 assert "RAG_EMBEDDING_MODEL_REVISION=1110a243fdf4706b3f48f1d95db1a4f5529b4d41" in env_example
-assert "WEBUI_ADMIN_EMAIL=admin@nettaptech.com" in env_example
-assert "WEBUI_ADMIN_PASSWORD=Password!" in env_example
+assert example_settings["WEBUI_ADMIN_EMAIL"]
+assert example_settings["WEBUI_ADMIN_PASSWORD"]
 assert "WEBUI_ADMIN_PASSWORD=admin" not in env_example
 assert "BIND_ADDRESS=127.0.0.1" in env_example
 assert "EVIDENCE_PORT=3200" in env_example
 assert "EVIDENCE_API_TOKEN=GENERATE_ON_FIRST_START" in env_example
-assert "Password!" in (root / "scripts/production-preflight.sh").read_text()
+preflight = (root / "scripts/production-preflight.sh").read_text()
+assert "load_env_value WEBUI_ADMIN_PASSWORD" in preflight
+assert example_settings["WEBUI_ADMIN_PASSWORD"] in preflight
 assert "EVIDENCE_MAX_UPLOAD_BYTES=52428800" in env_example
 
 caddy = (root / "config/Caddyfile").read_text(encoding="utf-8")
@@ -165,7 +176,9 @@ for profile in ("compose.local.yaml", "compose.production.yaml", "compose.bootst
     assert profile in workflow
 assert "shellcheck scripts/*.sh scripts/nettap-ai scripts/nettap-packet-expert tests/*.sh" in workflow
 assert "tests/test_case_service.py" in workflow
+assert "tests/test_evidence_filter.py" in workflow
 assert "case_service/*.py" in workflow
+assert "functions/*.py" in workflow
 assert "retire-legacy-models-mock.sh" in workflow
 assert "retire-legacy-models.ps1" in workflow
 assert "package-model-bundle.sh" in workflow

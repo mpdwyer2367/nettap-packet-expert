@@ -1,6 +1,6 @@
 # Tool and connector security
 
-Tools are disabled by default in this release candidate. Model sharing does not authorize either assistant to reach a network, appliance, file, telemetry feed, or external API.
+External tools and connectors are disabled by default in this release candidate. The only managed function is the local Packet Expert attachment filter. Model sharing does not authorize either assistant to reach a network, appliance, telemetry feed, or external API.
 
 Before enabling a connector, define:
 
@@ -20,6 +20,6 @@ Bind a tool only to the assistant that requires it. Validate that the other assi
 
 ## Evidence Workspace boundary
 
-The local Evidence Workspace is authenticated with an appliance-generated bearer token and stores cases in a dedicated volume. Its `/context` response is designed as the only future LLM tool payload: it excludes raw files and packet payloads, declares that live telemetry is not connected, and carries evidence IDs, hashes, parser versions, quality warnings and bounded deterministic findings.
+The local Evidence Workspace is authenticated with an appliance-generated bearer token and stores cases in a dedicated volume. Its `/context` response is the only payload injected by the managed Packet Expert attachment filter: it excludes raw files and packet payloads, declares that live telemetry is not connected, and carries evidence IDs, hashes, parser versions, quality warnings and bounded deterministic findings.
 
-Do not attach this endpoint to an assistant in production until the connector maps the authenticated Open WebUI user to an independently authorized case role. Possession of a model URL or case ID is not authorization. Raw evidence retrieval, write-capable device control and arbitrary file paths are outside the tool contract.
+The current attachment path is loopback evaluation scope. Do not approve it for multi-user production until the connector maps the authenticated Open WebUI user to an independently authorized case role. Possession of a model URL or case ID is not authorization. Raw evidence retrieval, write-capable device control and arbitrary file paths are outside the tool contract.

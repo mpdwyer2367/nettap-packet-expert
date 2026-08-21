@@ -32,13 +32,19 @@ Open:
 - <http://127.0.0.1:3100> — shared Open WebUI
 - <http://127.0.0.1:3200> — authenticated local Evidence Workspace; token in `.evidence-api-token`
 
-Use `admin@nettaptech.com` with the local default password `Password!`. Change it immediately, verify the default password fails, and run:
+Read the local login from `.bootstrap-admin-password`. Change its bootstrap password immediately, verify the old value fails, and run:
 
 ```bash
 ./scripts/finalize-admin.sh --confirm
 ```
 
 Production preflight rejects the local default password. Existing volumes retain existing accounts and passwords; use `./scripts/nettap-ai reset-default-admin --confirm-insecure-default` only when intentionally restoring the documented loopback credential.
+
+To verify restored evidence upload, open port 3100, select **NetTAP Network
+Intelligence — Packet Expert**, attach a small authorized `.pcap`, `.jsonl`, or
+`.log` file, and ask for an evidence-supported analysis. The response must cite
+Evidence Workspace IDs and limitations. `.pcapng` still requires external
+TShark normalization and is rejected by the built-in parser.
 
 ## Validation
 

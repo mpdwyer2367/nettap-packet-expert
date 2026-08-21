@@ -54,6 +54,15 @@
       "tags": ["NetTAP", "Network Intelligence", "Packet Expert", "Managed"]
     }
   ],
+  "functions": [
+    {
+      "key": "evidence_ingestion",
+      "id": "nettap_evidence_ingestion",
+      "name": "NetTAP managed evidence ingestion",
+      "description": "Routes supported chat attachments through local deterministic parsing and injects only minimized evidence context.",
+      "file": "functions/nettap_evidence_ingestion.py"
+    }
+  ],
   "assistants": [
     {
       "id": "nettap-network-visibility",
@@ -78,6 +87,7 @@
       "description": "Authorized packet evidence, performance investigation, cyber visibility, and forensic analysis guidance.",
       "knowledge_keys": ["shared", "packet_expert"],
       "skill_keys": ["packet_expert"],
+      "function_keys": ["evidence_ingestion"],
       "system_prompt_files": [
         "assistants/shared/core-policy.md",
         "assistants/packet-expert/system-prompt.md"

@@ -5,16 +5,24 @@
 An empty Open WebUI data volume creates one local administrator:
 
 - Display name: `NetTAP Administrator`
-- Login: `admin@nettaptech.com`
-- Password: `Password!`
 - Role: `admin`
 
-This documented credential is limited to local evaluation bound to `127.0.0.1`. The ignored file `.bootstrap-admin-password` is created with restricted local permissions as an operator reminder. Open WebUI creates the account only when its user database is empty; existing volumes keep their existing accounts. Production preflight rejects the default password.
+The login email and bootstrap password are written to the ignored file
+`.bootstrap-admin-password` with mode `0600`. Read them on the deployment host:
+
+```bash
+cat .bootstrap-admin-password
+```
+
+The bootstrap credential is limited to local evaluation bound to `127.0.0.1`.
+Open WebUI creates the account only when its user database is empty; existing
+volumes keep their existing accounts. Production preflight rejects the bootstrap
+password.
 
 ## Required activation
 
 1. Keep the application on `127.0.0.1`.
-2. Sign in using `admin@nettaptech.com` and `Password!`.
+2. Sign in using the email and bootstrap password in `.bootstrap-admin-password`.
 3. In **Settings > Account**, choose a unique password of 12–72 characters with upper, lower, number, and symbol.
 4. Sign out, verify the default password fails, and verify the new password succeeds.
 5. Run `./scripts/finalize-admin.sh --confirm` and type `FINALIZE`.
@@ -48,13 +56,14 @@ For an intentionally simple loopback-only development credential, run:
 ./scripts/nettap-ai reset-default-admin --confirm-insecure-default
 ```
 
-This resets an existing administrator in place, writes a timestamped database backup beside `webui.db`, and configures these local credentials:
+This resets an existing administrator in place, writes a timestamped database backup beside `webui.db`, and writes the restored local login to `.bootstrap-admin-password`.
 
 - Display name: `NetTAP Administrator`
-- Login email: `admin@nettaptech.com`
-- Password: `Password!`
 
-Open WebUI uses an email address for password sign-in, so enter `admin@nettaptech.com`, not the bare name `admin`. The command refuses production mode and any bind address other than `127.0.0.1`. Signup remains disabled. Replace the default password before exposing the application beyond the deployment host.
+Open WebUI uses the email address shown in that file for password sign-in, not
+the bare name `admin`. The command refuses production mode and any bind address
+other than `127.0.0.1`. Signup remains disabled. Replace the bootstrap password
+before exposing the application beyond the deployment host.
 
 To reset or reidentify the retained local administrator with a specific email,
 run the supported command and enter the new password twice at the hidden prompt:
@@ -79,7 +88,7 @@ associated data, keeps signup disabled, and is refused outside loopback local mo
 - Additional accounts require an approved administrator workflow.
 - One application instance serves one customer or trust boundary.
 - Use an 8-hour session lifetime in this candidate.
-- API keys, web search, direct tool servers, sub-agents, user webhooks, non-admin file/web uploads, sharing/import/export, code execution, memories, admin exports, and admin chat access are disabled by default.
+- API keys, web search, direct tool servers, sub-agents, user webhooks, web uploads, sharing/import/export, code execution, memories, admin exports, and admin chat access are disabled by default. Local file attachment is enabled only for the managed Packet Expert workflow and is intercepted by its reviewed evidence filter.
 - SSO/MFA is not part of the certified candidate scope; customers requiring it need a separately engineered and validated identity profile.
 
 ## Acceptance

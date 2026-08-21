@@ -83,9 +83,13 @@ services:
     depends_on:
       ollama:
         condition: service_healthy
+      evidence-service:
+        condition: service_healthy
     environment:
       OLLAMA_BASE_URL: http://ollama:11434
       WEBUI_NAME: "NetTAP Network Intelligence"
+      NETTAP_EVIDENCE_URL: http://evidence-service:8081
+      EVIDENCE_API_TOKEN: ${EVIDENCE_API_TOKEN}
       WEBUI_SECRET_KEY: ${WEBUI_SECRET_KEY}
       WEBUI_AUTH: "True"
       WEBUI_ADMIN_NAME: ${WEBUI_ADMIN_NAME}
@@ -112,7 +116,7 @@ services:
       ENABLE_DIRECT_CONNECTIONS: "False"
       ENABLE_RAG_LOCAL_WEB_FETCH: "False"
       ENABLE_SUBAGENTS: "False"
-      USER_PERMISSIONS_CHAT_FILE_UPLOAD: "False"
+      USER_PERMISSIONS_CHAT_FILE_UPLOAD: "True"
       USER_PERMISSIONS_CHAT_WEB_UPLOAD: "False"
       USER_PERMISSIONS_CHAT_EXPORT: "False"
       USER_PERMISSIONS_CHAT_IMPORT: "False"
@@ -184,6 +188,8 @@ services:
     depends_on:
       open-webui:
         condition: service_healthy
+      evidence-service:
+        condition: service_healthy
     environment:
       OPEN_WEBUI_URL: http://open-webui:8080
       WEBUI_ADMIN_EMAIL: ${WEBUI_ADMIN_EMAIL}
@@ -197,6 +203,7 @@ services:
       - ./provisioning:/provision:ro
       - ./assistants:/source/assistants:ro
       - ./skills:/source/skills:ro
+      - ./functions:/source/functions:ro
       - ./knowledge:/source/knowledge:ro
       - packet-expert-open-webui-data:/app/backend/data
     networks: [backend]
