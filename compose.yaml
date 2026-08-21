@@ -94,7 +94,7 @@ services:
       evidence-service:
         condition: service_healthy
     environment:
-      OLLAMA_BASE_URL: http://ollama:11434
+      OLLAMA_BASE_URL: ${OPEN_WEBUI_OLLAMA_BASE_URL:-http://ollama:11434}
       WEBUI_NAME: "NetTAP Network Intelligence"
       NETTAP_EVIDENCE_URL: http://evidence-service:8081
       EVIDENCE_API_TOKEN: ${EVIDENCE_API_TOKEN}
