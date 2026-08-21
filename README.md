@@ -125,6 +125,8 @@ The startup script also generates a unique bootstrap password and prints the pro
 
 A populated Open WebUI volume retains its existing accounts and passwords; startup does not reset them.
 
+For a lost password or a missing named administrator, run `./scripts/nettap-ai reset-password --email ADDRESS --name "Display Name" --role admin --create-if-missing --confirm`. The command prompts securely, takes a validated database backup, preserves chats and knowledge, invalidates earlier sessions, and verifies the new credential after restart. See [Authentication](docs/AUTHENTICATION.md).
+
 ## Upgrade from Packet Expert 0.2
 
 Do not begin by deleting containers or volumes. Follow [MIGRATION.md](docs/MIGRATION.md) to:

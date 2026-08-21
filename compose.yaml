@@ -96,8 +96,8 @@ services:
       ENABLE_PASSWORD_VALIDATION: "True"
       ENABLE_PASSWORD_CHANGE_FORM: "True"
       JWT_EXPIRES_IN: ${JWT_EXPIRES_IN}
-      PASSWORD_VALIDATION_REGEX_PATTERN: '^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^\w\s]).{12,72}$$'
-      PASSWORD_VALIDATION_HINT: "Use 12-72 characters with upper, lower, number, and symbol."
+      PASSWORD_VALIDATION_REGEX_PATTERN: '^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^\w\s]).{8,72}$$'
+      PASSWORD_VALIDATION_HINT: "Use 8-72 characters with upper, lower, number, and symbol."
       ENABLE_PERSISTENT_CONFIG: "False"
       OFFLINE_MODE: "True"
       HF_HUB_OFFLINE: "1"
@@ -161,6 +161,7 @@ services:
         [{"title":["Start with","my goal"],"content":"Ask me one simple question to understand what I want to accomplish."},{"title":["Explain this","assistant"],"content":"Briefly explain what this selected NetTAP assistant can help me do."},{"title":["Help me","decide"],"content":"I am not sure where to start. Ask me one important question at a time."}]
     expose: ["8080"]
     volumes:
+      - ./provisioning:/nettap-provisioning:ro
       - packet-expert-open-webui-data:/app/backend/data
     networks: [backend, user-access]
     security_opt:
