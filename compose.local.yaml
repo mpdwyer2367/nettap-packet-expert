@@ -36,8 +36,8 @@ services:
       test:
         - CMD-SHELL
         - >-
-          curl --fail --silent --show-error http://127.0.0.1:3000/healthz >/dev/null &&
-          curl --fail --silent --show-error http://127.0.0.1:3001/healthz >/dev/null
+          wget --quiet --spider http://127.0.0.1:3000/healthz &&
+          wget --quiet --spider http://127.0.0.1:3001/healthz
       interval: 15s
       timeout: 5s
       retries: 10
