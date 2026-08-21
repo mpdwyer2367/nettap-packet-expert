@@ -133,6 +133,6 @@ while IFS= read -r model; do
   fi
 done <<< "$(printf '%s\n' "$remaining_rows" | model_names)"
 
-echo "PASS: $current_model is the only NetTAP model tag in the appliance Ollama store."
+echo "PASS: $current_model is the only selected NetTAP release tag."
 echo "The two Open WebUI experiences remain lightweight profiles over this one model."
 echo "No Docker volume, Open WebUI account, chat, knowledge collection, or non-NetTAP model was removed."

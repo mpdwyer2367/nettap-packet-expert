@@ -1,9 +1,9 @@
 schema_version: 1
 id: nettap-network-visibility
 display_name: NetTAP Network Intelligence — Network & Visibility
-version: 0.3.0-rc.4
-base_model: qwen2.5:7b-instruct-q4_K_M
-runtime_model: nettap-ai:0.3.0-rc.4
+version: 0.4.0-rc.1
+base_model: qwen3.5:9b-q4_K_M
+runtime_model: nettap-ai:0.4.0-rc.1
 workspace_model_id: nettap-network-visibility
 mode: network_visibility
 modelfile: model/nettap-ai.Modelfile

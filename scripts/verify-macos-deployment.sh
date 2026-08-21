@@ -49,7 +49,7 @@ bind_address="$(load_env_value BIND_ADDRESS)"
 ollama_image="$(load_env_value OLLAMA_IMAGE)"
 webui_image="$(load_env_value OPEN_WEBUI_IMAGE)"
 
-[[ "$nettap_model" == "nettap-ai:0.3.0-rc.4" ]] || fail "Unexpected Network Intelligence model identity: $nettap_model"
+[[ "$nettap_model" == "nettap-ai:0.4.0-rc.1" ]] || fail "Unexpected Network Intelligence model identity: $nettap_model"
 model_rows="$("${compose[@]}" exec -T ollama ollama list)"
 legacy_models="$(printf '%s\n' "$model_rows" | awk -v current="$nettap_model" 'NR > 1 && $1 != current && ($1 ~ /^nettap-ai:/ || $1 ~ /^nettap-ai-backup-/ || $1 ~ /^nettap-packet-expert:/ || $1 ~ /^nettap-network-visibility:/) {print $1}')"
 [[ -z "$legacy_models" ]] || fail "Superseded NetTAP model tags remain in the appliance store: $legacy_models"
@@ -130,7 +130,7 @@ actual_files = {
 }
 assert actual_files == expected_files
 assert aggregate.hexdigest() == embedding['aggregate_sha256']
-assert provisioning['release_version'] == '0.3.0-rc.4'
+assert provisioning['release_version'] == '0.4.0-rc.1'
 assert provisioning['offline_rag']['result'] == 'PASS'
 assert {item['id'] for item in provisioning['assistants']} == {
     'nettap-network-visibility', 'nettap-packet-expert'

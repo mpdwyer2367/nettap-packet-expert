@@ -1,12 +1,12 @@
 {
   "schema_version": 1,
-  "release_version": "0.3.0-rc.4",
+  "release_version": "0.4.0-rc.1",
   "embedding": {
     "engine": "",
     "model_path": "/app/backend/data/nettap-models/all-MiniLM-L6-v2/1110a243fdf4706b3f48f1d95db1a4f5529b4d41",
     "probe_collection": "shared",
     "probe_query": "What is the NetTAP offline RAG verification marker?",
-    "probe_expected": "NETTAP-RAG-OFFLINE-PROBE-RC4"
+    "probe_expected": "NETTAP-RAG-OFFLINE-PROBE-0.4.0-RC1"
   },
   "knowledge_collections": [
     {

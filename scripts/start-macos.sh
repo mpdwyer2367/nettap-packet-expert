@@ -25,8 +25,8 @@ if ! docker info >/dev/null 2>&1; then
 fi
 
 available_kib="$(df -Pk "$project_dir" | awk 'NR==2 {print $4}')"
-if [[ -n "$available_kib" && "$available_kib" -lt 15728640 ]]; then
-  echo "ERROR: At least 15 GiB of free disk is required for images, model, and data." >&2
+if [[ -n "$available_kib" && "$available_kib" -lt 20971520 ]]; then
+  echo "ERROR: At least 20 GiB of free disk is required for images, model, and data." >&2
   exit 4
 fi
 
@@ -48,5 +48,5 @@ echo "Immediately change the generated password in Settings > Account."
 echo "Then run ./scripts/finalize-admin.sh --confirm after verifying the old password fails."
 echo "Existing Open WebUI volumes keep their existing accounts and passwords."
 echo "Keep loopback binding until TLS and access controls are configured."
-echo "Both experiences use one shared NetTAP Network Intelligence Model and one Qwen2.5 7B base in the shared Ollama volume."
+echo "Both experiences use one shared NetTAP Network Intelligence Model and one verified Qwen3.5 9B Q4_K_M base in the shared Ollama volume."
 echo "Apple Silicon note: Dockerized Ollama is CPU-compatible; Docker Desktop does not expose Metal acceleration to this Linux container."

@@ -25,7 +25,7 @@ class OpenWebUIState:
         self.models = {}
         self.skills = {}
         self.uploads = 0
-        self.rag_marker = "NETTAP-RAG-OFFLINE-PROBE-RC4"
+        self.rag_marker = "NETTAP-RAG-OFFLINE-PROBE-0.4.0-RC1"
         self.config = {
             "DEFAULT_MODELS": "",
             "DEFAULT_PINNED_MODELS": "",
@@ -175,8 +175,8 @@ class ProvisioningTest(unittest.TestCase):
         self.env.update({
             "OPEN_WEBUI_URL": f"http://127.0.0.1:{self.server.server_port}",
             "WEBUI_ADMIN_EMAIL": "admin@nettap.local",
-            "RELEASE_VERSION": "0.3.0-rc.4",
-            "NETTAP_AI_MODEL": "nettap-ai:0.3.0-rc.4",
+            "RELEASE_VERSION": "0.4.0-rc.1",
+            "NETTAP_AI_MODEL": "nettap-ai:0.4.0-rc.1",
             "NETTAP_PROVISIONING_MANIFEST": str(ROOT / "provisioning/open-webui.json"),
             "NETTAP_PROVISIONING_CHECKSUMS": str(ROOT / "provisioning/knowledge-sources.sha256"),
             "NETTAP_PROVISIONING_SOURCE_ROOT": str(ROOT),
@@ -215,7 +215,7 @@ class ProvisioningTest(unittest.TestCase):
             self.assertTrue(skill["content"].startswith("# NetTAP "))
             self.assertNotIn("\nname: nettap-", skill["content"])
         for model in Handler.state.models.values():
-            self.assertEqual(model["base_model_id"], "nettap-ai:0.3.0-rc.4")
+            self.assertEqual(model["base_model_id"], "nettap-ai:0.4.0-rc.1")
             self.assertEqual(model["params"]["function_calling"], "legacy")
             self.assertEqual(len(model["meta"]["knowledge"]), 2)
             self.assertEqual(len(model["meta"]["skillIds"]), 1)
@@ -261,7 +261,7 @@ class ProvisioningTest(unittest.TestCase):
             [{"group_id": "network-team", "permission": "read"}],
         )
         state = json.loads(self.state_path.read_text(encoding="utf-8"))
-        self.assertEqual(state["release_version"], "0.3.0-rc.4")
+        self.assertEqual(state["release_version"], "0.4.0-rc.1")
         self.assertEqual(state["offline_rag"]["result"], "PASS")
         self.assertEqual(set(state["skills"]), {"network_visibility", "packet_expert"})
         self.assertEqual(

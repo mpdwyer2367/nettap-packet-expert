@@ -42,8 +42,8 @@ If access is lost, use the guarded recovery command from the deployment director
 
 ```bash
 ./scripts/nettap-ai reset-password \
-  --email matt.dwyer@nettaptech.com \
-  --name "Matthew Dwyer" \
+  --email admin@example.com \
+  --name "Example Administrator" \
   --role admin \
   --create-if-missing \
   --confirm

@@ -18,9 +18,9 @@ fi)
 archive_digest="$(if command -v shasum >/dev/null 2>&1; then shasum -a 256 "$archive"; else sha256sum "$archive"; fi | awk '{print $1}')"
 grep -Fqx "Artifact: $archive_name" "$provenance"
 grep -Fqx "SHA256: $archive_digest" "$provenance"
-grep -Fqx 'Model: nettap-ai:0.3.0-rc.4' "$provenance"
-grep -Fqx 'Base: qwen2.5:7b-instruct-q4_K_M' "$provenance"
-grep -Fqx 'Expected-Base-ID: 845dbda0ea48' "$provenance"
+grep -Fqx 'Model: nettap-ai:0.4.0-rc.1' "$provenance"
+grep -Fqx 'Base: qwen3.5:9b-q4_K_M' "$provenance"
+grep -Fqx 'Expected-Base-ID: 6488c96fa5fa' "$provenance"
 grep -Fqx 'Contains-Weights: no' "$provenance"
 
 temporary_base="${TMPDIR:-$archive_dir}"

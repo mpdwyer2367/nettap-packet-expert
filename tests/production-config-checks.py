@@ -126,11 +126,11 @@ assert gateway["environment"]["NETTAP_PACKET_EXPERT_PROFILE"] == "${NETTAP_PACKE
 assert gateway["depends_on"]["evidence-service"]["condition"] == "service_healthy"
 
 env_example = (root / ".env.example").read_text(encoding="utf-8")
-assert "RELEASE_VERSION=0.3.0-rc.4" in env_example
-assert "BASE_MODEL=qwen2.5:7b-instruct-q4_K_M" in env_example
-assert "NETTAP_AI_MODEL=nettap-ai:0.3.0-rc.4" in env_example
+assert "RELEASE_VERSION=0.4.0-rc.1" in env_example
+assert "BASE_MODEL=qwen3.5:9b-q4_K_M" in env_example
+assert "NETTAP_AI_MODEL=nettap-ai:0.4.0-rc.1" in env_example
 assert "RETIRE_LEGACY_NETTAP_MODELS=true" in env_example
-assert "EXPECTED_BASE_MODEL_ID=845dbda0ea48" in env_example
+assert "EXPECTED_BASE_MODEL_ID=6488c96fa5fa" in env_example
 assert "NETTAP_VISIBILITY_PROFILE=nettap-network-visibility" in env_example
 assert "NETTAP_PACKET_EXPERT_PROFILE=nettap-packet-expert" in env_example
 assert "RAG_EMBEDDING_MODEL_REVISION=1110a243fdf4706b3f48f1d95db1a4f5529b4d41" in env_example

@@ -2,7 +2,7 @@
 
 ## Supported scope
 
-Deploy one NetTAP Network Intelligence instance per customer or security boundary. The instance contains one shared NetTAP Network Intelligence Model, two Open WebUI experience profiles, one Open WebUI, and one Ollama model store. This guide covers the Docker software-appliance candidate on macOS or a Windows host running Docker Desktop with WSL 2/Linux containers. The target must meet the sizing and release gates for the exact commit and image digests.
+Deploy one NetTAP Network Intelligence instance per customer or security boundary. The instance contains one shared NetTAP Network Intelligence Model, two Open WebUI experience profiles, one Open WebUI, and one Ollama model store. This guide covers the Docker software-appliance candidate on macOS, native Linux, or a Windows host running Docker Desktop with WSL 2/Linux containers. The target must meet the sizing and release gates for the exact commit and image digests.
 
 ## Customer prerequisites
 
@@ -25,7 +25,7 @@ chmod +x scripts/* tests/*.sh
 ./scripts/start-macos.sh
 ```
 
-On Windows, use `scripts/start-windows.ps1` and complete the Bash steps from WSL. The credential appears only in the ignored local `.bootstrap-admin-password` file. Change it, verify rejection of the generated credential, and run:
+On native Linux, use `scripts/start-linux.sh`. On Windows, use `scripts/start-windows.ps1` and complete the Bash steps from WSL. The credential appears only in the ignored local `.bootstrap-admin-password` file. Change it, verify rejection of the generated credential, and run:
 
 ```bash
 ./scripts/finalize-admin.sh --confirm
@@ -58,7 +58,7 @@ On Windows, use `scripts/start-windows.ps1` and complete the Bash steps from WSL
 
 ## Knowledge configuration
 
-Startup automatically reconciles the reviewed shared and specialist Markdown into three managed collections through supported Open WebUI APIs. It attaches shared knowledge to both Workspace Models, Network & Visibility knowledge only to its matching profile, and Packet Expert knowledge only to Packet Expert. Both profiles use `nettap-ai:0.3.0-rc.4`. Confirm the recorded provisioning fingerprint, file hashes, exact embedding revision, and `Offline RAG verification: PASS`. Knowledge and uploaded evidence remain untrusted model inputs; neither may override system policy. See [knowledge management](KNOWLEDGE_MANAGEMENT.md).
+Startup automatically reconciles the reviewed shared and specialist Markdown into three managed collections through supported Open WebUI APIs. It attaches shared knowledge to both Workspace Models, Network & Visibility knowledge only to its matching profile, and Packet Expert knowledge only to Packet Expert. Both profiles use `nettap-ai:0.4.0-rc.1`. Confirm the recorded provisioning fingerprint, file hashes, exact embedding revision, and `Offline RAG verification: PASS`. Knowledge and uploaded evidence remain untrusted model inputs; neither may override system policy. See [knowledge management](KNOWLEDGE_MANAGEMENT.md).
 
 ## Acceptance
 
