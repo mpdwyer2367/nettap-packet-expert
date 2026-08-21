@@ -10,6 +10,7 @@ from __future__ import annotations
 import asyncio
 import base64
 import hashlib
+import http.client
 import json
 import os
 from pathlib import Path
@@ -42,6 +43,9 @@ class Filter:
         max_files_per_turn: int = 8
         max_images_per_turn: int = 4
         max_image_bytes: int = 10 * 1024 * 1024
+        max_evidence_bytes: int = int(
+            os.environ.get("NETTAP_EVIDENCE_MAX_UPLOAD_BYTES", str(100 * 1024 * 1024))
+        )
 
     def __init__(self):
         self.valves = self.Valves()
@@ -232,7 +236,11 @@ class Filter:
             if not file_id or not filename:
                 raise ValueError("Open WebUI attachment metadata is incomplete")
             path = self._upload_path(file_id, filename)
-            content = path.read_bytes()
+            file_size = path.stat().st_size
+            if file_size > self.valves.max_evidence_bytes:
+                raise ValueError(
+                    f"Evidence exceeds the {self.valves.max_evidence_bytes}-byte limit: {filename}"
+                )
             source_type = self._source_type(filename)
             evidence_metadata = {
                 "source_timezone": "unknown",
@@ -252,10 +260,10 @@ class Filter:
                 "POST",
                 f"/v1/cases/{case['id']}/evidence?{query}",
                 token,
-                content,
+                path,
                 {
                     "Content-Type": "application/octet-stream",
-                    "X-Content-SHA256": hashlib.sha256(content).hexdigest(),
+                    "X-Content-SHA256": self._sha256_path(path),
                     "X-NetTAP-Metadata": encoded_metadata,
                 },
             )
@@ -298,9 +306,63 @@ class Filter:
                 )
         return "Analyze attached network evidence"
 
+    @staticmethod
+    def _sha256_path(path: Path) -> str:
+        digest = hashlib.sha256()
+        with path.open("rb") as source:
+            for chunk in iter(lambda: source.read(1024 * 1024), b""):
+                digest.update(chunk)
+        return digest.hexdigest()
+
+    def _stream_file_request(
+        self, method: str, path: str, token: str, source_path: Path, headers: dict
+    ):
+        target = urllib.parse.urlsplit(
+            f"{self.valves.evidence_url.rstrip('/')}{path}"
+        )
+        if target.scheme != "http" or not target.hostname:
+            raise ValueError("NetTAP evidence service requires an internal HTTP endpoint")
+        request_path = target.path or "/"
+        if target.query:
+            request_path += f"?{target.query}"
+        connection = http.client.HTTPConnection(
+            target.hostname, target.port or 80, timeout=300
+        )
+        request_headers = {
+            "Authorization": f"Bearer {token}",
+            "Accept": "application/json",
+            "Content-Length": str(source_path.stat().st_size),
+            **headers,
+        }
+        try:
+            with source_path.open("rb") as source:
+                connection.request(
+                    method,
+                    request_path,
+                    body=source,
+                    headers=request_headers,
+                    encode_chunked=False,
+                )
+                response = connection.getresponse()
+                payload = response.read()
+            if response.status < 200 or response.status >= 300:
+                detail = payload.decode(errors="replace")[:1000]
+                raise ValueError(
+                    f"NetTAP evidence processing failed ({response.status}): {detail}"
+                )
+            return json.loads(payload.decode())
+        except (OSError, http.client.HTTPException) as exc:
+            raise ValueError(
+                "NetTAP evidence processing service is unavailable"
+            ) from exc
+        finally:
+            connection.close()
+
     def _json_request(
         self, method: str, path: str, token: str, body, headers: dict
     ):
+        if isinstance(body, Path):
+            return self._stream_file_request(method, path, token, body, headers)
         request = urllib.request.Request(
             f"{self.valves.evidence_url.rstrip('/')}{path}",
             data=body,
