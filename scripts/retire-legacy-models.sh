@@ -133,14 +133,18 @@ if [[ "$confirm" != true ]]; then
   exit 0
 fi
 
-for model in "${container_candidates[@]}"; do
-  "${selected[@]}" exec -T ollama ollama rm "$model"
-done
-for model in "${legacy_base_candidates[@]}"; do
-  "${selected[@]}" exec -T ollama ollama rm "$model"
-done
+if [[ ${#container_candidates[@]} -gt 0 ]]; then
+  for model in "${container_candidates[@]}"; do
+    "${selected[@]}" exec -T ollama ollama rm "$model"
+  done
+fi
+if [[ ${#legacy_base_candidates[@]} -gt 0 ]]; then
+  for model in "${legacy_base_candidates[@]}"; do
+    "${selected[@]}" exec -T ollama ollama rm "$model"
+  done
+fi
 
-if [[ "$include_native" == true ]]; then
+if [[ "$include_native" == true && ${#native_candidates[@]} -gt 0 ]]; then
   for model in "${native_candidates[@]}"; do
     env -u OLLAMA_HOST ollama rm "$model"
   done
