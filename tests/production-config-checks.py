@@ -157,7 +157,7 @@ assert "EVIDENCE_API_TOKEN=GENERATE_ON_FIRST_START" in env_example
 preflight = (root / "scripts/production-preflight.sh").read_text()
 assert "load_env_value WEBUI_ADMIN_PASSWORD" in preflight
 assert example_settings["WEBUI_ADMIN_PASSWORD"] in preflight
-assert "EVIDENCE_MAX_UPLOAD_BYTES=52428800" in env_example
+assert "EVIDENCE_MAX_UPLOAD_BYTES=104857600" in env_example
 
 caddy = (root / "config/Caddyfile").read_text(encoding="utf-8")
 for control in ("tls /etc/caddy/tls/tls.crt", "Strict-Transport-Security", "X-Frame-Options", "-Server"):
