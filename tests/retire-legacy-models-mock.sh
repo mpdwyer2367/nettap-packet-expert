@@ -110,4 +110,8 @@ if grep -Eq '0\.4\.0-rc\.1|qwen3\.5|kimi|qwen3:8b' "$NETTAP_RETIRE_TEST_LOG"; th
   exit 1
 fi
 
+second_run="$("${test_root}/project/scripts/retire-legacy-models.sh" --confirm)"
+[[ "$second_run" == *"Legacy container tags: none"* ]]
+[[ "$second_run" == *"PASS: nettap-ai:0.4.0-rc.1 is the only selected NetTAP release tag."* ]]
+
 echo "Legacy model retirement regression test passed."

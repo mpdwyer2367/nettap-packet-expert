@@ -10,6 +10,14 @@ services:
     cpus: ${OLLAMA_CPUS}
     mem_limit: ${OLLAMA_MEMORY}
     pids_limit: 1024
+    environment:
+      # Keep laptop inference bounded: the managed Open WebUI profiles both
+      # resolve to the same NetTAP runtime model.
+      OLLAMA_MAX_LOADED_MODELS: ${OLLAMA_MAX_LOADED_MODELS:-1}
+      OLLAMA_NUM_PARALLEL: ${OLLAMA_NUM_PARALLEL:-1}
+      OLLAMA_MAX_QUEUE: ${OLLAMA_MAX_QUEUE:-8}
+      OLLAMA_KEEP_ALIVE: ${OLLAMA_KEEP_ALIVE:-2m}
+      OLLAMA_NO_CLOUD: "1"
     volumes:
       - packet-expert-ollama-data:/root/.ollama
     networks: [backend]
@@ -83,9 +91,13 @@ services:
     depends_on:
       ollama:
         condition: service_healthy
+      evidence-service:
+        condition: service_healthy
     environment:
-      OLLAMA_BASE_URL: http://ollama:11434
+      OLLAMA_BASE_URL: ${OPEN_WEBUI_OLLAMA_BASE_URL:-http://ollama:11434}
       WEBUI_NAME: "NetTAP Network Intelligence"
+      NETTAP_EVIDENCE_URL: http://evidence-service:8081
+      EVIDENCE_API_TOKEN: ${EVIDENCE_API_TOKEN}
       WEBUI_SECRET_KEY: ${WEBUI_SECRET_KEY}
       WEBUI_AUTH: "True"
       WEBUI_ADMIN_NAME: ${WEBUI_ADMIN_NAME}
@@ -105,6 +117,9 @@ services:
       RAG_EMBEDDING_MODEL: ${RAG_EMBEDDING_MODEL}
       RAG_EMBEDDING_MODEL_AUTO_UPDATE: "False"
       RAG_EMBEDDING_MODEL_TRUST_REMOTE_CODE: "False"
+      RAG_FILE_MAX_SIZE: "100"
+      RAG_FILE_MAX_COUNT: "8"
+      NETTAP_EVIDENCE_MAX_UPLOAD_BYTES: ${EVIDENCE_MAX_UPLOAD_BYTES:-104857600}
       RAG_RERANKING_MODEL_AUTO_UPDATE: "False"
       WHISPER_MODEL_AUTO_UPDATE: "False"
       ENABLE_OPENAI_API: "False"
@@ -112,7 +127,7 @@ services:
       ENABLE_DIRECT_CONNECTIONS: "False"
       ENABLE_RAG_LOCAL_WEB_FETCH: "False"
       ENABLE_SUBAGENTS: "False"
-      USER_PERMISSIONS_CHAT_FILE_UPLOAD: "False"
+      USER_PERMISSIONS_CHAT_FILE_UPLOAD: "True"
       USER_PERMISSIONS_CHAT_WEB_UPLOAD: "False"
       USER_PERMISSIONS_CHAT_EXPORT: "False"
       USER_PERMISSIONS_CHAT_IMPORT: "False"
@@ -184,6 +199,8 @@ services:
     depends_on:
       open-webui:
         condition: service_healthy
+      evidence-service:
+        condition: service_healthy
     environment:
       OPEN_WEBUI_URL: http://open-webui:8080
       WEBUI_ADMIN_EMAIL: ${WEBUI_ADMIN_EMAIL}
@@ -197,6 +214,7 @@ services:
       - ./provisioning:/provision:ro
       - ./assistants:/source/assistants:ro
       - ./skills:/source/skills:ro
+      - ./functions:/source/functions:ro
       - ./knowledge:/source/knowledge:ro
       - packet-expert-open-webui-data:/app/backend/data
     networks: [backend]
@@ -225,7 +243,7 @@ services:
       NETTAP_EVIDENCE_PORT: 8081
       NETTAP_EVIDENCE_DB: /data/nettap-evidence.db
       NETTAP_EVIDENCE_DATA_DIR: /data/files
-      NETTAP_EVIDENCE_MAX_UPLOAD_BYTES: ${EVIDENCE_MAX_UPLOAD_BYTES}
+      NETTAP_EVIDENCE_MAX_UPLOAD_BYTES: ${EVIDENCE_MAX_UPLOAD_BYTES:-104857600}
       NETTAP_EVIDENCE_MAX_RECORDS: ${EVIDENCE_MAX_RECORDS}
     entrypoint: ["python", "-m", "case_service"]
     volumes:

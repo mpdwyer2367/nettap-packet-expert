@@ -48,6 +48,7 @@ bundle_root="${temporary}/${archive_name%.tar.gz}"
 [[ -f "${bundle_root}/model/MODEL_CARD.md" ]]
 [[ -f "${bundle_root}/skills/nettap-network-visibility/SKILL.md" ]]
 [[ -f "${bundle_root}/skills/nettap-packet-expert/SKILL.md" ]]
+[[ -f "${bundle_root}/functions/nettap_evidence_ingestion.py" ]]
 [[ -f "${bundle_root}/scripts/install-model-native.sh" ]]
 model_digest="$(if command -v shasum >/dev/null 2>&1; then shasum -a 256 "${bundle_root}/model/nettap-ai.Modelfile"; else sha256sum "${bundle_root}/model/nettap-ai.Modelfile"; fi | awk '{print $1}')"
 sources_digest="$(if command -v shasum >/dev/null 2>&1; then shasum -a 256 "${bundle_root}/provisioning/knowledge-sources.sha256"; else sha256sum "${bundle_root}/provisioning/knowledge-sources.sha256"; fi | awk '{print $1}')"

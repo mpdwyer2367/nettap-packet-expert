@@ -21,11 +21,17 @@ The first start downloads and verifies `qwen3.5:9b-q4_K_M` with expected Ollama 
 
 Open the Network & Visibility launcher at <http://127.0.0.1:3000>, Packet Expert at <http://127.0.0.1:3001>, shared Open WebUI at <http://127.0.0.1:3100>, and the Evidence Workspace at <http://127.0.0.1:3200>.
 
-Use `admin@nettaptech.com` with the local default password `Password!`. Change it immediately, verify the default password no longer works, then run:
+Read the local login from `.bootstrap-admin-password`. Change its bootstrap password immediately, verify the old value no longer works, then run:
 
 ```bash
 ./scripts/finalize-admin.sh --confirm
 ```
+
+To verify restored evidence upload, open port 3100, select **NetTAP Network
+Intelligence — Packet Expert**, attach a small authorized `.pcap`, `.jsonl`, or
+`.log` file, and ask for an evidence-supported analysis. The response must cite
+Evidence Workspace IDs and limitations. `.pcapng` still requires external
+TShark normalization and is rejected by the built-in parser.
 
 ## Verification
 

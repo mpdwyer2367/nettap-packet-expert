@@ -11,7 +11,7 @@ The release uses the explicit Ollama tag `qwen3.5:9b-q4_K_M` and requires Ollama
 - Network & Visibility and Packet Expert remain two lightweight profiles over one shared Ollama model.
 - The Qwen3.5 9B base provides a larger, newer foundation and a 16,384-token configured context window.
 - Existing NetTAP policy, specialist Skills, reviewed knowledge, offline RAG, profile isolation and evidence controls remain in force.
-- Qwen3.5 multimodal and tool-oriented upstream capabilities do not automatically enable image ingestion, tool execution or external connectors in NetTAP.
+- The reviewed Packet Expert attachment filter explicitly enables supported images and network-evidence uploads. Other tool execution and external connectors remain disabled.
 - Raw PCAP, logs, flow records and telemetry still require an approved deterministic parser and validated schema. The LLM analyzes normalized evidence; it does not become a packet decoder merely because the base model changed.
 
 ## Version integrity

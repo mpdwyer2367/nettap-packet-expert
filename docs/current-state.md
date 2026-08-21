@@ -16,6 +16,7 @@
 | Packet Expert | Branded launcher on loopback port 3001 and a distinct managed Open WebUI profile |
 | Shared administration | One Open WebUI instance on loopback port 3100 |
 | Evidence Workspace | Authenticated local service on loopback port 3200 |
+| Packet Expert chat upload | Managed filter for classic PCAP, JSON/JSONL, logs, text and supported network images |
 | Model | One `nettap-ai:0.4.0-rc.1` definition over `qwen3.5:9b-q4_K_M` |
 | Skills | Two managed Skills attached only to their matching profiles |
 | Knowledge and RAG | Three checksum-pinned managed collections and one pinned offline embedding revision |
@@ -27,6 +28,9 @@ The Evidence Workspace can create cases, ingest classic PCAP metadata and normal
 JSON/JSONL, syslog, flow, and cloud-flow records, retain original evidence under
 server-generated paths, compute SHA-256, record provenance limitations, run bounded
 deterministic aggregation, and export minimized context and Markdown reports.
+The Packet Expert profile can create and analyze those cases directly from an
+authenticated Open WebUI file attachment without placing raw evidence in the
+model prompt.
 
 ## Baseline validation actually run
 

@@ -30,6 +30,11 @@ grep -q '^RELEASE_VERSION=0.4.0-rc.1$' "$project_dir/.env.example"
 grep -q '^BASE_MODEL=qwen3.5:9b-q4_K_M$' "$project_dir/.env.example"
 grep -q '^NETTAP_AI_MODEL=nettap-ai:0.4.0-rc.1$' "$project_dir/.env.example"
 grep -q '^EXPECTED_BASE_MODEL_ID=6488c96fa5fa$' "$project_dir/.env.example"
+grep -q '^OLLAMA_MAX_LOADED_MODELS=1$' "$project_dir/.env.example"
+grep -q '^OLLAMA_NUM_PARALLEL=1$' "$project_dir/.env.example"
+grep -q 'OLLAMA_MAX_LOADED_MODELS:' "$project_dir/compose.yaml"
+grep -q 'OLLAMA_NUM_PARALLEL:' "$project_dir/compose.yaml"
+grep -q 'OLLAMA_NO_CLOUD: "1"' "$project_dir/compose.yaml"
 grep -q '^RETIRE_LEGACY_NETTAP_MODELS=true$' "$project_dir/.env.example"
 grep -q '^NETTAP_VISIBILITY_PROFILE=nettap-network-visibility$' "$project_dir/.env.example"
 grep -q '^NETTAP_PACKET_EXPERT_PROFILE=nettap-packet-expert$' "$project_dir/.env.example"
@@ -38,6 +43,8 @@ grep -q '^RAG_EMBEDDING_MODEL_REVISION=1110a243fdf4706b3f48f1d95db1a4f5529b4d41$
 grep -q 'test "$$actual_id" = "${EXPECTED_BASE_MODEL_ID}"' "$project_dir/compose.yaml"
 grep -q '^BIND_ADDRESS=127.0.0.1$' "$project_dir/.env.example"
 grep -q '^WEB_PORT=3100$' "$project_dir/.env.example"
+grep -q '^OPEN_WEBUI_OLLAMA_BASE_URL=http://ollama:11434$' "$project_dir/.env.example"
+grep -Fq 'ensure_env_default OPEN_WEBUI_OLLAMA_BASE_URL "http://ollama:11434"' "$project_dir/scripts/common.sh"
 grep -q '^VISIBILITY_LAUNCHER_PORT=3000$' "$project_dir/.env.example"
 grep -q '^PACKET_EXPERT_LAUNCHER_PORT=3001$' "$project_dir/.env.example"
 grep -q '^EVIDENCE_PORT=3200$' "$project_dir/.env.example"
@@ -53,19 +60,23 @@ grep -Fq 'Historical naming:' "$project_dir/reports/PRODUCTION_CERTIFICATION_STA
 grep -Fq 'Historical naming:' "$project_dir/reports/RELEASE_ACCEPTANCE_0.2.0-rc.1.md"
 grep -q 'retire-old-models)' "$project_dir/scripts/nettap-ai"
 grep -q 'nettap-ai-backup-\*' "$project_dir/scripts/retire-legacy-models.sh"
-grep -q '^WEBUI_ADMIN_EMAIL=admin@nettaptech.com$' "$project_dir/.env.example"
-grep -q '^WEBUI_ADMIN_PASSWORD=Password!$' "$project_dir/.env.example"
-grep -Fq "load_env_value WEBUI_ADMIN_PASSWORD)\" != 'Password!'" "$project_dir/scripts/production-preflight.sh"
+grep -q '^WEBUI_ADMIN_EMAIL=.' "$project_dir/.env.example"
+grep -q '^WEBUI_ADMIN_PASSWORD=.' "$project_dir/.env.example"
+grep -Fq 'load_env_value WEBUI_ADMIN_PASSWORD' "$project_dir/scripts/production-preflight.sh"
 grep -q 'ENABLE_SIGNUP: "False"' "$project_dir/compose.yaml"
+grep -q 'USER_PERMISSIONS_CHAT_FILE_UPLOAD: "True"' "$project_dir/compose.yaml"
+grep -q 'NETTAP_EVIDENCE_URL: http://evidence-service:8081' "$project_dir/compose.yaml"
+grep -q './functions:/source/functions:ro' "$project_dir/compose.yaml"
 grep -q 'ENABLE_PASSWORD_VALIDATION: "False"' "$project_dir/compose.local.yaml"
 grep -q '127.0.0.1:3000/healthz' "$project_dir/compose.local.yaml"
 grep -q '127.0.0.1:3001/healthz' "$project_dir/compose.local.yaml"
-grep -q 'respond @health "ok" 200' "$project_dir/config/Launcher.Caddyfile"
+test "$(grep -Fc 'handle /healthz' "$project_dir/config/Launcher.Caddyfile")" -eq 2
+test "$(grep -Fc 'respond "ok" 200' "$project_dir/config/Launcher.Caddyfile")" -eq 2
 grep -q 'Qwen3.5 9B' "$project_dir/launchers/network-visibility/index.html"
 grep -q 'Qwen3.5 9B' "$project_dir/launchers/packet-expert/index.html"
 grep -q 'confirm-insecure-default' "$project_dir/scripts/reset-local-admin.sh"
-grep -q 'admin_email="admin@nettaptech.com"' "$project_dir/scripts/reset-local-admin.sh"
-grep -q 'admin_password="Password!"' "$project_dir/scripts/reset-local-admin.sh"
+grep -q '^admin_email=".' "$project_dir/scripts/reset-local-admin.sh"
+grep -q '^admin_password=".' "$project_dir/scripts/reset-local-admin.sh"
 grep -q 'reset-default-admin)' "$project_dir/scripts/nettap-ai"
 grep -q 'reset-password)' "$project_dir/scripts/nettap-ai"
 grep -q 'NETTAP_RESET_CREATE_IF_MISSING' "$project_dir/scripts/reset-password.sh"
@@ -114,6 +125,7 @@ required_files=(
   assistants/network-visibility/assistant.yaml assistants/packet-expert/assistant.yaml
   assistants/network-visibility/system-prompt.md assistants/packet-expert/system-prompt.md
   skills/nettap-network-visibility/SKILL.md skills/nettap-packet-expert/SKILL.md
+  functions/nettap_evidence_ingestion.py
   case_service/__init__.py case_service/__main__.py case_service/config.py
   case_service/database.py case_service/parsers.py case_service/analysis.py
   case_service/service.py case_service/http_api.py
@@ -156,6 +168,7 @@ required_files=(
   tests/fixtures/normalized-pcap.json tests/fixtures/normalized-logs.jsonl
   tests/fixtures/normalized-ipfix.jsonl
   tests/production-config-checks.py tests/test_reset_local_admin.py
+  tests/test_evidence_filter.py
   tests/test_provision_open_webui.py tests/test_verify_archive_tree.py tests/test_case_service.py
   reports/PRODUCTION_CERTIFICATION_STATUS_0.2.0-rc.1.md
   reports/RELEASE_ACCEPTANCE_0.2.0-rc.1.md
@@ -261,7 +274,7 @@ assert release == {
     "runtime_model": "nettap-ai:0.4.0-rc.1",
     "source_policy": "model/nettap-ai.Modelfile",
     "temperature": 0.1,
-    "num_ctx": 16384,
+    "num_ctx": 4096,
     "status": "release-candidate",
     "source": "https://ollama.com/library/qwen3.5:9b-q4_K_M",
     "license": "Apache-2.0",
@@ -274,10 +287,19 @@ assert {item["name"] for item in provisioning["skills"]} == {
     "NetTAP Network Intelligence — Network & Visibility",
     "NetTAP Network Intelligence — Packet Expert",
 }
+assert {item["id"] for item in provisioning["functions"]} == {
+    "nettap_evidence_ingestion",
+}
+provisioned_assistants = {item["id"]: item for item in provisioning["assistants"]}
+assert provisioned_assistants["nettap-network-visibility"].get("function_keys", []) == []
+assert provisioned_assistants["nettap-packet-expert"]["function_keys"] == [
+    "evidence_ingestion"
+]
 expected_sources = {
     "assistants/shared/core-policy.md",
     "assistants/network-visibility/system-prompt.md",
     "assistants/packet-expert/system-prompt.md",
+    "functions/nettap_evidence_ingestion.py",
 }
 for assistant in assistants:
     expected_sources.update(assistant["knowledge"])

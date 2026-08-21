@@ -2,7 +2,7 @@
 
 ## Decision
 
-NetTAP Network Intelligence runs one Open WebUI instance, one Ollama service, and one shared NetTAP Network Intelligence Model built from Qwen2.5 7B in one Ollama volume. Two thin application profiles provide distinct user experiences without duplicating weights. This is a single-node, single-customer architecture; it is not a multi-tenant SaaS design.
+NetTAP Network Intelligence runs one Open WebUI instance, one Ollama service, and one shared NetTAP Network Intelligence Model built from Qwen3.5 9B Q4_K_M in one Ollama volume. Two thin application profiles provide distinct user experiences without duplicating weights. This is a single-node, single-customer architecture; it is not a multi-tenant SaaS design.
 
 ```mermaid
 flowchart TB
@@ -15,17 +15,20 @@ flowchart TB
     V --> O["One Ollama service"]
     P --> O
     O --> M["nettap-ai:0.4.0-rc.1"]
-    M --> Q["One pinned Qwen2.5 7B base"]
-    U --> E["Evidence Workspace"]
+    M --> Q["One pinned Qwen3.5 9B base"]
+    P --> F["Managed attachment filter"]
+    F --> E["Evidence Workspace"]
     E --> D["Deterministic parsers + case store"]
     D --> X["Minimized evidence context"]
-    X -. "authorized transfer" .-> W
+    X --> P
 ```
 
-The solid path is the application runtime. The dashed path is not an automatic
-live-data connector: minimized evidence reaches a chat only through an approved,
-authorized transfer. Raw PCAP, logs, flow records, accounts, chats, model data,
-and case evidence remain in their separate persistent volumes.
+The managed Packet Expert attachment path is local and deterministic. It is not
+a live-data connector: an authenticated user must attach each file to a chat.
+Open WebUI stages chat attachments in its application volume and the Evidence
+Workspace retains the analyzed copy in its dedicated evidence volume. Raw bytes
+are not sent to Ollama. Only minimized context produced by the Evidence Workspace
+is added to the Packet Expert request.
 
 ## Model installation and replacement
 
@@ -55,6 +58,7 @@ Open WebUI storage because it provides offline RAG and is not a chat LLM.
 | Network & Visibility profile | 1 | Managed Workspace Model and isolated specialist knowledge collection | Broad architecture, deployment, visibility, and telemetry workflow |
 | Packet Expert profile | 1 | Managed Workspace Model and isolated specialist knowledge collection | Packet evidence, capture planning, forensics, and security investigation |
 | Managed Open WebUI Skills | 2 | Versioned Markdown instructions with preserved access grants | One specialist Skill is attached to each profile; Skills do not duplicate weights or execute tools |
+| Managed attachment filter | 1 | Versioned Python source and provisioning identity | Attached only to Packet Expert; routes reviewed file types to deterministic local parsing |
 | Offline embedding cache | 1 | Exact-revision MiniLM model and integrity metadata | Local-only knowledge indexing and retrieval |
 | One-shot provisioner | 1 per release change | Provisioning fingerprint and API-created objects | No host port; supported Open WebUI APIs only |
 | Local launcher | 1 small Caddy container | None | Ports 3000 and 3001; no authentication or application data |
@@ -74,11 +78,11 @@ The Compose project name and existing volume names remain `nettap-packet-expert`
 
 The launchers submit only documented Open WebUI `model` and `q` URL parameters. Port 3000 selects `nettap-network-visibility`; port 3001 selects `nettap-packet-expert`. Both profiles resolve to `nettap-ai:0.4.0-rc.1`. The launchers do not hold accounts, chats, model weights, tools, or knowledge.
 
-During initialization only, the bootstrap overlay supplies egress to Ollama and the embedding-cache job. Normal runtime has internal Docker networks, `OFFLINE_MODE=True`, `HF_HUB_OFFLINE=1`, a pinned local embedding path, automatic model updates disabled, and no remote-code trust. The assistant provisioner starts only after Open WebUI is healthy, authenticates as the administrator, reconciles knowledge and Skills, proves local retrieval, attaches the matching Skill and knowledge collections to each profile, writes a state record, and exits. The default RC4 lifecycle then removes recognized older NetTAP tags from the containerized Ollama store; it never removes the current model, approved base, non-NetTAP models, or application volumes.
+During initialization only, the bootstrap overlay supplies egress to Ollama and the embedding-cache job. Normal runtime has internal Docker networks, `OFFLINE_MODE=True`, `HF_HUB_OFFLINE=1`, a pinned local embedding path, automatic model updates disabled, and no remote-code trust. The assistant provisioner starts only after Open WebUI and the Evidence Workspace are healthy, authenticates as the administrator, reconciles knowledge, Skills and the managed attachment filter, proves local retrieval, attaches the matching Skill and knowledge collections to each profile, attaches the filter only to Packet Expert, writes a state record, and exits. The default lifecycle then removes recognized older NetTAP tags from the containerized Ollama store; it never removes the current model, approved base, non-NetTAP models, or application volumes.
 
 The raw Ollama model is inclusive of both experiences. The Open WebUI layers do not create separate models: they narrow the starting mode, suggestions, knowledge and permissions for a particular job. RAG content and Skills are intentionally not described as fine-tuned weights.
 
-The Evidence Workspace is a separate trust boundary. It retains original evidence in a dedicated volume, parses supported sources deterministically and exposes a minimized context that explicitly excludes raw evidence and payloads. It does not currently register an Open WebUI tool automatically; production attachment requires a separate per-user authorization and connector acceptance decision.
+The Evidence Workspace is a separate trust boundary. It retains original evidence in a dedicated volume, parses supported sources deterministically and exposes a minimized context that explicitly excludes raw evidence and payloads. A checksum-pinned Open WebUI filter handles chat attachments only for the managed Packet Expert profile. It creates a case, uploads each supported source, runs deterministic analysis, and injects the minimized context. It does not provide live capture, device access, or an external connector.
 
 ### Citation boundary
 

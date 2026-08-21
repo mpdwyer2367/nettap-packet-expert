@@ -6,7 +6,7 @@
   "runtime_model": "nettap-ai:0.4.0-rc.1",
   "source_policy": "model/nettap-ai.Modelfile",
   "temperature": 0.1,
-  "num_ctx": 16384,
+  "num_ctx": 4096,
   "status": "release-candidate",
   "source": "https://ollama.com/library/qwen3.5:9b-q4_K_M",
   "license": "Apache-2.0"
