@@ -44,7 +44,7 @@ The managed filter creates a case, hashes and uploads the source to the Evidence
 Workspace, runs deterministic analysis, and adds only the minimized context to
 the model request. It is not attached to the Network & Visibility profile.
 
-Supported chat attachments are `.pcap`, `.json`, `.jsonl`, `.ndjson`, `.log`,
+Supported chat attachments are `.pcap`, `.pcapng`, `.json`, `.jsonl`, `.ndjson`, `.log`,
 `.txt`, `.png`, `.jpg`, `.jpeg`, and `.webp`. The classic PCAP path performs the
 built-in metadata decode documented below. Images are signature-validated and
 passed to the multimodal model with explicit untrusted-input instructions.
@@ -72,7 +72,7 @@ reloading the page requires the token again.
 
 | Source type | Accepted input | Built-in behavior |
 |---|---|---|
-| `pcap` | Classic PCAP, Ethernet or raw IP link type | IPv4/IPv6 and basic TCP/UDP/ICMP/GRE/ESP metadata; no application payload extraction |
+| `pcap` | Classic PCAP or PCAPNG enhanced-packet blocks, Ethernet or raw IP link type | IPv4/IPv6 and basic TCP/UDP/ICMP/GRE/ESP metadata; no application payload extraction |
 | `normalized-pcap` | JSON object, JSON array or JSONL | Validates objects, maps common fields and redacts sensitive keys |
 | `ipfix` | Normalized JSON/JSONL | Preserves exporter/template/sampling metadata and common five-tuple fields |
 | `netflow` | Normalized JSON/JSONL | Maps common flow aliases and records schema limitations |
@@ -81,10 +81,12 @@ reloading the page requires the token again.
 | `syslog` | UTF-8 lines | Extracts priority, facility, severity, host and bounded message text into the protected normalized store; raw lines remain excluded from LLM context |
 | `json` / `jsonl` | UTF-8 JSON objects | Generic schema-bounded import |
 
-PCAPNG is not parsed by the built-in dependency-free parser. Normalize it in an
-isolated, resource-limited TShark service and upload JSON/JSONL as
-`normalized-pcap`. The product must not claim PCAPNG support until that extractor
-is packaged, pinned and accepted.
+The dependency-free PCAPNG path validates section, interface, and
+enhanced-packet block boundaries, supports per-interface timestamp resolution,
+and emits the same payload-free packet metadata as classic PCAP. It does not
+expand every PCAPNG block family or replace deeper, resource-isolated TShark
+normalization. The OVA acceptance additionally proves that its pinned guest
+TShark can decode both formats before upload.
 
 ## API contract
 
@@ -198,8 +200,8 @@ without an evidence volume.
 ## Next integration gate
 
 The next decoder increment should package a resource-isolated, version-pinned
-TShark worker for PCAPNG and deeper protocol normalization, with derived-artifact
-hashing and malicious-input tests. The current managed chat path uses the
-built-in classic-PCAP metadata parser and does not claim packaged TShark or
-PCAPNG support. No write-capable NetTAP NPB or device connector should be added
+TShark worker for deeper protocol normalization, additional PCAPNG block
+families, derived-artifact hashing, and malicious-input tests. The current
+managed chat path uses the bounded built-in PCAP/PCAPNG metadata parser. No
+write-capable NetTAP NPB or device connector should be added
 until read-only acquisition, audit, validation and rollback controls pass.

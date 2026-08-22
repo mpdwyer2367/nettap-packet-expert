@@ -1,0 +1,21 @@
+#cloud-config
+autoinstall:
+  version: 1
+  locale: en_US.UTF-8
+  keyboard:
+    layout: us
+  identity:
+    hostname: nettap-builder
+    username: packer
+    password: "$6$nettap-builder$sEBy2C.QHpHBxm7vAstULULVqhGxXglm.P7Erso/E.J3HaGSFUOVmy/C2MRYSm17C4wfFDrCq1jwH9BhPzld7."
+  ssh:
+    install-server: true
+    allow-pw: true
+  storage:
+    layout:
+      name: direct
+  packages:
+    - qemu-guest-agent
+  late-commands:
+    - curtin in-target --target=/target -- sh -c 'printf "packer ALL=(ALL) NOPASSWD:ALL\\n" > /etc/sudoers.d/packer'
+    - curtin in-target --target=/target -- chmod 0440 /etc/sudoers.d/packer

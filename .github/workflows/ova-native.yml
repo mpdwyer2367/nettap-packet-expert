@@ -1,0 +1,72 @@
+name: Native OVA build and acceptance
+
+on:
+  workflow_dispatch:
+    inputs:
+      phase:
+        description: Build a candidate or run import acceptance
+        required: true
+        type: choice
+        options: [build, accept]
+      target:
+        description: Exact native hypervisor target
+        required: true
+        type: choice
+        options: [virtualbox-amd64, vmware-amd64, virtualbox-arm64, vmware-arm64]
+      ova_path:
+        description: Runner-local OVA path for accept phase
+        required: false
+        type: string
+      guest_report_path:
+        description: Runner-local full guest-smoke report for accept phase
+        required: false
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  native:
+    runs-on: [self-hosted, ova, "${{ inputs.target }}"]
+    timeout-minutes: 360
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Verify source gates
+        run: |
+          ./tests/static-checks.sh
+          ./tests/appliance-source-checks.sh
+      - name: Build native OVA candidate
+        if: inputs.phase == 'build'
+        run: ./scripts/build-ova.sh "${{ inputs.target }}"
+      - name: Verify acceptance inputs
+        if: inputs.phase == 'accept'
+        env:
+          OVA_PATH: "${{ inputs.ova_path }}"
+          GUEST_REPORT_PATH: "${{ inputs.guest_report_path }}"
+        run: |
+          test -f "$OVA_PATH"
+          test -f "$GUEST_REPORT_PATH"
+      - name: Run native import acceptance
+        if: inputs.phase == 'accept'
+        env:
+          OVA_PATH: "${{ inputs.ova_path }}"
+          GUEST_REPORT_PATH: "${{ inputs.guest_report_path }}"
+        run: |
+          ./tests/ova-import-acceptance.sh \
+            --target "${{ inputs.target }}" \
+            --ova "$OVA_PATH" \
+            --evidence-dir "dist/acceptance/${{ inputs.target }}" \
+            --guest-report "$GUEST_REPORT_PATH" \
+            --cleanup \
+            --confirm
+      - name: Upload candidate and evidence
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: nettap-${{ inputs.phase }}-${{ inputs.target }}
+          path: |
+            dist/nettap-ai-*.ova
+            dist/nettap-ai-*.sha256
+            dist/evidence/${{ inputs.target }}/
+            dist/acceptance/${{ inputs.target }}/
+          if-no-files-found: error
+          retention-days: 14

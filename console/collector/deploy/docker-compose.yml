@@ -1,0 +1,166 @@
+# =============================================================================
+# AMDAI appliance stack: Postgres/TimescaleDB, collector, web console, Ollama.
+#
+# .env CONTRACT (create collector/deploy/.env next to this file; never commit
+# real secrets — this is the full list of variables this stack reads):
+#
+#   AMDAI_PROFILE=small            # small | medium | large | xl -> profiles/<name>.env
+#   AMDAI_CONSOLE_URL=https://console.example.com   # matches AMDAI_CONSOLE_URL in collector/src/config.ts
+#   AMDAI_COLLECTOR_TOKEN=changeme                  # pairing token issued by the console
+#   AMDAI_API_PORT=8787                             # collector local API bind port (config.ts default)
+#   POSTGRES_USER=amdai
+#   POSTGRES_PASSWORD=changeme-strong-password       # required, no default is baked in
+#   POSTGRES_DB=amdai_collector
+#   AMDAI_LOCAL_PG=postgresql://amdai:changeme-strong-password@postgres:5432/amdai_collector
+#   WEB_PORT=8443                                    # host port the console UI is published on
+#   OLLAMA_MODEL=llama3.1:8b                         # only used when the "ollama" compose profile is enabled
+#
+# Profile-specific Postgres tuning (shared_buffers, work_mem, CPU/mem
+# reservations, ...) is layered in from profiles/${AMDAI_PROFILE}.env — see
+# that directory for the four shipped profiles (small/medium/large/xl), sized
+# to match src/lib/capacity.ts's CAPACITY_PROFILES table.
+#
+# Bring the stack up:
+#   AMDAI_PROFILE=medium docker compose --env-file .env \
+#     --env-file profiles/medium.env up -d
+#
+# Enable local Ollama (optional, off by default):
+#   docker compose --profile ollama --env-file .env \
+#     --env-file profiles/medium.env up -d
+#
+# NOTE ON network_mode: host — the collector container captures live traffic
+# (dumpcap/tshark) and receives NetFlow/IPFIX/sFlow UDP directly on host
+# interfaces, so it runs with network_mode: host plus CAP_NET_ADMIN/CAP_NET_RAW
+# instead of published ports. This means it shares the host's network
+# namespace: firewall/port exposure is controlled on the host, not by this
+# compose file. Do not remove NET_ADMIN/NET_RAW or capture and flow receivers
+# will fail to bind raw sockets / promiscuous mode.
+# =============================================================================
+
+name: amdai
+
+services:
+  postgres:
+    image: timescale/timescaledb:latest-pg16
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-amdai}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD must be set in .env}
+      POSTGRES_DB: ${POSTGRES_DB:-amdai_collector}
+    command:
+      - postgres
+      - -c
+      - shared_preload_libraries=timescaledb
+      - -c
+      - shared_buffers=${PG_SHARED_BUFFERS:-2GB}
+      - -c
+      - effective_cache_size=${PG_EFFECTIVE_CACHE_SIZE:-6GB}
+      - -c
+      - work_mem=${PG_WORK_MEM:-16MB}
+      - -c
+      - max_wal_size=${PG_MAX_WAL_SIZE:-2GB}
+      - -c
+      - max_connections=${PG_MAX_CONNECTIONS:-100}
+      - -c
+      - wal_compression=${PG_WAL_COMPRESSION:-on}
+    volumes:
+      - amdai_pgdata:/var/lib/postgresql/data
+    mem_limit: ${PG_MEM_LIMIT:-4g}
+    mem_reservation: ${PG_MEM_RESERVATION:-2g}
+    cpus: ${PG_CPU_LIMIT:-2}
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-amdai} -d ${POSTGRES_DB:-amdai_collector}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+    # Not published on purpose: only the collector (host network) and any
+    # local tooling on this box need to reach Postgres.
+    expose:
+      - "5432"
+
+  collector:
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile
+    restart: unless-stopped
+    # Host networking is required for raw packet capture (dumpcap) and to
+    # receive NetFlow/IPFIX/sFlow UDP on the host's real interfaces/ports
+    # (2055, 4739, 6343). CAP_NET_ADMIN enables promiscuous mode, CAP_NET_RAW
+    # enables raw socket capture; both are dropped from every other process
+    # in the container via the non-root dumpcap capability set (see
+    # deploy/Dockerfile) rather than running the whole container as root.
+    network_mode: host
+    cap_add:
+      - NET_ADMIN
+      - NET_RAW
+    environment:
+      AMDAI_CONSOLE_URL: ${AMDAI_CONSOLE_URL:?AMDAI_CONSOLE_URL must be set in .env}
+      AMDAI_COLLECTOR_TOKEN: ${AMDAI_COLLECTOR_TOKEN:?AMDAI_COLLECTOR_TOKEN must be set in .env}
+      AMDAI_LOCAL_PG: ${AMDAI_LOCAL_PG:-postgresql://amdai:changeme@127.0.0.1:5432/amdai_collector}
+      AMDAI_API_PORT: ${AMDAI_API_PORT:-8787}
+      AMDAI_PROFILE: ${AMDAI_PROFILE:-small}
+    volumes:
+      - amdai_collector_config:/opt/amdai/collector/config
+      - amdai_collector_data:/opt/amdai/collector/data
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://127.0.0.1:${AMDAI_API_PORT:-8787}/healthz || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 6
+      start_period: 20s
+    mem_limit: ${COLLECTOR_MEM_LIMIT:-3g}
+    mem_reservation: ${COLLECTOR_MEM_RESERVATION:-1g}
+    cpus: ${COLLECTOR_CPU_LIMIT:-2}
+
+  web:
+    build:
+      context: ../..
+      dockerfile: collector/deploy/web.Dockerfile
+    restart: unless-stopped
+    environment:
+      AMDAI_CONSOLE_URL: ${AMDAI_CONSOLE_URL:-http://localhost:${WEB_PORT:-8443}}
+    ports:
+      - "${WEB_PORT:-8443}:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://127.0.0.1:8080/ || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 6
+      start_period: 20s
+    mem_limit: ${WEB_MEM_LIMIT:-2g}
+    mem_reservation: ${WEB_MEM_RESERVATION:-512m}
+    cpus: ${WEB_CPU_LIMIT:-1}
+
+  # Optional local LLM for on-box AI features. Off by default; start with
+  # `docker compose --profile ollama up -d`.
+  ollama:
+    image: ollama/ollama:latest
+    profiles: ["ollama"]
+    restart: unless-stopped
+    volumes:
+      - amdai_ollama:/root/.ollama
+    expose:
+      - "11434"
+    environment:
+      OLLAMA_MODEL: ${OLLAMA_MODEL:-llama3.1:8b}
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://127.0.0.1:11434/api/tags || exit 1"]
+      interval: 20s
+      timeout: 5s
+      retries: 6
+      start_period: 30s
+    mem_limit: ${OLLAMA_MEM_LIMIT:-4g}
+    cpus: ${OLLAMA_CPU_LIMIT:-2}
+
+volumes:
+  amdai_pgdata:
+  amdai_collector_config:
+  amdai_collector_data:
+  amdai_ollama:

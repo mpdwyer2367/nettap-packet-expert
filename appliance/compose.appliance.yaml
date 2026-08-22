@@ -1,0 +1,55 @@
+services:
+  model-init:
+    # Appliance builds preload the pinned base model while temporary build
+    # egress exists. Runtime initialization must never contact a registry.
+    command:
+      - >-
+        actual_id="$$(ollama list | awk '$$1 == "${BASE_MODEL}" {print $$2}')" &&
+        test "$$actual_id" = "${EXPECTED_BASE_MODEL_ID}" &&
+        ollama create ${NETTAP_AI_MODEL} -f /model/nettap-ai.Modelfile &&
+        ollama show ${NETTAP_AI_MODEL}
+
+  ollama:
+    volumes:
+      - packet-expert-ollama-data:/root/.ollama
+
+  open-webui:
+    volumes:
+      - packet-expert-open-webui-data:/app/backend/data
+
+  evidence-service:
+    volumes:
+      - ./case_service:/service/case_service:ro
+      - packet-expert-evidence-data:/data
+
+volumes:
+  packet-expert-ollama-data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: /var/lib/nettap/ollama
+  packet-expert-open-webui-data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: /var/lib/nettap/open-webui
+  packet-expert-evidence-data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: /var/lib/nettap/evidence
+  packet-expert-gateway-data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: /var/lib/nettap/gateway/data
+  packet-expert-gateway-config:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: /var/lib/nettap/gateway/config

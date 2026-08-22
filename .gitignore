@@ -6,6 +6,7 @@ config/tls/*
 !config/tls/.gitkeep
 backups/
 dist/
+.packer/
 reports/generated/
 reports/production/private/
 __pycache__/

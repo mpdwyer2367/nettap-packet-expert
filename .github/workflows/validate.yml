@@ -12,13 +12,38 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
-      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - name: Install validation dependencies
         run: python3 -m pip install --disable-pip-version-check pyyaml==6.0.3 pydantic==2.13.4
+      - name: Install pinned Packer validator
+        run: |
+          curl --fail --silent --show-error --location \
+            --output /tmp/packer.zip \
+            https://releases.hashicorp.com/packer/1.15.4/packer_1.15.4_linux_amd64.zip
+          echo '15f97a6a99645c7d5308c609973b5280837b38e112beac413ccbce80da927cf1  /tmp/packer.zip' | sha256sum --check --strict
+          mkdir -p /tmp/packer-bin
+          unzip -q /tmp/packer.zip packer -d /tmp/packer-bin
+          sudo install -m 0755 /tmp/packer-bin/packer /usr/local/bin/packer
       - name: Lint shell entry points
-        run: shellcheck scripts/*.sh scripts/nettap-ai scripts/nettap-packet-expert tests/*.sh
+        run: |
+          shellcheck scripts/*.sh scripts/nettap-ai scripts/nettap-packet-expert tests/*.sh
+          shellcheck scripts/nettapctl
+          find appliance -type f -name '*.sh' -print0 | xargs -0 shellcheck
       - name: Run static checks
         run: ./tests/static-checks.sh
+      - name: Validate OVA appliance sources
+        run: ./tests/appliance-source-checks.sh
+      - name: Validate analyst console integration sources
+        run: ./tests/console-source-checks.sh
+      - name: Validate Packer plugin schemas
+        run: |
+          mkdir -p /tmp/nettap-packer-evidence
+          git archive --format=tar.gz -o /tmp/nettap-source.tar.gz HEAD
+          packer init appliance/packer
+          packer validate \
+            -var source_archive=/tmp/nettap-source.tar.gz \
+            -var evidence_directory=/tmp/nettap-packer-evidence \
+            appliance/packer
       - name: Test native model installer verification
         run: ./tests/native-model-installer-mock.sh
       - name: Test legacy model retirement safeguards
@@ -26,7 +51,7 @@ jobs:
       - name: Test Open WebUI provisioning contract
         run: python3 -m unittest -v tests/test_provision_open_webui.py tests/test_verify_archive_tree.py tests/test_case_service.py tests/test_evidence_filter.py
       - name: Compile provisioning code
-        run: python3 -m py_compile provisioning/*.py case_service/*.py functions/*.py scripts/verify-archive-tree.py
+        run: python3 -m py_compile provisioning/*.py case_service/*.py functions/*.py appliance/*.py tests/generate-packet-fixtures.py tests/inspect_ova.py scripts/verify-archive-tree.py
       - name: Render supported Compose profiles
         run: |
           docker compose --env-file .env.example \
@@ -36,6 +61,12 @@ jobs:
           docker compose --env-file .env.example \
             -f compose.yaml -f compose.production.yaml -f compose.bootstrap.yaml \
             --profile initialize config --quiet
+          docker compose --env-file .env.example \
+            -f compose.yaml -f compose.production.yaml -f appliance/compose.appliance.yaml \
+            --profile initialize config --quiet
+          docker compose --env-file .env.example \
+            -f compose.yaml -f compose.production.yaml -f compose.console.yaml \
+            config --quiet
       - name: Parse PowerShell deployment
         shell: pwsh
         run: |
@@ -71,3 +102,25 @@ jobs:
         run: |
           ./scripts/package-model-bundle.sh
           ./scripts/verify-model-bundle.sh dist/nettap-ai-model-0.4.0-rc.1.tar.gz
+
+  analyst-console:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: console
+    env:
+      VITE_SUPABASE_URL: https://example.supabase.co
+      VITE_SUPABASE_PUBLISHABLE_KEY: sb_publishable_ci_placeholder
+      SUPABASE_URL: https://example.supabase.co
+      SUPABASE_PUBLISHABLE_KEY: sb_publishable_ci_placeholder
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: "22.18.0"
+          cache: npm
+          cache-dependency-path: console/package-lock.json
+      - run: npm ci --ignore-scripts
+      - run: npm run lint
+      - run: npm run build

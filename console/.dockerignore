@@ -1,0 +1,8 @@
+.git
+.lovable
+node_modules
+.output
+collector
+supabase/.temp
+*.log
+.env

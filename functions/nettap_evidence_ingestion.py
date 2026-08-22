@@ -22,9 +22,9 @@ import urllib.request
 from pydantic import BaseModel
 
 
-# This reviewed filter owns attachment handling for the managed Packet Expert
-# profile. It keeps binary packet data out of Open WebUI's text RAG path.
-file_handler = True
+# This reviewed filter removes managed binary uploads from the request while
+# preserving Open WebUI's virtual knowledge sources for the normal RAG path.
+file_handler = False
 
 IMAGE_TYPES = {
     ".png": "image/png",
@@ -32,7 +32,7 @@ IMAGE_TYPES = {
     ".jpeg": "image/jpeg",
     ".webp": "image/webp",
 }
-EVIDENCE_SUFFIXES = {".pcap", ".json", ".jsonl", ".ndjson", ".log", ".txt"}
+EVIDENCE_SUFFIXES = {".pcap", ".pcapng", ".json", ".jsonl", ".ndjson", ".log", ".txt"}
 
 
 class Filter:
@@ -68,7 +68,9 @@ class Filter:
             raise ValueError(
                 f"Attach no more than {self.valves.max_files_per_turn} files per message"
             )
-        evidence_files, image_files = self._partition(files)
+        evidence_files, image_files, passthrough_files = self._partition(files)
+        if not evidence_files and not image_files:
+            return body
         if len(image_files) > self.valves.max_images_per_turn:
             raise ValueError(
                 f"Attach no more than {self.valves.max_images_per_turn} images per message"
@@ -130,6 +132,7 @@ class Filter:
                 }
             )
             parts.extend(image_parts)
+        self._preserve_virtual_sources(body, __metadata__, passthrough_files)
         user_message["content"] = parts
         body["messages"] = messages
         if __event_emitter__:
@@ -144,11 +147,13 @@ class Filter:
             )
         return body
 
-    def _partition(self, files: list) -> tuple[list, list]:
-        evidence_files, image_files = [], []
+    def _partition(self, files: list) -> tuple[list, list, list]:
+        evidence_files, image_files, passthrough_files = [], [], []
         for item in files:
-            record = item.get("file") or item.get("files") or item
-            filename = Path(str(record.get("filename") or "attachment.bin")).name
+            if not self._is_upload(item):
+                passthrough_files.append(item)
+                continue
+            _, filename = self._attachment_info(item)
             suffix = Path(filename).suffix.lower()
             if suffix in IMAGE_TYPES:
                 image_files.append(item)
@@ -159,14 +164,42 @@ class Filter:
                     "Unsupported attachment. Use .pcap, .json, .jsonl, .ndjson, "
                     ".log, .txt, .png, .jpg, .jpeg or .webp"
                 )
-        return evidence_files, image_files
+        return evidence_files, image_files, passthrough_files
+
+    @staticmethod
+    def _is_upload(item: dict) -> bool:
+        if not isinstance(item, dict):
+            return False
+        if item.get("type") == "file":
+            return True
+        if item.get("filename"):
+            return True
+        record = item.get("file")
+        if isinstance(record, dict) and (
+            record.get("filename") or record.get("name")
+        ):
+            return True
+        alternate = item.get("files")
+        return isinstance(alternate, dict) and (
+            alternate.get("filename") or alternate.get("name")
+        )
+
+    @staticmethod
+    def _preserve_virtual_sources(
+        body: dict, metadata: Optional[dict], passthrough_files: list
+    ) -> None:
+        if "files" in body:
+            body["files"] = passthrough_files
+        body_metadata = body.get("metadata")
+        if isinstance(body_metadata, dict) and "files" in body_metadata:
+            body_metadata["files"] = passthrough_files
+        if isinstance(metadata, dict) and "files" in metadata:
+            metadata["files"] = passthrough_files
 
     def _image_parts(self, files: list) -> list[dict]:
         parts = []
         for item in files:
-            record = item.get("file") or item.get("files") or item
-            file_id = str(record.get("id") or "")
-            filename = Path(str(record.get("filename") or "image.bin")).name
+            file_id, filename = self._attachment_info(item)
             if not file_id:
                 raise ValueError("Open WebUI image metadata is incomplete")
             path = self._upload_path(file_id, filename)
@@ -230,9 +263,7 @@ class Filter:
             {"Content-Type": "application/json"},
         )
         for item in files:
-            record = item.get("file") or item.get("files") or item
-            file_id = str(record.get("id") or "")
-            filename = Path(str(record.get("filename") or "evidence.bin")).name
+            file_id, filename = self._attachment_info(item)
             if not file_id or not filename:
                 raise ValueError("Open WebUI attachment metadata is incomplete")
             path = self._upload_path(file_id, filename)
@@ -272,6 +303,32 @@ class Filter:
             "GET", f"/v1/cases/{case['id']}/context", token, None, {}
         )
 
+    @staticmethod
+    def _attachment_info(item: dict) -> tuple[str, str]:
+        if not isinstance(item, dict):
+            raise ValueError("Open WebUI attachment metadata is incomplete")
+        record = item.get("file")
+        if not isinstance(record, dict):
+            record = {}
+        alternate = item.get("files")
+        if not isinstance(alternate, dict):
+            alternate = {}
+        file_id = str(
+            item.get("id") or record.get("id") or alternate.get("id") or ""
+        )
+        filename = Path(
+            str(
+                item.get("name")
+                or item.get("filename")
+                or record.get("filename")
+                or record.get("name")
+                or alternate.get("filename")
+                or alternate.get("name")
+                or "attachment.bin"
+            )
+        ).name
+        return file_id, filename
+
     def _upload_path(self, file_id: str, filename: str) -> Path:
         root = Path(
             os.environ.get("NETTAP_OPEN_WEBUI_UPLOAD_DIR", "/app/backend/data/uploads")
@@ -286,7 +343,7 @@ class Filter:
     @staticmethod
     def _source_type(filename: str) -> str:
         suffix = Path(filename).suffix.lower()
-        if suffix == ".pcap":
+        if suffix in {".pcap", ".pcapng"}:
             return "pcap"
         if suffix in {".log", ".txt"}:
             return "syslog"

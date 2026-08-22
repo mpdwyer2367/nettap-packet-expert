@@ -28,10 +28,11 @@ Read the local login from `.bootstrap-admin-password`. Change its bootstrap pass
 ```
 
 To verify restored evidence upload, open port 3100, select **NetTAP Network
-Intelligence — Packet Expert**, attach a small authorized `.pcap`, `.jsonl`, or
+Intelligence — Packet Expert**, attach a small authorized `.pcap`, `.pcapng`, `.jsonl`, or
 `.log` file, and ask for an evidence-supported analysis. The response must cite
-Evidence Workspace IDs and limitations. `.pcapng` still requires external
-TShark normalization and is rejected by the built-in parser.
+Evidence Workspace IDs and limitations. PCAP and PCAPNG use the bounded
+payload-free metadata parser; deeper protocol claims still require reviewed
+TShark-derived normalization.
 
 ## Verification
 

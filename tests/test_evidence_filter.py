@@ -9,6 +9,110 @@ from functions.nettap_evidence_ingestion import Filter
 
 
 class EvidenceFilterTests(unittest.TestCase):
+    def test_pcap_upload_preserves_virtual_knowledge_sources(self):
+        with tempfile.TemporaryDirectory() as directory, patch.dict(
+            os.environ,
+            {
+                "EVIDENCE_API_TOKEN": "a" * 64,
+                "NETTAP_OPEN_WEBUI_UPLOAD_DIR": directory,
+            },
+            clear=False,
+        ):
+            filename = "unistim_phone_startup.pcap"
+            Path(directory, f"pcap-knowledge_{filename}").write_bytes(
+                b"\xd4\xc3\xb2\xa1" + b"synthetic-pcap-fixture"
+            )
+            managed_filter = Filter()
+
+            def fake_request(method, path, token, body, headers):
+                if path == "/v1/cases":
+                    return {"id": "case-knowledge"}
+                if path.endswith("/context"):
+                    return {
+                        "context_contract": "nettap-evidence-context/v1",
+                        "evidence_ids": ["evidence-knowledge"],
+                    }
+                return {"status": "ok"}
+
+            managed_filter._json_request = fake_request
+            knowledge = {
+                "id": "nettap-packet-expert-knowledge",
+                "name": "NetTAP Packet Expert Managed",
+                "collection_name": "nettap-packet-expert-knowledge",
+                "legacy": True,
+            }
+            body = {
+                "messages": [{"role": "user", "content": "Read capture"}],
+                "files": [
+                    knowledge,
+                    {
+                        "type": "file",
+                        "id": "pcap-knowledge",
+                        "name": filename,
+                        "file": {"id": "pcap-knowledge"},
+                    },
+                ],
+            }
+
+            result = asyncio.run(managed_filter.inlet(body))
+            self.assertEqual(result["files"], [knowledge])
+            rendered = "\n".join(
+                part.get("text", "") for part in result["messages"][-1]["content"]
+            )
+            self.assertIn("evidence-knowledge", rendered)
+
+    def test_open_webui_wrapper_uses_top_level_name_for_pcap(self):
+        with tempfile.TemporaryDirectory() as directory, patch.dict(
+            os.environ,
+            {
+                "EVIDENCE_API_TOKEN": "a" * 64,
+                "NETTAP_OPEN_WEBUI_UPLOAD_DIR": directory,
+            },
+            clear=False,
+        ):
+            filename = "unistim_phone_startup.pcap"
+            Path(directory, f"pcap-1_{filename}").write_bytes(
+                b"\xd4\xc3\xb2\xa1" + b"synthetic-pcap-fixture"
+            )
+            calls = []
+            managed_filter = Filter()
+
+            def fake_request(method, path, token, body, headers):
+                calls.append((method, path, token, body, headers))
+                if path == "/v1/cases":
+                    return {"id": "case-pcap"}
+                if path.endswith("/context"):
+                    return {
+                        "context_contract": "nettap-evidence-context/v1",
+                        "evidence_ids": ["evidence-pcap"],
+                    }
+                return {"status": "ok"}
+
+            managed_filter._json_request = fake_request
+            body = {
+                "messages": [{"role": "user", "content": "Read capture"}],
+                "files": [
+                    {
+                        "type": "file",
+                        "id": "pcap-1",
+                        "name": filename,
+                        "file": {"id": "pcap-1"},
+                    }
+                ],
+            }
+
+            result = asyncio.run(managed_filter.inlet(body))
+            upload = next(call for call in calls if "/evidence?" in call[1])
+            self.assertIn("source_type=pcap", upload[1])
+            self.assertIn("filename=unistim_phone_startup.pcap", upload[1])
+            self.assertIn(
+                "evidence-pcap",
+                "\n".join(
+                    part.get("text", "")
+                    for part in result["messages"][-1]["content"]
+                ),
+            )
+
     def test_chat_attachment_is_sent_to_internal_service_and_minimized(self):
         with tempfile.TemporaryDirectory() as directory, patch.dict(
             os.environ,
@@ -77,7 +181,7 @@ class EvidenceFilterTests(unittest.TestCase):
                 asyncio.run(managed_filter.inlet(body))
             self.assertEqual(len(calls), 1)
 
-    def test_unsupported_attachment_fails_closed(self):
+    def test_pcapng_attachment_is_sent_to_internal_service(self):
         with tempfile.TemporaryDirectory() as directory, patch.dict(
             os.environ,
             {
@@ -88,13 +192,32 @@ class EvidenceFilterTests(unittest.TestCase):
         ):
             Path(directory, "file-2_capture.pcapng").write_bytes(b"fixture")
             managed_filter = Filter()
-            managed_filter._json_request = lambda *args: {"id": "case-2"}
+            calls = []
+
+            def fake_request(method, path, token, body, headers):
+                calls.append((method, path, token, body, headers))
+                if path == "/v1/cases":
+                    return {"id": "case-2"}
+                if path.endswith("/context"):
+                    return {
+                        "context_contract": "nettap-evidence-context/v1",
+                        "evidence_ids": ["evidence-pcapng"],
+                    }
+                return {"status": "ok"}
+
+            managed_filter._json_request = fake_request
             body = {
                 "messages": [{"role": "user", "content": "Analyze this"}],
                 "files": [{"id": "file-2", "filename": "capture.pcapng"}],
             }
-            with self.assertRaisesRegex(ValueError, "Unsupported attachment"):
-                asyncio.run(managed_filter.inlet(body))
+            result = asyncio.run(managed_filter.inlet(body))
+            upload = next(call for call in calls if "/evidence?" in call[1])
+            self.assertIn("source_type=pcap", upload[1])
+            self.assertIn("filename=capture.pcapng", upload[1])
+            rendered = "\n".join(
+                part.get("text", "") for part in result["messages"][-1]["content"]
+            )
+            self.assertIn("evidence-pcapng", rendered)
 
     def test_valid_network_diagram_is_forwarded_as_multimodal_input(self):
         with tempfile.TemporaryDirectory() as directory, patch.dict(

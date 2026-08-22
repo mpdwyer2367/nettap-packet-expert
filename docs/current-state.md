@@ -24,7 +24,7 @@
 | Installer | macOS, Windows/WSL2, and native Ollama entry points with identity checks |
 | Recovery | Backup format v3, non-overwriting restore, failed-update harness, and legacy-model retirement controls |
 
-The Evidence Workspace can create cases, ingest classic PCAP metadata and normalized
+The Evidence Workspace can create cases, ingest classic PCAP and PCAPNG metadata and normalized
 JSON/JSONL, syslog, flow, and cloud-flow records, retain original evidence under
 server-generated paths, compute SHA-256, record provenance limitations, run bounded
 deterministic aggregation, and export minimized context and Markdown reports.
@@ -47,8 +47,8 @@ security, signing, or commercial acceptance.
 ## Current incomplete or unsafe boundaries
 
 - The appliance-local bearer token is not user identity, RBAC, or case-level tenancy.
-- PCAPNG has no packaged, resource-isolated TShark worker and is rejected with normalization guidance.
-- Classic-PCAP parsing is dependency-free metadata extraction, not full DNS/TLS/TCP analysis.
+- PCAPNG enhanced-packet blocks are supported by the dependency-free metadata parser, but there is no packaged resource-isolated TShark worker for deeper normalization.
+- PCAP/PCAPNG parsing is bounded metadata extraction, not full DNS/TLS/TCP analysis.
 - Evidence lifecycle states, retention, deletion, legal hold, parser quarantine, and encrypted-at-rest policy are incomplete.
 - No documented real NetTAP device API or accepted hardware connector is present.
 - No device write path is enabled.
@@ -62,7 +62,7 @@ and a SHA-256-bound analysis artifact. Citation lookup is scoped by both case an
 audited, and exposed through a read-only API. The UI resolves normalized-observation
 citations without exposing retained raw evidence.
 
-The next priority is a packaged PCAP/PCAPNG parser-worker boundary with format detection,
+The next priority is a packaged deep-protocol parser-worker boundary with format detection,
 resource limits, lifecycle states, derived-artifact hashing, and malicious-input tests.
 
 ## Citation increment validation actually run
