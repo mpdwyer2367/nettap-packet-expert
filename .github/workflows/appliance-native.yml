@@ -1,0 +1,40 @@
+name: Appliance native build and proof
+
+on:
+  workflow_dispatch:
+    inputs:
+      architecture:
+        description: Native guest architecture
+        required: true
+        type: choice
+        options: [amd64, arm64]
+      hypervisor:
+        description: Installed hypervisor
+        required: true
+        type: choice
+        options: [virtualbox, vmware]
+
+permissions:
+  contents: read
+
+jobs:
+  native-build:
+    runs-on: [self-hosted, "native-${{ inputs.architecture }}", "${{ inputs.hypervisor }}"]
+    timeout-minutes: 240
+    env:
+      NETTAP_REQUIRE_PACKER: "1"
+    steps:
+      - name: Checkout exact release source
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          fetch-depth: 0
+      - name: Source and Packer gate
+        run: ./appliance/tests/source-gate.sh
+      - name: Build native appliance
+        run: ./scripts/build-appliance.sh --hypervisor "${{ inputs.hypervisor }}" --arch "${{ inputs.architecture }}"
+      - name: Package artifacts
+        run: ./scripts/package-appliance-bundle.sh --arch "${{ inputs.architecture }}" --hypervisor "${{ inputs.hypervisor }}"
+      - name: Record remaining guest gates
+        run: |
+          echo "NOT EXECUTED: guest import/setup/runtime/reboot acceptance requires operator SSH bootstrap"
+          echo "Run appliance/acceptance/README.md against this exact artifact hash."

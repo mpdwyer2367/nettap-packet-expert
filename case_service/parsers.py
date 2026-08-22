@@ -9,16 +9,23 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import datetime, timezone
+import csv
+import io
 import ipaddress
 import json
 import re
 import struct
 from typing import Any
+import xml.etree.ElementTree as ET
+import zipfile
+
+from .packet_decoder import TsharkDecodeError, TsharkUnavailable, decode_capture
 
 
 PARSER_VERSION = "1.0.0"
 SUPPORTED_SOURCE_TYPES = {
     "pcap",
+    "pcapng",
     "normalized-pcap",
     "json",
     "jsonl",
@@ -27,6 +34,8 @@ SUPPORTED_SOURCE_TYPES = {
     "netflow",
     "sflow",
     "cloud-flow",
+    "csv",
+    "xlsx",
 }
 SENSITIVE_KEYS = {
     "api_key",
@@ -98,13 +107,31 @@ def parse_evidence(
             f"{metadata_omissions} unrecognized or non-scalar metadata field(s) were not included"
         )
 
-    if source_type == "pcap":
-        observations, parser_metadata = parse_pcap(content, max_records)
+    if source_type in {"pcap", "pcapng"}:
+        try:
+            observations, parser_metadata = decode_capture(content, max_records)
+            parser_name = "nettap-tshark-metadata"
+        except TsharkUnavailable:
+            if source_type == "pcapng" or content.startswith(b"\x0a\x0d\x0d\x0a"):
+                raise ParseError(
+                    "PCAPNG requires the managed TShark decoder; normalize it with TShark"
+                )
+            observations, parser_metadata = parse_pcap(content, max_records)
+            parser_name = "nettap-pcap-metadata"
+            warnings.append("TShark was unavailable; the limited built-in PCAP parser was used")
+        except TsharkDecodeError as exc:
+            raise ParseError(str(exc)) from exc
         clean_metadata.update(parser_metadata)
-        parser_name = "nettap-pcap-metadata"
     elif source_type == "syslog":
         observations = parse_syslog(content, max_records)
         parser_name = "nettap-syslog-lines"
+    elif source_type in {"csv", "xlsx"}:
+        observations, redactions = parse_tabular(content, source_type, max_records)
+        if redactions:
+            warnings.append(
+                f"{redactions} sensitive record field(s) were redacted from normalized observations"
+            )
+        parser_name = f"nettap-normalized-{source_type}"
     else:
         observations, redactions = parse_structured(content, source_type, max_records)
         if redactions:
@@ -152,7 +179,7 @@ def metadata_quality_warnings(source_type: str, metadata: dict[str, Any]) -> lis
         "unknown",
     ):
         warnings.append("IPFIX template status is unknown")
-    if source_type in {"pcap", "normalized-pcap"}:
+    if source_type in {"pcap", "pcapng", "normalized-pcap"}:
         if metadata.get("capture_drops") in (None, "", "unknown"):
             warnings.append("Capture-drop count is unknown")
         if metadata.get("truncation") in (None, "", "unknown"):
@@ -227,6 +254,104 @@ def parse_syslog(content: bytes, max_records: int) -> list[dict[str, Any]]:
             item["source_timestamp"] = match.group("timestamp")
         observations.append(item)
     return observations
+
+
+def parse_tabular(
+    content: bytes, source_type: str, max_records: int
+) -> tuple[list[dict[str, Any]], int]:
+    if source_type == "csv":
+        try:
+            reader = csv.DictReader(io.StringIO(decode_text(content), newline=""))
+            if not reader.fieldnames or not any(str(item).strip() for item in reader.fieldnames):
+                raise ParseError("CSV evidence requires a header row")
+            records = [dict(row) for _, row in zip(range(max_records), reader)]
+        except csv.Error as exc:
+            raise ParseError(f"invalid CSV evidence: {exc}") from exc
+    else:
+        records = parse_xlsx_rows(content, max_records)
+
+    observations = []
+    redactions = 0
+    for record in records:
+        clean, count = redact_sensitive(record)
+        redactions += count
+        observations.append(normalize_record(clean, source_type))
+    return observations, redactions
+
+
+def parse_xlsx_rows(content: bytes, max_records: int) -> list[dict[str, Any]]:
+    """Read the first XLSX worksheet without formulas, macros or external links."""
+    try:
+        archive = zipfile.ZipFile(io.BytesIO(content))
+    except (OSError, zipfile.BadZipFile) as exc:
+        raise ParseError("XLSX evidence is not a valid Office Open XML workbook") from exc
+    with archive:
+        members = {item.filename: item for item in archive.infolist()}
+        required = "xl/worksheets/sheet1.xml"
+        if required not in members:
+            raise ParseError("XLSX evidence requires a first worksheet")
+        selected = [required]
+        if "xl/sharedStrings.xml" in members:
+            selected.append("xl/sharedStrings.xml")
+        if sum(members[name].file_size for name in selected) > 64 * 1024 * 1024:
+            raise ParseError("XLSX worksheet data exceeds the 64 MiB normalization limit")
+
+        shared = []
+        if "xl/sharedStrings.xml" in members:
+            try:
+                root = ET.fromstring(archive.read("xl/sharedStrings.xml"))
+            except (ET.ParseError, RuntimeError, zipfile.BadZipFile) as exc:
+                raise ParseError("XLSX shared strings are invalid") from exc
+            shared = ["".join(node.itertext()) for node in root.findall("{*}si")]
+        try:
+            sheet = ET.fromstring(archive.read(required))
+        except (ET.ParseError, RuntimeError, zipfile.BadZipFile) as exc:
+            raise ParseError("XLSX first worksheet XML is invalid") from exc
+
+    rows = []
+    for row in sheet.findall(".//{*}sheetData/{*}row"):
+        values: dict[int, str] = {}
+        for cell in row.findall("{*}c"):
+            reference = cell.get("r", "")
+            column = xlsx_column_index(reference)
+            kind = cell.get("t", "")
+            value_node = cell.find("{*}v")
+            if kind == "inlineStr":
+                inline = cell.find("{*}is")
+                value = "" if inline is None else "".join(inline.itertext())
+            else:
+                value = "" if value_node is None or value_node.text is None else value_node.text
+                if kind == "s" and value:
+                    try:
+                        value = shared[int(value)]
+                    except (ValueError, IndexError) as exc:
+                        raise ParseError("XLSX contains an invalid shared-string reference") from exc
+            values[column] = value
+        if values:
+            rows.append([values.get(index, "") for index in range(max(values) + 1)])
+        if len(rows) >= max_records + 1:
+            break
+    if not rows:
+        raise ParseError("XLSX first worksheet is empty")
+    headers = [str(item).strip() for item in rows[0]]
+    if not any(headers):
+        raise ParseError("XLSX evidence requires a header row")
+    if len(set(filter(None, headers))) != len(list(filter(None, headers))):
+        raise ParseError("XLSX header names must be unique")
+    return [
+        {header: row[index] if index < len(row) else "" for index, header in enumerate(headers) if header}
+        for row in rows[1:]
+    ]
+
+
+def xlsx_column_index(reference: str) -> int:
+    letters = "".join(item for item in reference.upper() if "A" <= item <= "Z")
+    if not letters or len(letters) > 3:
+        raise ParseError("XLSX contains an invalid or excessively wide cell reference")
+    result = 0
+    for letter in letters:
+        result = result * 26 + ord(letter) - ord("A") + 1
+    return result - 1
 
 
 def parse_pcap(content: bytes, max_records: int) -> tuple[list[dict[str, Any]], dict[str, Any]]:
@@ -440,7 +565,9 @@ def normalize_record(record: dict[str, Any], source_type: str) -> dict[str, Any]
             if candidate in lower and lower[candidate] not in (None, ""):
                 normalized[target] = scalar_value(lower[candidate])
                 break
-    if source_type in {"normalized-pcap", "ipfix", "netflow", "sflow", "cloud-flow"}:
+    if source_type in {
+        "normalized-pcap", "ipfix", "netflow", "sflow", "cloud-flow", "csv", "xlsx"
+    }:
         if not any(key in normalized for key in ("src_ip", "dst_ip", "protocol", "timestamp")):
             raise ParseError(
                 f"{source_type} record does not contain a recognized endpoint, protocol or timestamp field"

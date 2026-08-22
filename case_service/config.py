@@ -61,3 +61,4 @@ def _bounded_integer(name: str, default: int, minimum: int, maximum: int) -> int
     if value < minimum or value > maximum:
         raise RuntimeError(f"{name} must be between {minimum} and {maximum}")
     return value
+

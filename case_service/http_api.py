@@ -23,6 +23,7 @@ EVIDENCE_PATH = re.compile(r"^/v1/cases/([0-9a-f-]{36})/evidence$")
 ANALYZE_PATH = re.compile(r"^/v1/cases/([0-9a-f-]{36})/analyze$")
 CONTEXT_PATH = re.compile(r"^/v1/cases/([0-9a-f-]{36})/context$")
 REPORT_PATH = re.compile(r"^/v1/cases/([0-9a-f-]{36})/report\.md$")
+PDF_REPORT_PATH = re.compile(r"^/v1/cases/([0-9a-f-]{36})/report\.pdf$")
 OBSERVATION_PATH = re.compile(
     r"^/v1/cases/([0-9a-f-]{36})/observations/([0-9a-f-]{36})$"
 )
@@ -90,6 +91,14 @@ def handler_factory(
                         HTTPStatus.OK,
                         service.markdown_report(match.group(1)).encode("utf-8"),
                         "text/markdown; charset=utf-8",
+                    )
+                    return
+                match = PDF_REPORT_PATH.match(route)
+                if match:
+                    self.send_bytes(
+                        HTTPStatus.OK,
+                        service.pdf_report(match.group(1)),
+                        "application/pdf",
                     )
                     return
                 self.send_error_json(HTTPStatus.NOT_FOUND, "route not found")

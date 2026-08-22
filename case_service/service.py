@@ -5,6 +5,7 @@ from __future__ import annotations
 import hashlib
 from pathlib import PurePath
 import re
+import textwrap
 from typing import Any
 
 from .analysis import ENGINE_VERSION, analyze_case
@@ -205,6 +206,14 @@ class EvidenceService:
         )
         return "\n".join(lines)
 
+    def pdf_report(self, case_id: str) -> bytes:
+        """Render the bounded case report as a dependency-free PDF 1.4."""
+        lines: list[str] = []
+        for source_line in self.markdown_report(case_id).splitlines():
+            plain = source_line.replace("`", "").replace("**", "").lstrip("# ")
+            lines.extend(textwrap.wrap(plain, width=92) or [""])
+        return simple_pdf(lines)
+
 
 def clean_text(value: Any, name: str, limit: int, required: bool = False) -> str:
     if value is None:
@@ -252,3 +261,42 @@ def format_citation(citation: dict[str, Any]) -> str:
             f"(SHA-256 `{citation['output_sha256']}`)"
         )
     return "Unknown citation type"
+
+
+def simple_pdf(lines: list[str]) -> bytes:
+    """Return a valid multipage PDF containing escaped Latin-1 text."""
+    pages = [lines[index:index + 48] for index in range(0, len(lines), 48)] or [[""]]
+    objects: dict[int, bytes] = {}
+    page_ids = [4 + index * 2 for index in range(len(pages))]
+    objects[1] = b"<< /Type /Catalog /Pages 2 0 R >>"
+    kids = " ".join(f"{page_id} 0 R" for page_id in page_ids)
+    objects[2] = f"<< /Type /Pages /Kids [{kids}] /Count {len(pages)} >>".encode()
+    objects[3] = b"<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>"
+    for index, page_lines in enumerate(pages):
+        page_id = page_ids[index]
+        content_id = page_id + 1
+        commands = ["BT", "/F1 9 Tf", "48 756 Td", "11 TL"]
+        for line in page_lines:
+            safe = line.encode("latin-1", "replace").decode("latin-1")
+            safe = safe.replace("\\", "\\\\").replace("(", "\\(").replace(")", "\\)")
+            commands.extend((f"({safe}) Tj", "T*"))
+        commands.append("ET")
+        stream = "\n".join(commands).encode("latin-1")
+        objects[page_id] = (
+            f"<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] "
+            f"/Resources << /Font << /F1 3 0 R >> >> /Contents {content_id} 0 R >>"
+        ).encode()
+        objects[content_id] = f"<< /Length {len(stream)} >>\nstream\n".encode() + stream + b"\nendstream"
+    output = bytearray(b"%PDF-1.4\n%\xe2\xe3\xcf\xd3\n")
+    offsets = [0]
+    for object_id in range(1, max(objects) + 1):
+        offsets.append(len(output))
+        output.extend(f"{object_id} 0 obj\n".encode() + objects[object_id] + b"\nendobj\n")
+    xref = len(output)
+    output.extend(f"xref\n0 {len(offsets)}\n0000000000 65535 f \n".encode())
+    for offset in offsets[1:]:
+        output.extend(f"{offset:010d} 00000 n \n".encode())
+    output.extend(
+        f"trailer\n<< /Size {len(offsets)} /Root 1 0 R >>\nstartxref\n{xref}\n%%EOF\n".encode()
+    )
+    return bytes(output)

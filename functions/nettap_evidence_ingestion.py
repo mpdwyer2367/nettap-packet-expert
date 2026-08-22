@@ -32,7 +32,9 @@ IMAGE_TYPES = {
     ".jpeg": "image/jpeg",
     ".webp": "image/webp",
 }
-EVIDENCE_SUFFIXES = {".pcap", ".json", ".jsonl", ".ndjson", ".log", ".txt"}
+EVIDENCE_SUFFIXES = {
+    ".pcap", ".pcapng", ".json", ".jsonl", ".ndjson", ".csv", ".xlsx", ".log", ".txt"
+}
 
 
 class Filter:
@@ -161,8 +163,8 @@ class Filter:
                 evidence_files.append(item)
             else:
                 raise ValueError(
-                    "Unsupported attachment. Use .pcap, .json, .jsonl, .ndjson, "
-                    ".log, .txt, .png, .jpg, .jpeg or .webp"
+                    "Unsupported attachment. Use .pcap, .pcapng, .json, .jsonl, .ndjson, "
+                    ".csv, .xlsx, .log, .txt, .png, .jpg, .jpeg or .webp"
                 )
         return evidence_files, image_files, passthrough_files
 
@@ -343,11 +345,26 @@ class Filter:
     @staticmethod
     def _source_type(filename: str) -> str:
         suffix = Path(filename).suffix.lower()
+        lowered = Path(filename).name.lower()
         if suffix == ".pcap":
             return "pcap"
+        if suffix == ".pcapng":
+            return "pcapng"
         if suffix in {".log", ".txt"}:
             return "syslog"
+        if suffix == ".csv":
+            return "csv"
+        if suffix == ".xlsx":
+            return "xlsx"
         if suffix in {".json", ".jsonl", ".ndjson"}:
+            if "ipfix" in lowered:
+                return "ipfix"
+            if "netflow" in lowered:
+                return "netflow"
+            if "sflow" in lowered:
+                return "sflow"
+            if "cloud-flow" in lowered or "flow-log" in lowered:
+                return "cloud-flow"
             return "jsonl"
         raise ValueError("Unsupported evidence attachment")
 

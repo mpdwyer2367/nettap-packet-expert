@@ -1,0 +1,18 @@
+[Unit]
+Description=NetTAP Network Intelligence appliance
+After=docker.service network-online.target
+Requires=docker.service
+Wants=network-online.target
+ConditionPathExists=/var/lib/nettap/setup-complete
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/usr/local/sbin/nettapctl start
+ExecStop=/usr/local/sbin/nettapctl stop
+TimeoutStartSec=900
+TimeoutStopSec=180
+
+[Install]
+WantedBy=multi-user.target
+

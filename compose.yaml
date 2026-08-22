@@ -228,7 +228,12 @@ services:
     cap_drop: [ALL]
 
   evidence-service:
-    image: ${OPEN_WEBUI_IMAGE}
+    image: ${EVIDENCE_IMAGE:-nettap/evidence-service:0.4.0-rc.1}
+    build:
+      context: .
+      dockerfile: containers/evidence-service.Dockerfile
+      args:
+        EVIDENCE_BASE_IMAGE: ${EVIDENCE_BASE_IMAGE:-python:3.12-alpine3.22}
     init: true
     restart: unless-stopped
     cpus: ${EVIDENCE_CPUS}
@@ -245,6 +250,7 @@ services:
       NETTAP_EVIDENCE_DATA_DIR: /data/files
       NETTAP_EVIDENCE_MAX_UPLOAD_BYTES: ${EVIDENCE_MAX_UPLOAD_BYTES:-104857600}
       NETTAP_EVIDENCE_MAX_RECORDS: ${EVIDENCE_MAX_RECORDS}
+      NETTAP_TSHARK_MAX_PACKETS: ${EVIDENCE_TSHARK_MAX_PACKETS:-50000}
     entrypoint: ["python", "-m", "case_service"]
     volumes:
       - ./case_service:/service/case_service:ro
@@ -253,7 +259,7 @@ services:
     networks: [backend, user-access]
     read_only: true
     tmpfs:
-      - /tmp:size=64m,mode=1777
+      - /tmp:size=128m,mode=1777
     security_opt:
       - no-new-privileges:true
     cap_drop: [ALL]
