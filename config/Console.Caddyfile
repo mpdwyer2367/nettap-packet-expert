@@ -1,0 +1,31 @@
+{
+	admin off
+	auto_https off
+}
+
+:443 {
+	tls /etc/caddy/tls/tls.crt /etc/caddy/tls/tls.key
+	encode zstd gzip
+
+	@health path /healthz
+	respond @health "ok" 200
+
+	reverse_proxy analyst-console:3000
+	request_body {
+		max_size 100MB
+	}
+	header {
+		Strict-Transport-Security "max-age=31536000; includeSubDomains"
+		Content-Security-Policy "default-src 'self'; connect-src 'self' {$CONSOLE_SUPABASE_HTTPS_ORIGIN} {$CONSOLE_SUPABASE_WSS_ORIGIN}; img-src 'self' data: blob:; style-src 'self' 'unsafe-inline'; font-src 'self' data:; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'"
+		X-Content-Type-Options "nosniff"
+		X-Frame-Options "DENY"
+		Referrer-Policy "no-referrer"
+		Permissions-Policy "camera=(), microphone=(), geolocation=(), payment=(), usb=()"
+		-Server
+	}
+	log {
+		output stdout
+		format json
+	}
+}
+

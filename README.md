@@ -9,6 +9,13 @@ The two experiences select the same technical Ollama model tag, `nettap-ai:0.4.0
 
 The repository contains the combined model definition, both experience Skills, reviewed RAG knowledge, automatic provisioning, and the evaluation **NetTAP Network Intelligence — Evidence Workspace** for uploaded PCAP metadata, normalized logs and flow records. It does **not** contain separately fine-tuned weights, customer telemetry, packet captures, credentials, or a live NetTAP connector. See the [combined model card](model/MODEL_CARD.md), [Evidence Workspace guide](docs/EVIDENCE_CASE_SERVICE.md), and [naming conventions](docs/NAMING_CONVENTIONS.md).
 
+An optional pre-production analyst console is imported from the connected
+Lovable project under `console/`. It adds investigations, telemetry dashboards,
+live capture, cases, reports, retention and capacity workflows. Appliance
+inference is forced through an authenticated same-origin proxy to the internal
+`nettap-ai:0.4.0-rc.1` Ollama model; hosted-model fallback is disabled. See the
+[console integration and promotion gates](docs/LOVABLE_CONSOLE_INTEGRATION.md).
+
 ## Release status
 
 `0.4.0-rc.1` promotes Qwen3.5 9B Q4_K_M as the default foundation for both NetTAP profiles. It is a migration and integration release candidate, not a production-certified or commercially approved appliance. The exact commit still requires passing macOS and Windows/WSL2 runtime evidence, behavior and profile-isolation tests, storage measurement, SBOM/CVE acceptance, independent penetration testing, legal/licensing approval, support readiness, signature verification, and authorized release acceptance. See the [promotion decision](docs/QWEN35_PROMOTION.md).
