@@ -5,7 +5,7 @@ Every gate is fail-closed. `Blocked` and `not run` are not passes.
 | Milestone | Required outcome | Current disposition |
 |---|---|---|
 | RC3 installation qualification | Clean macOS, Windows/WSL2, and Linux installation; shared model; two profiles; offline RAG; restart, backup, restore, and rollback evidence | Historical automation exists; clean three-platform acceptance is not complete |
-| RC4 evidence workspace | Validated local evidence, deterministic analysis, resolvable citations, reports, persistence, authorization, and malicious-input coverage | In progress; exact normalized-observation citations are implemented, but PCAPNG worker isolation and enterprise authorization are incomplete |
+| RC4 evidence workspace | Validated local evidence, deterministic analysis, resolvable citations, reports, persistence, authorization, and malicious-input coverage | In progress; exact citations and bounded PCAP/PCAPNG metadata are implemented, but deep-parser isolation and enterprise authorization are incomplete |
 | 0.4 connected visibility | Documented read-only NetTAP device adapters and hardware acceptance per model/firmware | Blocked on documented device APIs and hardware |
 | 0.5 controlled operations | Approved plans, state revalidation, audited writes, post-checks, and tested rollback | Disabled by design |
 | 1.0 commercial appliance | Signed x86_64 appliance, licensing, updates, DR, SBOM disposition, penetration testing, legal/support approval, and pilot outcomes | Not started or externally blocked |

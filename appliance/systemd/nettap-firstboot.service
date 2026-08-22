@@ -1,0 +1,17 @@
+[Unit]
+Description=NetTAP unique first-boot initialization
+After=network-online.target docker.service
+Wants=network-online.target
+Requires=docker.service
+Before=nettap.service
+ConditionPathExists=!/var/lib/nettap/state/firstboot-complete
+
+[Service]
+Type=oneshot
+ExecStart=/opt/nettap/current/appliance/firstboot.sh
+RemainAfterExit=yes
+StandardOutput=journal+console
+StandardError=journal+console
+
+[Install]
+WantedBy=multi-user.target

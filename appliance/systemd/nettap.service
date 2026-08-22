@@ -1,0 +1,17 @@
+[Unit]
+Description=NetTAP Network Intelligence appliance
+After=network-online.target docker.service nettap-firstboot.service
+Wants=network-online.target
+Requires=docker.service
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+Environment=NETTAP_SYSTEMD_EXEC=1
+ExecStart=/opt/nettap/current/appliance/runtime.sh start
+ExecStop=/opt/nettap/current/appliance/runtime.sh stop
+TimeoutStartSec=1800
+TimeoutStopSec=300
+
+[Install]
+WantedBy=multi-user.target

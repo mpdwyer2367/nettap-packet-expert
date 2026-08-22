@@ -16,7 +16,7 @@ import struct
 from typing import Any
 
 
-PARSER_VERSION = "1.0.0"
+PARSER_VERSION = "1.1.0"
 SUPPORTED_SOURCE_TYPES = {
     "pcap",
     "normalized-pcap",
@@ -241,7 +241,7 @@ def parse_pcap(content: bytes, max_records: int) -> tuple[list[dict[str, Any]], 
     }
     if magic not in formats:
         if magic == b"\x0a\x0d\x0d\x0a":
-            raise ParseError("PCAPNG is not supported by the built-in parser; normalize it with TShark")
+            return parse_pcapng(content, max_records)
         raise ParseError("unsupported capture format or byte order")
     endian, timestamp_divisor = formats[magic]
     try:
@@ -295,6 +295,133 @@ def parse_pcap(content: bytes, max_records: int) -> tuple[list[dict[str, Any]], 
         "pcap_linktype": linktype,
         "pcap_records_parsed": len(observations),
         "pcap_truncated_records": capture_truncated_records,
+    }
+    return observations, metadata
+
+
+def parse_pcapng(content: bytes, max_records: int) -> tuple[list[dict[str, Any]], dict[str, Any]]:
+    """Parse PCAPNG interface and enhanced-packet blocks without payload output."""
+    position = 0
+    endian = "<"
+    interfaces: list[dict[str, Any]] = []
+    observations: list[dict[str, Any]] = []
+    truncated_records = 0
+    section_count = 0
+
+    while position < len(content) and len(observations) < max_records:
+        if len(content) - position < 12:
+            raise ParseError("truncated PCAPNG block header")
+        raw_type = content[position : position + 4]
+        if raw_type == b"\x0a\x0d\x0d\x0a":
+            byte_order = content[position + 8 : position + 12]
+            if byte_order == b"\x4d\x3c\x2b\x1a":
+                endian = "<"
+            elif byte_order == b"\x1a\x2b\x3c\x4d":
+                endian = ">"
+            else:
+                raise ParseError("invalid PCAPNG byte-order magic")
+        block_type, block_length = struct.unpack(
+            f"{endian}II", content[position : position + 8]
+        )
+        if block_length < 12 or block_length % 4 or block_length > len(content) - position:
+            raise ParseError("invalid or truncated PCAPNG block length")
+        trailer = struct.unpack(
+            f"{endian}I", content[position + block_length - 4 : position + block_length]
+        )[0]
+        if trailer != block_length:
+            raise ParseError("PCAPNG block length trailer does not match")
+        body = content[position + 8 : position + block_length - 4]
+
+        if block_type == 0x0A0D0D0A:
+            if len(body) < 16:
+                raise ParseError("PCAPNG section header is incomplete")
+            major, minor = struct.unpack(f"{endian}HH", body[4:8])
+            if major != 1:
+                raise ParseError(f"unsupported PCAPNG major version: {major}")
+            section_count += 1
+            interfaces = []
+        elif block_type == 1:
+            if section_count == 0 or len(body) < 8:
+                raise ParseError("PCAPNG interface block is incomplete or precedes its section")
+            linktype, _, snaplen = struct.unpack(f"{endian}HHI", body[:8])
+            if linktype not in {1, 101}:
+                raise ParseError(
+                    f"unsupported PCAPNG link type: {linktype}; supported: Ethernet and raw IP"
+                )
+            timestamp_divisor = 1_000_000
+            option_position = 8
+            while option_position + 4 <= len(body):
+                code, length = struct.unpack(
+                    f"{endian}HH", body[option_position : option_position + 4]
+                )
+                option_position += 4
+                if code == 0:
+                    break
+                if length > len(body) - option_position:
+                    raise ParseError("truncated PCAPNG interface option")
+                value = body[option_position : option_position + length]
+                option_position += length + ((4 - length % 4) % 4)
+                if code == 9 and length == 1:
+                    resolution = value[0]
+                    exponent = resolution & 0x7F
+                    if exponent > 19:
+                        raise ParseError("unsupported PCAPNG timestamp resolution")
+                    timestamp_divisor = (2 if resolution & 0x80 else 10) ** exponent
+            interfaces.append(
+                {
+                    "linktype": linktype,
+                    "snaplen": snaplen,
+                    "timestamp_divisor": timestamp_divisor,
+                }
+            )
+        elif block_type == 6:
+            if len(body) < 20:
+                raise ParseError("PCAPNG enhanced packet block is incomplete")
+            interface_id, timestamp_high, timestamp_low, included_length, original_length = (
+                struct.unpack(f"{endian}IIIII", body[:20])
+            )
+            if interface_id >= len(interfaces):
+                raise ParseError("PCAPNG packet references an unknown interface")
+            padded_length = included_length + ((4 - included_length % 4) % 4)
+            if 20 + padded_length > len(body):
+                raise ParseError("truncated PCAPNG packet data")
+            packet = body[20 : 20 + included_length]
+            interface = interfaces[interface_id]
+            timestamp_value = (timestamp_high << 32) | timestamp_low
+            try:
+                timestamp = datetime.fromtimestamp(
+                    timestamp_value / interface["timestamp_divisor"], tz=timezone.utc
+                ).isoformat().replace("+00:00", "Z")
+            except (OverflowError, OSError, ValueError) as exc:
+                raise ParseError("PCAPNG packet timestamp is outside the supported range") from exc
+            observation = parse_packet(packet, interface["linktype"])
+            observation.update(
+                {
+                    "kind": "packet-metadata",
+                    "timestamp": timestamp,
+                    "captured_length": included_length,
+                    "original_length": original_length,
+                    "interface_id": interface_id,
+                }
+            )
+            if included_length < original_length:
+                observation["capture_truncated"] = True
+                truncated_records += 1
+            observations.append(observation)
+        position += block_length
+
+    if section_count == 0:
+        raise ParseError("PCAPNG section header is missing")
+    if not interfaces:
+        raise ParseError("PCAPNG interface description is missing")
+    linktypes = sorted({int(item["linktype"]) for item in interfaces})
+    metadata = {
+        "pcap_version": "ng-1.0",
+        "pcap_linktype": linktypes[0] if len(linktypes) == 1 else linktypes,
+        "pcap_interface_count": len(interfaces),
+        "pcap_section_count": section_count,
+        "pcap_records_parsed": len(observations),
+        "pcap_truncated_records": truncated_records,
     }
     return observations, metadata
 

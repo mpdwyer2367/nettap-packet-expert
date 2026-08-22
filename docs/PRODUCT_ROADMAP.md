@@ -25,8 +25,8 @@ Implemented in `0.4.0-rc.1` source:
 
 - authenticated loopback Evidence Workspace on port 3200;
 - persistent cases, source hashes, provenance and evidence-quality warnings;
-- classic PCAP metadata plus normalized JSON/JSONL, syslog, IPFIX, NetFlow, sFlow and cloud-flow inputs;
-- managed Packet Expert chat attachments for classic PCAP, JSON/JSONL, logs, text and supported network images;
+- classic PCAP and PCAPNG metadata plus normalized JSON/JSONL, syslog, IPFIX, NetFlow, sFlow and cloud-flow inputs;
+- managed Packet Expert chat attachments for PCAP, PCAPNG, JSON/JSONL, logs, text and supported network images;
 - deterministic protocol, endpoint, conversation, reset, truncation, dominance and regular-timing analysis;
 - evidence-bound findings that distinguish observations from hypotheses;
 - minimized LLM-safe context and reviewable Markdown case reports;

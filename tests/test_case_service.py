@@ -119,11 +119,18 @@ class CaseServiceTest(unittest.TestCase):
         self.assertNotIn("payload", packet)
         self.assertEqual(parsed.metadata["pcap_linktype"], 1)
 
-    def test_pcapng_is_rejected_with_actionable_normalization_guidance(self):
-        with self.assertRaisesRegex(ParseError, "normalize it with TShark"):
-            parse_evidence(
-                "pcap", b"\x0a\x0d\x0d\x0a" + b"\0" * 32, complete_metadata("host"), 100
-            )
+    def test_pcapng_parser_extracts_metadata_without_payload(self):
+        parsed = parse_evidence(
+            "pcap", build_pcapng(), complete_metadata("capture-host"), 100
+        )
+        self.assertEqual(len(parsed.observations), 1)
+        packet = parsed.observations[0]
+        self.assertEqual(packet["src_ip"], "192.0.2.10")
+        self.assertEqual(packet["dst_ip"], "198.51.100.20")
+        self.assertEqual(packet["protocol"], "TCP")
+        self.assertNotIn("payload", packet)
+        self.assertEqual(parsed.metadata["pcap_version"], "ng-1.0")
+        self.assertEqual(parsed.metadata["pcap_interface_count"], 1)
 
     def test_hash_mismatch_fails_before_persistence(self):
         case = self.make_case()
@@ -311,6 +318,24 @@ def build_pcap() -> bytes:
     global_header = struct.pack("<IHHIIII", 0xA1B2C3D4, 2, 4, 0, 0, 65535, 1)
     record_header = struct.pack("<IIII", 1_786_000_000, 250_000, len(packet), len(packet))
     return global_header + record_header + packet
+
+
+def pcapng_block(block_type: int, body: bytes) -> bytes:
+    padding = b"\0" * ((4 - len(body) % 4) % 4)
+    length = 12 + len(body) + len(padding)
+    return struct.pack("<II", block_type, length) + body + padding + struct.pack("<I", length)
+
+
+def build_pcapng() -> bytes:
+    pcap = build_pcap()
+    packet = pcap[40:]
+    section = pcapng_block(0x0A0D0D0A, struct.pack("<IHHq", 0x1A2B3C4D, 1, 0, -1))
+    interface = pcapng_block(1, struct.pack("<HHI", 1, 0, 65535))
+    enhanced = pcapng_block(
+        6,
+        struct.pack("<IIIII", 0, 0, 1_786_000_000, len(packet), len(packet)) + packet,
+    )
+    return section + interface + enhanced
 
 
 if __name__ == "__main__":

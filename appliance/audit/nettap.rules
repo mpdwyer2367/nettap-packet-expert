@@ -1,0 +1,4 @@
+-w /etc/nettap/ -p wa -k nettap_configuration
+-w /opt/nettap/current -p wa -k nettap_release
+-w /var/lib/nettap/state/ -p wa -k nettap_state
+-w /var/run/docker.sock -p rwxa -k nettap_container_admin

@@ -32,7 +32,7 @@ IMAGE_TYPES = {
     ".jpeg": "image/jpeg",
     ".webp": "image/webp",
 }
-EVIDENCE_SUFFIXES = {".pcap", ".json", ".jsonl", ".ndjson", ".log", ".txt"}
+EVIDENCE_SUFFIXES = {".pcap", ".pcapng", ".json", ".jsonl", ".ndjson", ".log", ".txt"}
 
 
 class Filter:
@@ -343,7 +343,7 @@ class Filter:
     @staticmethod
     def _source_type(filename: str) -> str:
         suffix = Path(filename).suffix.lower()
-        if suffix == ".pcap":
+        if suffix in {".pcap", ".pcapng"}:
             return "pcap"
         if suffix in {".log", ".txt"}:
             return "syslog"

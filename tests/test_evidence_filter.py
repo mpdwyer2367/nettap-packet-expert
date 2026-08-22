@@ -181,7 +181,7 @@ class EvidenceFilterTests(unittest.TestCase):
                 asyncio.run(managed_filter.inlet(body))
             self.assertEqual(len(calls), 1)
 
-    def test_unsupported_attachment_fails_closed(self):
+    def test_pcapng_attachment_is_sent_to_internal_service(self):
         with tempfile.TemporaryDirectory() as directory, patch.dict(
             os.environ,
             {
@@ -192,13 +192,32 @@ class EvidenceFilterTests(unittest.TestCase):
         ):
             Path(directory, "file-2_capture.pcapng").write_bytes(b"fixture")
             managed_filter = Filter()
-            managed_filter._json_request = lambda *args: {"id": "case-2"}
+            calls = []
+
+            def fake_request(method, path, token, body, headers):
+                calls.append((method, path, token, body, headers))
+                if path == "/v1/cases":
+                    return {"id": "case-2"}
+                if path.endswith("/context"):
+                    return {
+                        "context_contract": "nettap-evidence-context/v1",
+                        "evidence_ids": ["evidence-pcapng"],
+                    }
+                return {"status": "ok"}
+
+            managed_filter._json_request = fake_request
             body = {
                 "messages": [{"role": "user", "content": "Analyze this"}],
                 "files": [{"id": "file-2", "filename": "capture.pcapng"}],
             }
-            with self.assertRaisesRegex(ValueError, "Unsupported attachment"):
-                asyncio.run(managed_filter.inlet(body))
+            result = asyncio.run(managed_filter.inlet(body))
+            upload = next(call for call in calls if "/evidence?" in call[1])
+            self.assertIn("source_type=pcap", upload[1])
+            self.assertIn("filename=capture.pcapng", upload[1])
+            rendered = "\n".join(
+                part.get("text", "") for part in result["messages"][-1]["content"]
+            )
+            self.assertIn("evidence-pcapng", rendered)
 
     def test_valid_network_diagram_is_forwarded_as_multimodal_input(self):
         with tempfile.TemporaryDirectory() as directory, patch.dict(
