@@ -19,15 +19,17 @@ case "$(uname -m)" in x86_64) host_arch=amd64 ;; arm64|aarch64) host_arch=arm64 
   echo "BLOCKED: native $architecture build requires a $architecture host; detected $host_arch" >&2
   exit 4
 }
-command -v git >/dev/null && command -v packer >/dev/null || {
-  echo "ERROR: git and Packer are required" >&2; exit 3;
-}
+if ! command -v git >/dev/null || ! command -v packer >/dev/null; then
+  echo "ERROR: git and Packer are required" >&2
+  exit 3
+fi
 if [[ "$hypervisor" == virtualbox ]]; then command -v VBoxManage >/dev/null || { echo "ERROR: VirtualBox is required" >&2; exit 3; }; fi
 if [[ "$hypervisor" == vmware ]]; then command -v vmrun >/dev/null || { echo "ERROR: VMware Fusion/Workstation vmrun is required" >&2; exit 3; }; fi
 
-git -C "$project_dir" diff --quiet && git -C "$project_dir" diff --cached --quiet || {
-  echo "ERROR: appliance builds require a clean, committed worktree" >&2; exit 5;
-}
+if ! git -C "$project_dir" diff --quiet || ! git -C "$project_dir" diff --cached --quiet; then
+  echo "ERROR: appliance builds require a clean, committed worktree" >&2
+  exit 5
+fi
 commit="$(git -C "$project_dir" rev-parse HEAD)"
 release="$(sed -n 's/^RELEASE_VERSION=//p' "$project_dir/.env.example" | head -n1)"
 build_password="Ntp!9$(openssl rand -hex 16)"
