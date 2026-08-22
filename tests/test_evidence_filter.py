@@ -1,65 +1,47 @@
 import asyncio
+import io
 import os
 from pathlib import Path
 import tempfile
 import unittest
 from unittest.mock import patch
+import zipfile
 
+from case_service.parsers import parse_evidence
 from functions.nettap_evidence_ingestion import Filter
 
 
 class EvidenceFilterTests(unittest.TestCase):
-    def test_pcap_upload_preserves_virtual_knowledge_sources(self):
-        with tempfile.TemporaryDirectory() as directory, patch.dict(
-            os.environ,
-            {
-                "EVIDENCE_API_TOKEN": "a" * 64,
-                "NETTAP_OPEN_WEBUI_UPLOAD_DIR": directory,
-            },
-            clear=False,
-        ):
-            filename = "unistim_phone_startup.pcap"
-            Path(directory, f"pcap-knowledge_{filename}").write_bytes(
-                b"\xd4\xc3\xb2\xa1" + b"synthetic-pcap-fixture"
+    def test_network_table_formats_are_normalized_to_five_tuple(self):
+        csv_payload = (
+            b"timestamp,src_ip,dst_ip,src_port,dst_port,protocol,bytes\n"
+            b"2026-08-21T20:00:00Z,192.0.2.10,198.51.100.20,49152,443,tcp,1024\n"
+        )
+        csv_result = parse_evidence("csv", csv_payload, {}, 100)
+        self.assertEqual(csv_result.observations[0]["src_ip"], "192.0.2.10")
+        self.assertEqual(csv_result.observations[0]["dst_port"], "443")
+
+        workbook = io.BytesIO()
+        with zipfile.ZipFile(workbook, "w") as archive:
+            archive.writestr(
+                "xl/worksheets/sheet1.xml",
+                """<?xml version="1.0" encoding="UTF-8"?>
+                <worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">
+                  <sheetData>
+                    <row r="1"><c r="A1" t="inlineStr"><is><t>src_ip</t></is></c><c r="B1" t="inlineStr"><is><t>dst_ip</t></is></c><c r="C1" t="inlineStr"><is><t>protocol</t></is></c></row>
+                    <row r="2"><c r="A2" t="inlineStr"><is><t>10.0.0.1</t></is></c><c r="B2" t="inlineStr"><is><t>10.0.0.2</t></is></c><c r="C2" t="inlineStr"><is><t>udp</t></is></c></row>
+                  </sheetData>
+                </worksheet>""",
             )
-            managed_filter = Filter()
+        xlsx_result = parse_evidence("xlsx", workbook.getvalue(), {}, 100)
+        self.assertEqual(xlsx_result.observations[0]["dst_ip"], "10.0.0.2")
 
-            def fake_request(method, path, token, body, headers):
-                if path == "/v1/cases":
-                    return {"id": "case-knowledge"}
-                if path.endswith("/context"):
-                    return {
-                        "context_contract": "nettap-evidence-context/v1",
-                        "evidence_ids": ["evidence-knowledge"],
-                    }
-                return {"status": "ok"}
-
-            managed_filter._json_request = fake_request
-            knowledge = {
-                "id": "nettap-packet-expert-knowledge",
-                "name": "NetTAP Packet Expert Managed",
-                "collection_name": "nettap-packet-expert-knowledge",
-                "legacy": True,
-            }
-            body = {
-                "messages": [{"role": "user", "content": "Read capture"}],
-                "files": [
-                    knowledge,
-                    {
-                        "type": "file",
-                        "id": "pcap-knowledge",
-                        "name": filename,
-                        "file": {"id": "pcap-knowledge"},
-                    },
-                ],
-            }
-
-            result = asyncio.run(managed_filter.inlet(body))
-            self.assertEqual(result["files"], [knowledge])
-            rendered = "\n".join(
-                part.get("text", "") for part in result["messages"][-1]["content"]
-            )
-            self.assertIn("evidence-knowledge", rendered)
+    def test_flow_export_filename_selects_specific_normalizer(self):
+        self.assertEqual(Filter._source_type("edge-ipfix.jsonl"), "ipfix")
+        self.assertEqual(Filter._source_type("router-netflow.json"), "netflow")
+        self.assertEqual(Filter._source_type("switch-sflow.ndjson"), "sflow")
+        self.assertEqual(Filter._source_type("five-tuple.csv"), "csv")
+        self.assertEqual(Filter._source_type("five-tuple.xlsx"), "xlsx")
 
     def test_open_webui_wrapper_uses_top_level_name_for_pcap(self):
         with tempfile.TemporaryDirectory() as directory, patch.dict(
@@ -107,6 +89,61 @@ class EvidenceFilterTests(unittest.TestCase):
             self.assertIn("filename=unistim_phone_startup.pcap", upload[1])
             self.assertIn(
                 "evidence-pcap",
+                "\n".join(
+                    part.get("text", "")
+                    for part in result["messages"][-1]["content"]
+                ),
+            )
+
+    def test_pcap_upload_preserves_virtual_knowledge_sources(self):
+        with tempfile.TemporaryDirectory() as directory, patch.dict(
+            os.environ,
+            {
+                "EVIDENCE_API_TOKEN": "a" * 64,
+                "NETTAP_OPEN_WEBUI_UPLOAD_DIR": directory,
+            },
+            clear=False,
+        ):
+            filename = "unistim_phone_startup.pcap"
+            Path(directory, f"pcap-knowledge_{filename}").write_bytes(
+                b"\xd4\xc3\xb2\xa1" + b"synthetic-pcap-fixture"
+            )
+            managed_filter = Filter()
+
+            def fake_request(method, path, token, body, headers):
+                if path == "/v1/cases":
+                    return {"id": "case-knowledge"}
+                if path.endswith("/context"):
+                    return {
+                        "context_contract": "nettap-evidence-context/v1",
+                        "evidence_ids": ["evidence-knowledge"],
+                    }
+                return {"status": "ok"}
+
+            managed_filter._json_request = fake_request
+            knowledge = {
+                "id": "managed-packet-knowledge",
+                "name": "NetTAP Packet Expert (Managed)",
+                "collection_name": "managed-packet-knowledge",
+                "legacy": True,
+            }
+            body = {
+                "messages": [{"role": "user", "content": "Read capture"}],
+                "files": [
+                    knowledge,
+                    {
+                        "type": "file",
+                        "id": "pcap-knowledge",
+                        "name": filename,
+                        "file": {"id": "pcap-knowledge"},
+                    },
+                ],
+            }
+
+            result = asyncio.run(managed_filter.inlet(body))
+            self.assertEqual(result["files"], [knowledge])
+            self.assertIn(
+                "evidence-knowledge",
                 "\n".join(
                     part.get("text", "")
                     for part in result["messages"][-1]["content"]
@@ -190,12 +227,12 @@ class EvidenceFilterTests(unittest.TestCase):
             },
             clear=False,
         ):
-            Path(directory, "file-2_capture.pcapng").write_bytes(b"fixture")
+            Path(directory, "file-2_capture.exe").write_bytes(b"fixture")
             managed_filter = Filter()
             managed_filter._json_request = lambda *args: {"id": "case-2"}
             body = {
                 "messages": [{"role": "user", "content": "Analyze this"}],
-                "files": [{"id": "file-2", "filename": "capture.pcapng"}],
+                "files": [{"id": "file-2", "filename": "capture.exe"}],
             }
             with self.assertRaisesRegex(ValueError, "Unsupported attachment"):
                 asyncio.run(managed_filter.inlet(body))

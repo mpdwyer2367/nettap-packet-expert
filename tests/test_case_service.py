@@ -105,6 +105,9 @@ class CaseServiceTest(unittest.TestCase):
         self.assertIn(evidence["id"], rendered)
         self.assertIn("analysis_artifact", rendered)
         self.assertIn("Resolvable citations", self.service.markdown_report(case["id"]))
+        pdf = self.service.pdf_report(case["id"])
+        self.assertTrue(pdf.startswith(b"%PDF-1.4"))
+        self.assertTrue(pdf.rstrip().endswith(b"%%EOF"))
 
     def test_pcap_parser_extracts_metadata_without_payload(self):
         capture = build_pcap()

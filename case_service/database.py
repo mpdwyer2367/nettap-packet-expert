@@ -493,3 +493,4 @@ class Repository:
         value["citations"] = json.loads(value.pop("citations_json"))
         value["validation_steps"] = json.loads(value.pop("validation_steps_json"))
         return value
+

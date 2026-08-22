@@ -318,3 +318,4 @@ def conversation_key(item: dict[str, Any]) -> str:
     port = string_or_unknown(item.get("dst_port"))
     protocol = str(item.get("protocol", item.get("kind", "unknown"))).upper()
     return f"{src} -> {dst}:{port}/{protocol}"
+

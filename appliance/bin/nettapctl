@@ -1,0 +1,275 @@
+#!/usr/bin/env python3
+"""Administrative CLI for the NetTAP virtual appliance."""
+
+from __future__ import annotations
+
+import argparse
+import os
+from pathlib import Path
+import re
+import secrets
+import shutil
+import socket
+import subprocess
+import sys
+import tempfile
+
+
+APP_DIR = Path(os.environ.get("NETTAP_APP_DIR", "/opt/nettap/app"))
+STATE_DIR = Path(os.environ.get("NETTAP_STATE_DIR", "/var/lib/nettap"))
+ENV_FILE = APP_DIR / ".env"
+TLS_DIR = APP_DIR / "config/tls"
+BOOTSTRAP_ADMIN = STATE_DIR / "bootstrap-admin"
+APP_BOOTSTRAP_ADMIN = APP_DIR / ".bootstrap-admin-password"
+SETUP_MARKER = STATE_DIR / "setup-complete"
+HOSTNAME_PATTERN = re.compile(r"^[A-Za-z0-9](?:[A-Za-z0-9.-]{0,251}[A-Za-z0-9])?$")
+
+
+class ApplianceError(RuntimeError):
+    pass
+
+
+def run(command: list[str], *, check: bool = True, capture: bool = False) -> subprocess.CompletedProcess:
+    return subprocess.run(
+        command,
+        cwd=APP_DIR,
+        check=check,
+        text=True,
+        stdout=subprocess.PIPE if capture else None,
+        stderr=subprocess.PIPE if capture else None,
+    )
+
+
+def require_root() -> None:
+    if os.geteuid() != 0:
+        raise ApplianceError("run this command with sudo")
+
+
+def compose(*arguments: str, bootstrap: bool = False) -> list[str]:
+    files = ["compose.yaml", "compose.production.yaml"]
+    if bootstrap:
+        files.append("compose.bootstrap.yaml")
+    command = ["docker", "compose", "--project-directory", str(APP_DIR), "--env-file", str(ENV_FILE)]
+    for filename in files:
+        command.extend(("-f", str(APP_DIR / filename)))
+    command.extend(arguments)
+    return command
+
+
+def read_env() -> dict[str, str]:
+    values: dict[str, str] = {}
+    if ENV_FILE.exists():
+        for line in ENV_FILE.read_text(encoding="utf-8").splitlines():
+            if line and not line.startswith("#") and "=" in line:
+                key, value = line.split("=", 1)
+                values[key] = value
+    return values
+
+
+def write_env(values: dict[str, str]) -> None:
+    template = (APP_DIR / ".env.example").read_text(encoding="utf-8").splitlines()
+    emitted = set()
+    output = []
+    for line in template:
+        if line and not line.startswith("#") and "=" in line:
+            key = line.split("=", 1)[0]
+            if key in values:
+                output.append(f"{key}={values[key]}")
+                emitted.add(key)
+                continue
+        output.append(line)
+    output.extend(f"{key}={value}" for key, value in values.items() if key not in emitted)
+    ENV_FILE.parent.mkdir(parents=True, exist_ok=True)
+    with tempfile.NamedTemporaryFile("w", dir=ENV_FILE.parent, delete=False, encoding="utf-8") as temporary:
+        temporary.write("\n".join(output) + "\n")
+        temporary_path = Path(temporary.name)
+    temporary_path.chmod(0o600)
+    temporary_path.replace(ENV_FILE)
+
+
+def password() -> str:
+    return "Ntp!9" + secrets.token_hex(16)
+
+
+def certificate(hostname: str) -> None:
+    TLS_DIR.mkdir(parents=True, exist_ok=True)
+    key = TLS_DIR / "tls.key"
+    cert = TLS_DIR / "tls.crt"
+    configuration = "\n".join(
+        [
+            "[req]", "distinguished_name=dn", "x509_extensions=ext", "prompt=no",
+            "[dn]", f"CN={hostname}", "O=NetTAP Technology Limited",
+            "[ext]", f"subjectAltName=DNS:{hostname}", "keyUsage=digitalSignature,keyEncipherment",
+            "extendedKeyUsage=serverAuth", "basicConstraints=CA:FALSE", "",
+        ]
+    )
+    with tempfile.NamedTemporaryFile("w", delete=False, encoding="utf-8") as source:
+        source.write(configuration)
+        config_path = source.name
+    try:
+        run([
+            "openssl", "req", "-x509", "-newkey", "rsa:3072", "-sha256", "-nodes",
+            "-days", "397", "-keyout", str(key), "-out", str(cert), "-config", config_path,
+        ])
+    finally:
+        Path(config_path).unlink(missing_ok=True)
+    key.chmod(0o600)
+    cert.chmod(0o644)
+
+
+def setup(args: argparse.Namespace) -> None:
+    require_root()
+    if SETUP_MARKER.exists() and not args.force:
+        raise ApplianceError("setup is already complete; use --force only for a controlled rebuild")
+    if not HOSTNAME_PATTERN.fullmatch(args.hostname):
+        raise ApplianceError("hostname is invalid")
+    if not 1 <= args.https_port <= 65535:
+        raise ApplianceError("HTTPS port must be between 1 and 65535")
+    for executable in ("docker", "openssl"):
+        if not shutil.which(executable):
+            raise ApplianceError(f"required command is missing: {executable}")
+    run(["docker", "info"], capture=True)
+    admin_password = password()
+    values = read_env()
+    values.update(
+        {
+            # Model initialization starts through the proven local entry point;
+            # the appliance is switched to the production topology immediately
+            # after initialization and exposes only the TLS gateway.
+            "DEPLOYMENT_MODE": "local",
+            "BIND_ADDRESS": "127.0.0.1",
+            "HTTPS_BIND_ADDRESS": "0.0.0.0",
+            "HTTPS_PORT": str(args.https_port),
+            "APPLIANCE_HOSTNAME": args.hostname,
+            "OPEN_WEBUI_OLLAMA_BASE_URL": "http://ollama:11434",
+            "WEBUI_SECRET_KEY": secrets.token_hex(32),
+            "WEBUI_ADMIN_EMAIL": args.admin_email,
+            "WEBUI_ADMIN_PASSWORD": admin_password,
+            "EVIDENCE_API_TOKEN": secrets.token_hex(32),
+            "OLLAMA_MAX_LOADED_MODELS": "1",
+            "OLLAMA_NUM_PARALLEL": "1",
+            "OLLAMA_MAX_QUEUE": "4",
+            "OLLAMA_KEEP_ALIVE": "2m",
+            "OLLAMA_CPUS": "4",
+            "OLLAMA_MEMORY": "8g",
+            "WEBUI_CPUS": "1.5",
+            "WEBUI_MEMORY": "2g",
+            "EVIDENCE_CPUS": "1",
+            "EVIDENCE_MEMORY": "512m",
+            "GATEWAY_CPUS": "0.5",
+            "GATEWAY_MEMORY": "256m",
+            "EVIDENCE_MAX_UPLOAD_BYTES": "104857600",
+        }
+    )
+    write_env(values)
+    certificate(args.hostname)
+    STATE_DIR.mkdir(parents=True, exist_ok=True)
+    BOOTSTRAP_ADMIN.write_text(
+        f"Login: {args.admin_email}\nBootstrap password: {admin_password}\n",
+        encoding="utf-8",
+    )
+    BOOTSTRAP_ADMIN.chmod(0o600)
+    APP_BOOTSTRAP_ADMIN.write_text(
+        f"Login: {args.admin_email}\nBootstrap password: {admin_password}\n",
+        encoding="utf-8",
+    )
+    APP_BOOTSTRAP_ADMIN.chmod(0o600)
+    run([str(APP_DIR / "scripts/start-linux.sh")])
+    values = read_env()
+    values["DEPLOYMENT_MODE"] = "production"
+    write_env(values)
+    run(compose("up", "-d", "ollama", "open-webui", "evidence-service", "gateway"))
+    run(compose("ps"))
+    run(["systemctl", "enable", "nettap-appliance.service"])
+    SETUP_MARKER.write_text("setup-complete\n", encoding="utf-8")
+    SETUP_MARKER.chmod(0o600)
+    print(f"HTTPS: https://{args.hostname}:{args.https_port}")
+    print(f"Bootstrap credential: {BOOTSTRAP_ADMIN}")
+    print("Change the administrator password immediately, then run: sudo nettapctl finalize-admin")
+
+
+def start(_: argparse.Namespace) -> None:
+    require_root()
+    if not SETUP_MARKER.exists():
+        raise ApplianceError("run nettapctl setup first")
+    run(compose("up", "-d", "ollama", "open-webui", "evidence-service", "assistant-launcher", "gateway"))
+
+
+def stop(_: argparse.Namespace) -> None:
+    require_root()
+    run(compose("stop"))
+
+
+def status(_: argparse.Namespace) -> None:
+    run(compose("ps"))
+
+
+def health(_: argparse.Namespace) -> None:
+    result = run([str(APP_DIR / "scripts/healthcheck.sh")], check=False)
+    if result.returncode:
+        raise ApplianceError("application health check failed")
+
+
+def finalize_admin(_: argparse.Namespace) -> None:
+    require_root()
+    run([str(APP_DIR / "scripts/finalize-admin.sh"), "--confirm"])
+    BOOTSTRAP_ADMIN.unlink(missing_ok=True)
+    print("Administrator bootstrap credential retired.")
+
+
+def backup(args: argparse.Namespace) -> None:
+    require_root()
+    run([str(APP_DIR / "scripts/backup.sh"), args.destination, "--confirm-stop"])
+
+
+def restore(args: argparse.Namespace) -> None:
+    require_root()
+    if not args.confirm:
+        raise ApplianceError("restore requires --confirm")
+    run([str(APP_DIR / "scripts/restore.sh"), args.backup_directory, "--target-prefix", args.target_prefix])
+
+
+def acceptance(args: argparse.Namespace) -> None:
+    require_root()
+    run([str(APP_DIR / "appliance/tests/guest-smoke.sh"), "--phase", args.phase])
+
+
+def build_parser() -> argparse.ArgumentParser:
+    parser = argparse.ArgumentParser(prog="nettapctl")
+    parser.add_argument("--version", action="version", version="nettapctl 0.4.0-rc.1")
+    commands = parser.add_subparsers(dest="command", required=True)
+    setup_parser = commands.add_parser("setup")
+    setup_parser.add_argument("--hostname", default="nettap-ai.local")
+    setup_parser.add_argument("--https-port", type=int, default=8443)
+    setup_parser.add_argument("--admin-email", default="admin@nettap.invalid")
+    setup_parser.add_argument("--force", action="store_true")
+    setup_parser.set_defaults(handler=setup)
+    for name, handler in (("start", start), ("stop", stop), ("status", status), ("health", health), ("finalize-admin", finalize_admin)):
+        command = commands.add_parser(name)
+        command.set_defaults(handler=handler)
+    acceptance_parser = commands.add_parser("acceptance")
+    acceptance_parser.add_argument("--phase", choices=("runtime", "post-reboot"), default="runtime")
+    acceptance_parser.set_defaults(handler=acceptance)
+    backup_parser = commands.add_parser("backup")
+    backup_parser.add_argument("destination")
+    backup_parser.set_defaults(handler=backup)
+    restore_parser = commands.add_parser("restore")
+    restore_parser.add_argument("backup_directory")
+    restore_parser.add_argument("--target-prefix", required=True)
+    restore_parser.add_argument("--confirm", action="store_true")
+    restore_parser.set_defaults(handler=restore)
+    return parser
+
+
+def main() -> int:
+    try:
+        args = build_parser().parse_args()
+        args.handler(args)
+        return 0
+    except (ApplianceError, subprocess.CalledProcessError, OSError) as exc:
+        print(f"ERROR: {exc}", file=sys.stderr)
+        return 1
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

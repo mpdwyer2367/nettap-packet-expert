@@ -1,0 +1,14 @@
+[Unit]
+Description=NetTAP appliance first-boot identity
+After=network-online.target
+Wants=network-online.target
+ConditionPathExists=!/var/lib/nettap/first-boot-complete
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/libexec/nettap-first-boot
+RemainAfterExit=yes
+
+[Install]
+WantedBy=multi-user.target
+
