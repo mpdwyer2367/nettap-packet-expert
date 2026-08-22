@@ -26,4 +26,3 @@ export const Route = createFileRoute("/api/nettap/ollama/show")({
     },
   },
 });
-

@@ -200,8 +200,8 @@ function historyToOllama(messages: ChatMessage[]): OllamaMessage[] {
           out.push({
             role: "tool",
             tool_name: p.type.replace("tool-", ""),
-            content: p.state === "output-available" 
-              ? JSON.stringify(p.output).slice(0, 24000) 
+            content: p.state === "output-available"
+              ? JSON.stringify(p.output).slice(0, 24000)
               : `Error: ${p.errorText}`,
           });
         }

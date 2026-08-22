@@ -532,4 +532,3 @@ export function redactConfig(config: CollectorConfig): CollectorConfig {
     broker: config.broker ? maskKeys(config.broker, ["token"]) : null,
   };
 }
-

@@ -56,4 +56,3 @@ This project is connected to [Lovable](https://lovable.dev/projects/7968b127-f8d
 ## Authorization
 
 Capture only interfaces and networks you own or are explicitly authorized to monitor. Packet and flow evidence can contain sensitive addressing, hostnames, protocol fields, and application details.
-

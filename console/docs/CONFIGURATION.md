@@ -118,4 +118,3 @@ not port 22
 ```
 
 Record the applied filter with every investigation. An incorrect filter can make present traffic appear absent.
-

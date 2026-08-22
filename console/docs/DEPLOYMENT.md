@@ -1,7 +1,7 @@
 # NetTAP Network Intelligence Deployment Manual
 
-Version: 0.2 deployment baseline  
-Repository: `mpdwyer2367/net-chat-insight`  
+Version: 0.2 deployment baseline
+Repository: `mpdwyer2367/net-chat-insight`
 Product status: development and controlled lab validation
 
 ## 1. Choose the correct deployment mode

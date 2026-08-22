@@ -67,4 +67,3 @@ finally {
     $Token = $null
     Write-Host "Capture stopped. Review retained files in $SpoolDirectory before deleting them." -ForegroundColor Cyan
 }
-

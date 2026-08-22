@@ -59,4 +59,3 @@ Before calling this commercially available, implement and validate:
 - Backup and restore testing
 - Import-tested OVF/OVA packaging for each supported hypervisor
 - Documented vulnerability and incident-response process
-

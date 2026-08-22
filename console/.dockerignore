@@ -6,4 +6,3 @@ collector
 supabase/.temp
 *.log
 .env
-

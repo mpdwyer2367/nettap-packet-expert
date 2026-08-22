@@ -1512,4 +1512,3 @@ export async function runHistorySql(
         : "Rows come from retained history; state which fidelity tier(s) the numbers came from when tier is present.",
   };
 }
-
