@@ -38,8 +38,8 @@ temporary_dir="$(mktemp -d "${TMPDIR:-/tmp}/nettap-packet-fixtures.XXXXXX")"
 cleanup() { case "$temporary_dir" in */nettap-packet-fixtures.*) rm -rf "$temporary_dir" ;; esac; }
 trap cleanup EXIT
 python3 "${project_dir}/tests/generate-packet-fixtures.py" "$temporary_dir"
-test "$(stat -f '%z' "${temporary_dir}/synthetic.pcap" 2>/dev/null || stat -c '%s' "${temporary_dir}/synthetic.pcap")" -gt 64
-test "$(stat -f '%z' "${temporary_dir}/synthetic.pcapng" 2>/dev/null || stat -c '%s' "${temporary_dir}/synthetic.pcapng")" -gt 80
+test "$(wc -c < "${temporary_dir}/synthetic.pcap")" -gt 64
+test "$(wc -c < "${temporary_dir}/synthetic.pcapng")" -gt 80
 
 for script in \
   appliance/firstboot.sh appliance/runtime.sh \
