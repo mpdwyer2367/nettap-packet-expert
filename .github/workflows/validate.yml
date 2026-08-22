@@ -12,7 +12,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
-      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - name: Install validation dependencies
         run: python3 -m pip install --disable-pip-version-check pyyaml==6.0.3 pydantic==2.13.4
       - name: Install pinned Packer validator
@@ -21,7 +21,9 @@ jobs:
             --output /tmp/packer.zip \
             https://releases.hashicorp.com/packer/1.15.4/packer_1.15.4_linux_amd64.zip
           echo '15f97a6a99645c7d5308c609973b5280837b38e112beac413ccbce80da927cf1  /tmp/packer.zip' | sha256sum --check --strict
-          sudo unzip -q /tmp/packer.zip packer -d /usr/local/bin
+          mkdir -p /tmp/packer-bin
+          unzip -q /tmp/packer.zip packer -d /tmp/packer-bin
+          sudo install -m 0755 /tmp/packer-bin/packer /usr/local/bin/packer
       - name: Lint shell entry points
         run: |
           shellcheck scripts/*.sh scripts/nettap-ai scripts/nettap-packet-expert tests/*.sh
@@ -113,7 +115,7 @@ jobs:
       SUPABASE_URL: https://example.supabase.co
       SUPABASE_PUBLISHABLE_KEY: sb_publishable_ci_placeholder
     steps:
-      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
           node-version: "22.18.0"
